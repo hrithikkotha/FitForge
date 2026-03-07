@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from 'react';
 import { BackBodySvg } from './BackBodySvg';
 // TODO: Replace with new FrontBodySvg when user provides it
-import { BackBodySvg as FrontBodySvg } from './BackBodySvg';
+import { FrontBodySvg } from './FrontBodySvg';
 
 interface BodySVGProps {
     view: 'front' | 'back';
