@@ -73,7 +73,7 @@ const DashboardPage = () => {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div className="page-grid-2">
                 <div className="card">
                     <div className="card-header">
                         <h3>Workout Volume Trend</h3>

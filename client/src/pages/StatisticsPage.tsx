@@ -109,7 +109,7 @@ const StatisticsPage = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                    <div className="page-grid-2" style={{ marginBottom: 24 }}>
                         <div className="card">
                             <div className="card-header"><h3>Volume Over Time</h3></div>
                             {workoutStats.volumeOverTime?.length > 0 ? (
@@ -209,7 +209,7 @@ const StatisticsPage = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                    <div className="page-grid-2" style={{ marginBottom: 24 }}>
                         <div className="card">
                             <div className="card-header"><h3>Calorie Trend</h3></div>
                             {nutritionStats.dailyTrend?.length > 0 ? (

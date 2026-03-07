@@ -10,8 +10,17 @@ import StatisticsPage from './pages/StatisticsPage';
 import ProfilePage from './pages/ProfilePage';
 import './index.css';
 
+import { useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
+
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on path change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, []);
 
   if (loading) {
     return (
@@ -25,7 +34,18 @@ const ProtectedLayout = () => {
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      {/* Mobile Header overlay */}
+      <div className="mobile-header">
+        <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        <h1>FitForge</h1>
+      </div>
+
+      {/* Sidebar background overlay */}
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="app-main">
         <Outlet />
       </main>

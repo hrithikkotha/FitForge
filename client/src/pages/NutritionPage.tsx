@@ -140,7 +140,7 @@ const NutritionPage = () => {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 24, marginBottom: 24 }}>
+            <div className="page-grid-sidebar" style={{ marginBottom: 24 }}>
                 {/* Calorie Ring */}
                 <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <h3 style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Today's Calories</h3>

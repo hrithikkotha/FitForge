@@ -5,7 +5,12 @@ import {
     BarChart3, User, LogOut
 } from 'lucide-react';
 
-const Sidebar = () => {
+interface SidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
@@ -24,7 +29,7 @@ const Sidebar = () => {
     ];
 
     return (
-        <aside className="sidebar">
+        <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             <div className="sidebar-logo">
                 <div className="logo-icon">F</div>
                 <h1>FitForge</h1>
@@ -35,6 +40,7 @@ const Sidebar = () => {
                     <NavLink
                         key={item.path}
                         to={item.path}
+                        onClick={onClose}
                         className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                     >
                         {item.icon}

@@ -278,6 +278,19 @@ textarea {
   gap: 20px;
 }
 
+/* Generic Layout Grids */
+.page-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.page-grid-sidebar {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+}
+
 .stat-card {
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
@@ -1151,17 +1164,74 @@ textarea {
   .profile-grid {
     grid-template-columns: 1fr;
   }
+
+  .page-grid-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mobile-header {
+  display: none;
 }
 
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    transition: transform var(--transition);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: none;
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+  }
+
+  .mobile-header {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    padding: 0 16px;
+    z-index: 80;
+    gap: 16px;
+  }
+
+  .mobile-menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin: 0;
   }
 
   .app-main {
     margin-left: 0;
     max-width: 100%;
-    padding: 16px;
+    padding: 80px 16px 24px 16px;
+    /* account for mobile header */
   }
 
   .card-grid {
@@ -1169,6 +1239,10 @@ textarea {
   }
 
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .page-grid-2 {
     grid-template-columns: 1fr;
   }
 }
