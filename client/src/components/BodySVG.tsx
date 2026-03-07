@@ -58,7 +58,8 @@ const BodySVG = ({ view, muscleFrequency, selectedMuscle, onSelectMuscle }: Body
                 transition: all 0.25s ease;
             }
             .svg-muscle-layer g[id]:not([id="body"]):hover path {
-                filter: brightness(1.3);
+                fill: rgb(201, 99, 99) !important;
+                filter: brightness(1.2);
             }
         `;
 
@@ -70,8 +71,8 @@ const BodySVG = ({ view, muscleFrequency, selectedMuscle, onSelectMuscle }: Body
             if (freq > 0 || isSelected) {
                 styles += `
                     .svg-muscle-layer g[id="${svgId}"] path {
-                        ${freq > 0 ? `fill: ${getHeatColor(freq)} !important;` : ''}
-                        ${isSelected ? `stroke: #fca311 !important; stroke-width: 3px !important;` : ''}
+                        ${freq > 0 && !isSelected ? `fill: ${getHeatColor(freq)} !important;` : ''}
+                        ${isSelected ? `fill: rgb(201, 99, 99) !important; stroke: #fca311 !important; stroke-width: 3px !important;` : ''}
                     }
                 `;
             }

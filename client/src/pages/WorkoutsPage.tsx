@@ -255,12 +255,12 @@ const WorkoutsPage = () => {
 
     return (
         <div className="fade-in">
-            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
                 <div>
                     <h2>Workouts</h2>
                     <p>Log and dynamically build your training sessions</p>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button className="btn btn-secondary" onClick={() => setShowCustomModal(true)}>
                         <Edit3 size={16} /> Custom Exercise
                     </button>

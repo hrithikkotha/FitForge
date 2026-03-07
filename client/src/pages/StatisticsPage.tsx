@@ -62,12 +62,12 @@ const StatisticsPage = () => {
                 <p>Deep dive into your fitness data</p>
             </div>
 
-            <div style={{ display: 'flex', gap: 16, marginBottom: 24, alignItems: 'center' }}>
-                <div className="tabs" style={{ marginBottom: 0, flex: 'none', width: 300 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24, alignItems: 'center' }}>
+                <div className="tabs" style={{ marginBottom: 0, flex: '1 1 auto', minWidth: 200, maxWidth: 300 }}>
                     <button className={`tab ${activeTab === 'workout' ? 'active' : ''}`} onClick={() => setActiveTab('workout')}>Workouts</button>
                     <button className={`tab ${activeTab === 'nutrition' ? 'active' : ''}`} onClick={() => setActiveTab('nutrition')}>Nutrition</button>
                 </div>
-                <div className="date-pills">
+                <div className="date-pills" style={{ flexWrap: 'wrap' }}>
                     {periodOptions.map(p => (
                         <button key={p.days} className={`date-pill ${periodDays === p.days ? 'active' : ''}`} onClick={() => setPeriodDays(p.days)}>
                             {p.label}

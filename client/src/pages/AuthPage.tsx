@@ -6,6 +6,7 @@ const AuthPage = () => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login, register } = useAuth();
@@ -20,6 +21,11 @@ const AuthPage = () => {
             } else {
                 if (!username.trim()) {
                     setError('Username is required');
+                    setLoading(false);
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    setError('Passwords do not match');
                     setLoading(false);
                     return;
                 }
@@ -99,6 +105,22 @@ const AuthPage = () => {
                                 minLength={6}
                             />
                         </div>
+
+                        {!isLogin && (
+                            <div className="form-group">
+                                <label htmlFor="auth-confirm-password">Confirm Password</label>
+                                <input
+                                    id="auth-confirm-password"
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Re-enter your password"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                        )}
 
                         <button
                             type="submit"
