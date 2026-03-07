@@ -64,6 +64,13 @@ const AuthGuard = () => {
 };
 
 function App() {
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'alternate') {
+      document.documentElement.setAttribute('data-theme', 'alternate');
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

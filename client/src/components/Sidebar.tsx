@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     LayoutDashboard, Dumbbell, Utensils, Activity,
-    BarChart3, User, LogOut
+    BarChart3, User, LogOut, Palette
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,6 +17,17 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const handleLogout = () => {
         logout();
         navigate('/');
+    };
+
+    const toggleTheme = () => {
+        const isAlternate = document.documentElement.getAttribute('data-theme') === 'alternate';
+        if (isAlternate) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'default');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'alternate');
+            localStorage.setItem('theme', 'alternate');
+        }
     };
 
     const navItems = [
@@ -47,6 +58,15 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                         {item.label}
                     </NavLink>
                 ))}
+
+                <div style={{ flex: 1 }}></div>
+
+                <div className="theme-toggle-container">
+                    <button onClick={toggleTheme} className="theme-toggle-btn">
+                        <Palette size={18} className="theme-icon" />
+                        <span>Toggle Theme</span>
+                    </button>
+                </div>
             </nav>
 
             <div className="sidebar-footer">
