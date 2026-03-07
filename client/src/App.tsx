@@ -39,7 +39,10 @@ const ProtectedLayout = () => {
         <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-        <h1>FitForge</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img src="/logo.jpg" alt="FitForge" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
+          <h1>FitForge</h1>
+        </div>
       </div>
 
       {/* Sidebar background overlay */}

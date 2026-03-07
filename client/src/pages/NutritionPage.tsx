@@ -226,32 +226,34 @@ const NutritionPage = () => {
                     <h3>Meal History</h3>
                 </div>
                 {meals.length > 0 ? (
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Meal</th>
-                                <th>Food</th>
-                                <th>Qty</th>
-                                <th>Calories</th>
-                                <th>P / C / F</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {meals.slice(0, 20).map(m => (
-                                <tr key={m._id}>
-                                    <td>{new Date(m.date).toLocaleDateString()}</td>
-                                    <td><span className={`badge badge-${m.mealType === 'breakfast' ? 'cardio' : m.mealType === 'lunch' ? 'bodyweight' : 'strength'}`}>{mealTypeLabel(m.mealType)}</span></td>
-                                    <td>{m.foodName || m.foodItemId?.name}</td>
-                                    <td>{m.quantity}g</td>
-                                    <td style={{ fontWeight: 600 }}>{m.calories}</td>
-                                    <td style={{ color: 'var(--text-secondary)' }}>{m.protein}g / {m.carbs}g / {m.fat}g</td>
-                                    <td><button className="btn-icon btn-sm" onClick={() => deleteMeal(m._id)}><Trash2 size={12} /></button></td>
+                    <div className="table-responsive">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Meal</th>
+                                    <th>Food</th>
+                                    <th>Qty</th>
+                                    <th>Calories</th>
+                                    <th>P / C / F</th>
+                                    <th></th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {meals.slice(0, 20).map(m => (
+                                    <tr key={m._id}>
+                                        <td>{new Date(m.date).toLocaleDateString()}</td>
+                                        <td><span className={`badge badge-${m.mealType === 'breakfast' ? 'cardio' : m.mealType === 'lunch' ? 'bodyweight' : 'strength'}`}>{mealTypeLabel(m.mealType)}</span></td>
+                                        <td>{m.foodName || m.foodItemId?.name}</td>
+                                        <td>{m.quantity}g</td>
+                                        <td style={{ fontWeight: 600 }}>{m.calories}</td>
+                                        <td style={{ color: 'var(--text-secondary)' }}>{m.protein}g / {m.carbs}g / {m.fat}g</td>
+                                        <td><button className="btn-icon btn-sm" onClick={() => deleteMeal(m._id)}><Trash2 size={12} /></button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <div className="empty-state"><p>No meal history yet</p></div>
                 )}

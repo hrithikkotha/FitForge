@@ -31,7 +31,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     return (
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             <div className="sidebar-logo">
-                <div className="logo-icon">F</div>
+                <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon" />
                 <h1>FitForge</h1>
             </div>
 

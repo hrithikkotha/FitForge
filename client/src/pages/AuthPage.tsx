@@ -41,7 +41,7 @@ const AuthPage = () => {
         <div className="auth-page">
             <div className="auth-container fade-in">
                 <div className="auth-brand">
-                    <div className="logo-icon-lg">F</div>
+                    <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon-lg" />
                     <h1>FitForge</h1>
                     <p>Your complete fitness companion</p>
                 </div>
