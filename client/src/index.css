@@ -121,8 +121,9 @@ textarea {
   position: fixed;
   left: 0;
   top: 0;
+  bottom: 0;
   width: 260px;
-  height: 100vh;
+  height: 100dvh;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -1080,6 +1081,8 @@ textarea {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .exercise-block-header h4 {
@@ -1103,6 +1106,7 @@ textarea {
 
 .set-row input {
   flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);
@@ -1294,6 +1298,11 @@ textarea {
     padding: 0 16px;
     z-index: 80;
     gap: 16px;
+  }
+
+  .sidebar {
+    height: 100%;
+    bottom: 0;
   }
 
   .mobile-menu-btn {

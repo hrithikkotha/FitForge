@@ -151,26 +151,28 @@ const StatisticsPage = () => {
                     {workoutStats.personalRecords?.length > 0 && (
                         <div className="card">
                             <div className="card-header"><h3>Personal Records</h3></div>
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Exercise</th>
-                                        <th>Weight</th>
-                                        <th>Reps</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {workoutStats.personalRecords.slice(0, 10).map((pr: any, i: number) => (
-                                        <tr key={i}>
-                                            <td style={{ fontWeight: 600 }}>{pr.exercise}</td>
-                                            <td>{pr.weight} kg</td>
-                                            <td>{pr.reps}</td>
-                                            <td style={{ color: 'var(--text-secondary)' }}>{new Date(pr.date).toLocaleDateString()}</td>
+                            <div className="table-responsive">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Exercise</th>
+                                            <th>Weight</th>
+                                            <th>Reps</th>
+                                            <th>Date</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {workoutStats.personalRecords.slice(0, 10).map((pr: any, i: number) => (
+                                            <tr key={i}>
+                                                <td style={{ fontWeight: 600 }}>{pr.exercise}</td>
+                                                <td>{pr.weight} kg</td>
+                                                <td>{pr.reps}</td>
+                                                <td style={{ color: 'var(--text-secondary)' }}>{new Date(pr.date).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </>
