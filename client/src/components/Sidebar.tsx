@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -19,14 +20,27 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         navigate('/');
     };
 
+    const [isAlternate, setIsAlternate] = useState(
+        localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate'
+    );
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setIsAlternate(localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate');
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     const toggleTheme = () => {
-        const isAlternate = document.documentElement.getAttribute('data-theme') === 'alternate';
         if (isAlternate) {
             document.documentElement.removeAttribute('data-theme');
             localStorage.setItem('theme', 'default');
+            setIsAlternate(false);
         } else {
             document.documentElement.setAttribute('data-theme', 'alternate');
             localStorage.setItem('theme', 'alternate');
+            setIsAlternate(true);
         }
     };
 
@@ -41,7 +55,15 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
     return (
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-            <div className="sidebar-logo">
+            <div
+                className="sidebar-logo"
+                onClick={() => {
+                    navigate('/dashboard');
+                    if (onClose) onClose();
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Go to Dashboard"
+            >
                 <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon" />
                 <h1>FitForge</h1>
             </div>
@@ -64,7 +86,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <div className="theme-toggle-container">
                     <button onClick={toggleTheme} className="theme-toggle-btn">
                         <Palette size={18} className="theme-icon" />
-                        <span>Toggle Theme</span>
+                        <span>{isAlternate ? 'Light Mode' : 'Dark Mode'}</span>
                     </button>
                 </div>
             </nav>
