@@ -24,6 +24,9 @@ const NutritionPage = () => {
     const [mealType, setMealType] = useState('lunch');
     const [mealDate, setMealDate] = useState(new Date().toISOString().split('T')[0]);
 
+    // Delete confirmation modal
+    const [deleteMealId, setDeleteMealId] = useState<string | null>(null);
+
     // Custom Food Modal State
     const [showFoodModal, setShowFoodModal] = useState(false);
     const [customFood, setCustomFood] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '' });
@@ -94,9 +97,15 @@ const NutritionPage = () => {
         }
     };
 
-    const deleteMeal = async (id: string) => {
+    const confirmDeleteMeal = (id: string) => {
+        setDeleteMealId(id);
+    };
+
+    const handleDeleteMeal = async () => {
+        if (!deleteMealId) return;
         try {
-            await API.delete(`/meals/${id}`);
+            await API.delete(`/meals/${deleteMealId}`);
+            setDeleteMealId(null);
             loadData();
         } catch (err) {
             console.error(err);
@@ -206,7 +215,7 @@ const NutritionPage = () => {
                                     <span>P: {m.protein}g</span>
                                     <span>C: {m.carbs}g</span>
                                     <span>F: {m.fat}g</span>
-                                    <button className="btn-icon btn-sm" onClick={() => deleteMeal(m._id)} style={{ marginLeft: 4 }}>
+                                    <button className="btn-icon btn-sm" onClick={() => confirmDeleteMeal(m._id)} style={{ marginLeft: 4 }}>
                                         <Trash2 size={12} />
                                     </button>
                                 </div>
@@ -248,7 +257,7 @@ const NutritionPage = () => {
                                         <td>{m.quantity}g</td>
                                         <td style={{ fontWeight: 600 }}>{m.calories}</td>
                                         <td style={{ color: 'var(--text-secondary)' }}>{m.protein}g / {m.carbs}g / {m.fat}g</td>
-                                        <td><button className="btn-icon btn-sm" onClick={() => deleteMeal(m._id)}><Trash2 size={12} /></button></td>
+                                        <td><button className="btn-icon btn-sm" onClick={() => confirmDeleteMeal(m._id)}><Trash2 size={12} /></button></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -423,6 +432,27 @@ const NutritionPage = () => {
                             <button className="btn btn-secondary" onClick={() => setShowFoodModal(false)}>Cancel</button>
                             <button className="btn btn-primary" onClick={createCustomFood} disabled={!customFood.name || !customFood.calories}>
                                 Create Food
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteMealId && (
+                <div className="modal-overlay" onClick={() => setDeleteMealId(null)} style={{ zIndex: 1200 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+                        <div className="modal-header">
+                            <h3>Delete Meal</h3>
+                            <button className="btn-icon" onClick={() => setDeleteMealId(null)}><X size={18} /></button>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
+                            Are you sure you want to delete this meal record? This action cannot be undone.
+                        </p>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setDeleteMealId(null)}>Cancel</button>
+                            <button className="btn btn-danger" onClick={handleDeleteMeal}>
+                                <Trash2 size={16} /> Delete
                             </button>
                         </div>
                     </div>

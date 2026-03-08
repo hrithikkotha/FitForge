@@ -35,6 +35,9 @@ const WorkoutsPage = () => {
     const [newTitle, setNewTitle] = useState('');
     const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
 
+    // Delete confirmation modal
+    const [deleteWorkoutId, setDeleteWorkoutId] = useState<string | null>(null);
+
     useEffect(() => {
         loadData();
     }, []);
@@ -216,10 +219,15 @@ const WorkoutsPage = () => {
     };
 
     // Delete workout
-    const deleteWorkout = async (id: string) => {
-        if (!confirm('Delete this workout?')) return;
+    const confirmDeleteWorkout = (id: string) => {
+        setDeleteWorkoutId(id);
+    };
+
+    const handleDeleteWorkout = async () => {
+        if (!deleteWorkoutId) return;
         try {
-            await API.delete(`/workouts/${id}`);
+            await API.delete(`/workouts/${deleteWorkoutId}`);
+            setDeleteWorkoutId(null);
             loadData();
         } catch (err) {
             console.error(err);
@@ -288,7 +296,7 @@ const WorkoutsPage = () => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <button className="btn-icon btn-sm" onClick={(e) => { e.stopPropagation(); deleteWorkout(w._id); }}>
+                                    <button className="btn-icon btn-sm" onClick={(e) => { e.stopPropagation(); confirmDeleteWorkout(w._id); }}>
                                         <Trash2 size={14} />
                                     </button>
                                     {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -359,7 +367,7 @@ const WorkoutsPage = () => {
 
                                     {/* Add Exercise Bar */}
                                     <div className="add-exercise-bar">
-                                        <select value={addingToWorkoutId === w._id ? selectedExercise : ''}
+                                        <select className="form-input" value={addingToWorkoutId === w._id ? selectedExercise : ''}
                                             onFocus={() => setAddingToWorkoutId(w._id)}
                                             onChange={e => { setSelectedExercise(e.target.value); setAddingToWorkoutId(w._id); }}>
                                             <option value="">Add an exercise...</option>
@@ -465,6 +473,27 @@ const WorkoutsPage = () => {
                             <button className="btn btn-primary" onClick={createCustomExercise}
                                 disabled={!customName.trim() || customMuscles.length === 0}>
                                 <Save size={16} /> Save Exercise
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteWorkoutId && (
+                <div className="modal-overlay" onClick={() => setDeleteWorkoutId(null)} style={{ zIndex: 1200 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+                        <div className="modal-header">
+                            <h3>Delete Workout</h3>
+                            <button className="btn-icon" onClick={() => setDeleteWorkoutId(null)}><X size={18} /></button>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
+                            Are you sure you want to delete this workout? This action cannot be undone.
+                        </p>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setDeleteWorkoutId(null)}>Cancel</button>
+                            <button className="btn btn-danger" onClick={handleDeleteWorkout}>
+                                <Trash2 size={16} /> Delete
                             </button>
                         </div>
                     </div>

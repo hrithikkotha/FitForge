@@ -219,8 +219,8 @@ const StatisticsPage = () => {
                                     <BarChart data={nutritionStats.dailyTrend}>
                                         <XAxis dataKey="date" tick={{ fill: '#b0b8c8', fontSize: 10 }} tickFormatter={(v) => v.slice(5)} />
                                         <YAxis tick={{ fill: '#b0b8c8', fontSize: 11 }} />
-                                        <Tooltip contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 8, color: '#fff' }} />
-                                        <Bar dataKey="calories" fill="#fca311" radius={[4, 4, 0, 0]} name="Calories" />
+                                        <Tooltip contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 12, color: '#fff' }} />
+                                        <Bar dataKey="calories" fill="#fca311" radius={[12, 12, 0, 0]} name="Calories" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
@@ -252,7 +252,7 @@ const StatisticsPage = () => {
                                         <Legend
                                             formatter={(value: string) => <span style={{ color: '#fff', fontSize: '0.8rem' }}>{value}</span>}
                                         />
-                                        <Tooltip contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 8, color: '#fff' }} />
+                                        <Tooltip contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 12, color: '#fff' }} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             ) : (
@@ -271,8 +271,8 @@ const StatisticsPage = () => {
                                 }))}>
                                     <XAxis dataKey="type" tick={{ fill: '#b0b8c8', fontSize: 12 }} />
                                     <YAxis tick={{ fill: '#b0b8c8', fontSize: 11 }} />
-                                    <Tooltip contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 8, color: '#fff' }} />
-                                    <Bar dataKey="calories" radius={[4, 4, 0, 0]} name="Calories">
+                                    <Tooltip contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 12, color: '#fff' }} />
+                                    <Bar dataKey="calories" radius={[12, 12, 0, 0]} name="Calories">
                                         {Object.keys(nutritionStats.mealTypeBreakdown).map((_, i) => (
                                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                                         ))}
