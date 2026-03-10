@@ -28,13 +28,15 @@ router.get('/', protect, async (req, res) => {
 // POST /api/foods — create custom food
 router.post('/', protect, async (req, res) => {
     try {
-        const { name, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g } = req.body;
+        const { name, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g, servingUnit, gramsPerServing } = req.body;
         const food = await FoodItem.create({
             name,
             caloriesPer100g,
             proteinPer100g,
             carbsPer100g,
             fatPer100g,
+            servingUnit: servingUnit || 'g',
+            gramsPerServing: gramsPerServing || 1,
             isDefault: false,
             userId: req.user._id,
         });

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, X, Search } from 'lucide-react';
+import { Plus, Trash2, X, Search, Sunrise, Sun, Moon, Apple, UtensilsCrossed } from 'lucide-react';
+import { useToast, ToastContainer } from '../components/Toast';
+import PageLoader from '../components/PageLoader';
+import DatePicker from '../components/DatePicker';
 
 interface FoodItem {
     _id: string;
@@ -10,6 +13,8 @@ interface FoodItem {
     proteinPer100g: number;
     carbsPer100g: number;
     fatPer100g: number;
+    servingUnit?: string;
+    gramsPerServing?: number;
 }
 
 const NutritionPage = () => {
@@ -20,7 +25,7 @@ const NutritionPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
-    const [quantity, setQuantity] = useState('100');
+    const [quantity, setQuantity] = useState('1');
     const [mealType, setMealType] = useState('lunch');
     const [mealDate, setMealDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -29,7 +34,9 @@ const NutritionPage = () => {
 
     // Custom Food Modal State
     const [showFoodModal, setShowFoodModal] = useState(false);
-    const [customFood, setCustomFood] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '' });
+    const [customFood, setCustomFood] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '', servingUnit: 'g', gramsPerServing: '1' });
+    const { toasts, show: showToast, dismiss } = useToast();
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
         loadData();
@@ -50,6 +57,8 @@ const NutritionPage = () => {
             ));
         } catch (err) {
             console.error(err);
+        } finally {
+            setPageLoading(false);
         }
     };
 
@@ -60,15 +69,17 @@ const NutritionPage = () => {
                 date: new Date(mealDate).toISOString(),
                 mealType,
                 foodItemId: selectedFood._id,
-                quantity: parseInt(quantity) || 100,
+                quantity: parseFloat(quantity) || 1,
             });
             setShowModal(false);
             setSelectedFood(null);
-            setQuantity('100');
+            setQuantity('1');
             setMealType('lunch');
             loadData();
+            showToast('Meal logged successfully');
         } catch (err) {
             console.error(err);
+            showToast('Failed to log meal', 'error');
         }
     };
 
@@ -81,19 +92,22 @@ const NutritionPage = () => {
                 proteinPer100g: Number(customFood.protein || 0),
                 carbsPer100g: Number(customFood.carbs || 0),
                 fatPer100g: Number(customFood.fat || 0),
+                servingUnit: customFood.servingUnit,
+                gramsPerServing: Number(customFood.gramsPerServing || 1),
             });
             setFoods((prev) => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)));
             setShowFoodModal(false);
-            setCustomFood({ name: '', calories: '', protein: '', carbs: '', fat: '' });
+            setCustomFood({ name: '', calories: '', protein: '', carbs: '', fat: '', servingUnit: 'g', gramsPerServing: '1' });
 
             // Auto-select if user is in the middle of logging a meal
             if (showModal) {
                 setSelectedFood(res.data);
                 setSearchTerm(res.data.name);
             }
+            showToast('Custom food created');
         } catch (err) {
             console.error(err);
-            alert('Failed to create custom food');
+            showToast('Failed to create custom food', 'error');
         }
     };
 
@@ -107,8 +121,10 @@ const NutritionPage = () => {
             await API.delete(`/meals/${deleteMealId}`);
             setDeleteMealId(null);
             loadData();
+            showToast('Meal deleted successfully');
         } catch (err) {
             console.error(err);
+            showToast('Failed to delete meal', 'error');
         }
     };
 
@@ -123,8 +139,13 @@ const NutritionPage = () => {
 
     const mealTypeLabel = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
     const mealTypeIcon = (t: string) => {
-        const map: Record<string, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
-        return map[t] || '🍽️';
+        const map: Record<string, React.ReactNode> = {
+            breakfast: <Sunrise size={16} />,
+            lunch: <Sun size={16} />,
+            dinner: <Moon size={16} />,
+            snack: <Apple size={16} />,
+        };
+        return map[t] || <UtensilsCrossed size={16} />;
     };
 
     // SVG ring
@@ -132,8 +153,11 @@ const NutritionPage = () => {
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (calPercent / 100) * circumference;
 
+    if (pageLoading) return <PageLoader />;
+
     return (
         <div className="fade-in">
+            <ToastContainer toasts={toasts} dismiss={dismiss} />
             <div className="page-header">
                 <div>
                     <h2>Nutrition Tracker</h2>
@@ -206,7 +230,7 @@ const NutritionPage = () => {
                                     <div>
                                         <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.foodName || m.foodItemId?.name}</div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                            {mealTypeLabel(m.mealType)} · {m.quantity}g
+                                            {mealTypeLabel(m.mealType)} · {m.quantity}{m.servingUnit === 'g' || m.servingUnit === 'ml' || !m.servingUnit ? (m.servingUnit || 'g') : ` ${m.servingUnit}${m.quantity !== 1 ? 's' : ''}`}
                                         </div>
                                     </div>
                                 </div>
@@ -254,7 +278,7 @@ const NutritionPage = () => {
                                         <td>{new Date(m.date).toLocaleDateString()}</td>
                                         <td><span className={`badge badge-${m.mealType === 'breakfast' ? 'cardio' : m.mealType === 'lunch' ? 'bodyweight' : 'strength'}`}>{mealTypeLabel(m.mealType)}</span></td>
                                         <td>{m.foodName || m.foodItemId?.name}</td>
-                                        <td>{m.quantity}g</td>
+                                        <td>{m.quantity}{m.servingUnit === 'g' || m.servingUnit === 'ml' || !m.servingUnit ? (m.servingUnit || 'g') : ` ${m.servingUnit}${m.quantity !== 1 ? 's' : ''}`}</td>
                                         <td style={{ fontWeight: 600 }}>{m.calories}</td>
                                         <td style={{ color: 'var(--text-secondary)' }}>{m.protein}g / {m.carbs}g / {m.fat}g</td>
                                         <td><button className="btn-icon btn-sm" onClick={() => confirmDeleteMeal(m._id)}><Trash2 size={12} /></button></td>
@@ -280,7 +304,7 @@ const NutritionPage = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Date</label>
-                                <input type="date" className="form-input" value={mealDate} onChange={e => setMealDate(e.target.value)} />
+                                <DatePicker value={mealDate} onChange={setMealDate} />
                             </div>
                             <div className="form-group">
                                 <label>Meal Type</label>
@@ -322,7 +346,7 @@ const NutritionPage = () => {
                                 {filteredFoods.map(f => (
                                     <div
                                         key={f._id}
-                                        onClick={() => { setSelectedFood(f); setSearchTerm(f.name); }}
+                                        onClick={() => { setSelectedFood(f); setSearchTerm(f.name); setQuantity(f.servingUnit === 'g' || f.servingUnit === 'ml' ? '100' : '1'); }}
                                         style={{
                                             padding: '8px 12px',
                                             cursor: 'pointer',
@@ -336,6 +360,9 @@ const NutritionPage = () => {
                                         <div style={{ fontWeight: 500 }}>{f.name}</div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                             {f.caloriesPer100g} kcal · P:{f.proteinPer100g}g · C:{f.carbsPer100g}g · F:{f.fatPer100g}g per 100g
+                                            {f.servingUnit && f.servingUnit !== 'g' && f.servingUnit !== 'ml' && (
+                                                <span> · 1 {f.servingUnit} = {f.gramsPerServing}g</span>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -344,15 +371,29 @@ const NutritionPage = () => {
 
                         {selectedFood && (
                             <div className="form-group">
-                                <label>Quantity (grams)</label>
-                                <input className="form-input" type="number" value={quantity} onChange={e => setQuantity(e.target.value)} />
+                                <label>Quantity ({selectedFood.servingUnit === 'g' ? 'grams' : selectedFood.servingUnit === 'ml' ? 'ml' : selectedFood.servingUnit === 'piece' ? 'pieces' : selectedFood.servingUnit === 'slice' ? 'slices' : selectedFood.servingUnit === 'scoop' ? 'scoops' : selectedFood.servingUnit === 'tbsp' ? 'tablespoons' : selectedFood.servingUnit === 'cup' ? 'cups' : 'grams'})</label>
+                                <input className="form-input" type="number" value={quantity} onChange={e => setQuantity(e.target.value)} min="0" step={selectedFood.servingUnit === 'g' || selectedFood.servingUnit === 'ml' ? '10' : '1'} />
                                 <div style={{ marginTop: 8, padding: 12, background: 'var(--bg-primary)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                    <strong style={{ color: 'var(--text-primary)' }}>
-                                        {Math.round(selectedFood.caloriesPer100g * (parseInt(quantity) || 0) / 100)} kcal
-                                    </strong>{' '}
-                                    · P: {(selectedFood.proteinPer100g * (parseInt(quantity) || 0) / 100).toFixed(1)}g
-                                    · C: {(selectedFood.carbsPer100g * (parseInt(quantity) || 0) / 100).toFixed(1)}g
-                                    · F: {(selectedFood.fatPer100g * (parseInt(quantity) || 0) / 100).toFixed(1)}g
+                                    {(() => {
+                                        const gps = selectedFood.gramsPerServing || 1;
+                                        const totalGrams = (parseFloat(quantity) || 0) * gps;
+                                        const mult = totalGrams / 100;
+                                        return (
+                                            <>
+                                                <strong style={{ color: 'var(--text-primary)' }}>
+                                                    {Math.round(selectedFood.caloriesPer100g * mult)} kcal
+                                                </strong>{' '}
+                                                · P: {(selectedFood.proteinPer100g * mult).toFixed(1)}g
+                                                · C: {(selectedFood.carbsPer100g * mult).toFixed(1)}g
+                                                · F: {(selectedFood.fatPer100g * mult).toFixed(1)}g
+                                                {selectedFood.servingUnit !== 'g' && selectedFood.servingUnit !== 'ml' && (
+                                                    <span style={{ marginLeft: 8, opacity: 0.7 }}>
+                                                        ({Math.round(totalGrams)}g)
+                                                    </span>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}
@@ -426,6 +467,33 @@ const NutritionPage = () => {
                                     onChange={e => setCustomFood({ ...customFood, fat: e.target.value })}
                                 />
                             </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Serving Unit</label>
+                                <select className="form-input" value={customFood.servingUnit} onChange={e => setCustomFood({ ...customFood, servingUnit: e.target.value, gramsPerServing: e.target.value === 'g' || e.target.value === 'ml' ? '1' : customFood.gramsPerServing })}>
+                                    <option value="g">Grams (g)</option>
+                                    <option value="ml">Milliliters (ml)</option>
+                                    <option value="piece">Piece</option>
+                                    <option value="slice">Slice</option>
+                                    <option value="scoop">Scoop</option>
+                                    <option value="tbsp">Tablespoon</option>
+                                    <option value="cup">Cup</option>
+                                </select>
+                            </div>
+                            {customFood.servingUnit !== 'g' && customFood.servingUnit !== 'ml' && (
+                                <div className="form-group">
+                                    <label>Grams per {customFood.servingUnit}</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={customFood.gramsPerServing}
+                                        onChange={e => setCustomFood({ ...customFood, gramsPerServing: e.target.value })}
+                                        placeholder="e.g., 50 for one egg"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="modal-actions" style={{ marginTop: 24 }}>

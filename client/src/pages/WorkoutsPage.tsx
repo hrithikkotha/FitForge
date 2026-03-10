@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import API from '../api/axios';
 import { Plus, Dumbbell, Trash2, X, Edit3, Save, ChevronDown, ChevronUp } from 'lucide-react';
+import { useToast, ToastContainer } from '../components/Toast';
+import PageLoader from '../components/PageLoader';
+import DatePicker from '../components/DatePicker';
 
 interface Exercise {
     _id: string;
@@ -37,6 +40,8 @@ const WorkoutsPage = () => {
 
     // Delete confirmation modal
     const [deleteWorkoutId, setDeleteWorkoutId] = useState<string | null>(null);
+    const { toasts, show: showToast, dismiss } = useToast();
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
         loadData();
@@ -52,6 +57,8 @@ const WorkoutsPage = () => {
             setWorkouts(wkRes.data);
         } catch (err) {
             console.error(err);
+        } finally {
+            setPageLoading(false);
         }
     }, []);
 
@@ -69,8 +76,10 @@ const WorkoutsPage = () => {
             setNewDate(new Date().toISOString().split('T')[0]);
             await loadData();
             setExpandedWorkout(data._id);
+            showToast('Workout created successfully');
         } catch (err) {
             console.error(err);
+            showToast('Failed to create workout', 'error');
         }
     };
 
@@ -105,8 +114,10 @@ const WorkoutsPage = () => {
             setSelectedExercise('');
             setAddingToWorkoutId(null);
             loadData();
+            showToast('Exercise added to workout');
         } catch (err) {
             console.error(err);
+            showToast('Failed to add exercise', 'error');
         }
     };
 
@@ -127,8 +138,10 @@ const WorkoutsPage = () => {
         try {
             await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
             loadData();
+            showToast('Exercise removed');
         } catch (err) {
             console.error(err);
+            showToast('Failed to remove exercise', 'error');
         }
     };
 
@@ -229,8 +242,10 @@ const WorkoutsPage = () => {
             await API.delete(`/workouts/${deleteWorkoutId}`);
             setDeleteWorkoutId(null);
             loadData();
+            showToast('Workout deleted successfully');
         } catch (err) {
             console.error(err);
+            showToast('Failed to delete workout', 'error');
         }
     };
 
@@ -248,8 +263,10 @@ const WorkoutsPage = () => {
             setCustomCategory('strength');
             setCustomMuscles([]);
             loadData();
+            showToast('Custom exercise created');
         } catch (err) {
             console.error(err);
+            showToast('Failed to create exercise', 'error');
         }
     };
 
@@ -261,8 +278,11 @@ const WorkoutsPage = () => {
 
     const totalSets = (entries: any[]) => entries?.reduce((s: number, e: any) => s + (e.sets?.length || 0), 0) || 0;
 
+    if (pageLoading) return <PageLoader />;
+
     return (
         <div className="fade-in">
+            <ToastContainer toasts={toasts} dismiss={dismiss} />
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
                 <div>
                     <h2>Workouts</h2>
@@ -415,7 +435,7 @@ const WorkoutsPage = () => {
                         </div>
                         <div className="form-group">
                             <label>Date</label>
-                            <input type="date" className="form-input" value={newDate} onChange={e => setNewDate(e.target.value)} />
+                            <DatePicker value={newDate} onChange={setNewDate} />
                         </div>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 16 }}>
                             After creating, you can dynamically add exercises and sets to this workout.

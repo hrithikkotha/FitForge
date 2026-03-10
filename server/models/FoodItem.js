@@ -22,6 +22,15 @@ const foodItemSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    servingUnit: {
+        type: String,
+        enum: ['g', 'ml', 'piece', 'slice', 'scoop', 'tbsp', 'cup'],
+        default: 'g',
+    },
+    gramsPerServing: {
+        type: Number,
+        default: 1,
+    },
     isDefault: {
         type: Boolean,
         default: false,

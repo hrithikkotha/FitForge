@@ -86,7 +86,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <div className="theme-toggle-container">
                     <button onClick={toggleTheme} className="theme-toggle-btn">
                         <Palette size={18} className="theme-icon" />
-                        <span>{isAlternate ? 'Light Mode' : 'Dark Mode'}</span>
+                        <span>{isAlternate ? 'Change Theme' : 'Change Theme'}</span>
                     </button>
                 </div>
             </nav>

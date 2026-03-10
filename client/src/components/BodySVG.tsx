@@ -8,6 +8,7 @@ interface BodySVGProps {
     muscleFrequency: Record<string, number>;
     selectedMuscle: string;
     onSelectMuscle: (muscle: string) => void;
+    thresholds: [number, number, number];
 }
 
 // Map SVG group IDs → our muscle key names
@@ -30,15 +31,15 @@ const SVG_ID_TO_MUSCLE: Record<string, string> = {
     'obliques': 'obliques',
 };
 
-const getHeatColor = (count: number): string => {
+const getHeatColor = (count: number, thresholds: [number, number, number]): string => {
     if (count === 0) return '#3a3f5c';
-    if (count <= 2) return '#90caf9';
-    if (count <= 4) return '#66bb6a';
-    if (count <= 7) return '#ffb74d';
+    if (count <= thresholds[0]) return '#90caf9';
+    if (count <= thresholds[1]) return '#66bb6a';
+    if (count <= thresholds[2]) return '#ffb74d';
     return '#ef5350';
 };
 
-const BodySVG = ({ view, muscleFrequency, selectedMuscle, onSelectMuscle }: BodySVGProps) => {
+const BodySVG = ({ view, muscleFrequency, selectedMuscle, onSelectMuscle, thresholds }: BodySVGProps) => {
     const [hovered, setHovered] = useState('');
 
     const muscleLabel = (m: string) => m.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -71,7 +72,7 @@ const BodySVG = ({ view, muscleFrequency, selectedMuscle, onSelectMuscle }: Body
             if (freq > 0 || isSelected) {
                 styles += `
                     .svg-muscle-layer g[id="${svgId}"] path {
-                        ${freq > 0 && !isSelected ? `fill: ${getHeatColor(freq)} !important;` : ''}
+                        ${freq > 0 && !isSelected ? `fill: ${getHeatColor(freq, thresholds)} !important;` : ''}
                         ${isSelected ? `fill: rgb(201, 99, 99) !important; stroke: #fca311 !important; stroke-width: 3px !important;` : ''}
                     }
                 `;

@@ -5,6 +5,8 @@ import {
     XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart,
     PolarGrid, PolarAngleAxis, Radar, Legend,
 } from 'recharts';
+import { Dumbbell, TrendingUp, Clock, Layers, Flame, Beef, CalendarDays, UtensilsCrossed } from 'lucide-react';
+import PageLoader from '../components/PageLoader';
 
 const periodOptions = [
     { label: '7 Days', days: 7 },
@@ -21,12 +23,14 @@ const StatisticsPage = () => {
     const [workoutStats, setWorkoutStats] = useState<any>(null);
     const [nutritionStats, setNutritionStats] = useState<any>(null);
     const [heatmap, setHeatmap] = useState<Record<string, number>>({});
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
         loadStats();
     }, [periodDays]);
 
     const loadStats = async () => {
+        setPageLoading(true);
         const from = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString();
         const to = new Date().toISOString();
         try {
@@ -40,6 +44,8 @@ const StatisticsPage = () => {
             setHeatmap(hm.data.muscleFrequency || {});
         } catch (err) {
             console.error(err);
+        } finally {
+            setPageLoading(false);
         }
     };
 
@@ -54,6 +60,8 @@ const StatisticsPage = () => {
         const date = new Date(d);
         return `${date.getMonth() + 1}/${date.getDate()}`;
     };
+
+    if (pageLoading) return <PageLoader />;
 
     return (
         <div className="fade-in">
@@ -80,28 +88,28 @@ const StatisticsPage = () => {
                 <>
                     <div className="card-grid" style={{ marginBottom: 24 }}>
                         <div className="stat-card">
-                            <div className="stat-icon purple">🏋️</div>
+                            <div className="stat-icon purple"><Dumbbell size={22} /></div>
                             <div className="stat-content">
                                 <h4>Sessions</h4>
                                 <div className="stat-value">{workoutStats.totalSessions}</div>
                             </div>
                         </div>
                         <div className="stat-card">
-                            <div className="stat-icon green">📊</div>
+                            <div className="stat-icon green"><TrendingUp size={22} /></div>
                             <div className="stat-content">
                                 <h4>Total Volume</h4>
                                 <div className="stat-value">{(workoutStats.totalVolume / 1000).toFixed(1)}k kg</div>
                             </div>
                         </div>
                         <div className="stat-card">
-                            <div className="stat-icon orange">⏱</div>
+                            <div className="stat-icon orange"><Clock size={22} /></div>
                             <div className="stat-content">
                                 <h4>Avg Duration</h4>
                                 <div className="stat-value">{workoutStats.avgSessionDuration} min</div>
                             </div>
                         </div>
                         <div className="stat-card">
-                            <div className="stat-icon blue">💪</div>
+                            <div className="stat-icon blue"><Layers size={22} /></div>
                             <div className="stat-content">
                                 <h4>Total Sets</h4>
                                 <div className="stat-value">{workoutStats.totalSets}</div>
@@ -182,28 +190,28 @@ const StatisticsPage = () => {
                 <>
                     <div className="card-grid" style={{ marginBottom: 24 }}>
                         <div className="stat-card">
-                            <div className="stat-icon orange">🔥</div>
+                            <div className="stat-icon orange"><Flame size={22} /></div>
                             <div className="stat-content">
                                 <h4>Avg Daily Calories</h4>
                                 <div className="stat-value">{nutritionStats.avgDailyCalories}</div>
                             </div>
                         </div>
                         <div className="stat-card">
-                            <div className="stat-icon purple">🥩</div>
+                            <div className="stat-icon purple"><Beef size={22} /></div>
                             <div className="stat-content">
                                 <h4>Avg Daily Protein</h4>
                                 <div className="stat-value">{nutritionStats.avgDailyProtein}g</div>
                             </div>
                         </div>
                         <div className="stat-card">
-                            <div className="stat-icon green">📅</div>
+                            <div className="stat-icon green"><CalendarDays size={22} /></div>
                             <div className="stat-content">
                                 <h4>Days Tracked</h4>
                                 <div className="stat-value">{nutritionStats.daysTracked}</div>
                             </div>
                         </div>
                         <div className="stat-card">
-                            <div className="stat-icon blue">🍽️</div>
+                            <div className="stat-icon blue"><UtensilsCrossed size={22} /></div>
                             <div className="stat-content">
                                 <h4>Total Calories</h4>
                                 <div className="stat-value">{(nutritionStats.totalCalories / 1000).toFixed(1)}k</div>

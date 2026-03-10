@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import BodySVG from '../components/BodySVG';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart3, Crosshair } from 'lucide-react';
+import PageLoader from '../components/PageLoader';
 
 const periodOptions = [
     { label: '7 Days', days: 7 },
@@ -17,38 +19,32 @@ const BodyMapPage = () => {
     const [heatmap, setHeatmap] = useState<Record<string, number>>({});
     const [muscleStats, setMuscleStats] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
-        loadHeatmap();
+        let ignore = false;
+        setPageLoading(true);
+        const from = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString();
+        const to = new Date().toISOString();
+        API.get(`/analytics/body-heatmap?from=${from}&to=${to}`)
+            .then(({ data }) => { if (!ignore) setHeatmap(data.muscleFrequency || {}); })
+            .catch(console.error)
+            .finally(() => { if (!ignore) setPageLoading(false); });
+        return () => { ignore = true; };
     }, [periodDays]);
 
     useEffect(() => {
-        if (selectedMuscle) loadMuscleStats(selectedMuscle);
-    }, [selectedMuscle, periodDays]);
-
-    const loadHeatmap = async () => {
-        try {
-            const from = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString();
-            const to = new Date().toISOString();
-            const { data } = await API.get(`/analytics/body-heatmap?from=${from}&to=${to}`);
-            setHeatmap(data.muscleFrequency || {});
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const loadMuscleStats = async (muscle: string) => {
+        if (!selectedMuscle) return;
+        let ignore = false;
         setLoading(true);
-        try {
-            const from = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString();
-            const to = new Date().toISOString();
-            const { data } = await API.get(`/analytics/muscle/${muscle}?from=${from}&to=${to}`);
-            setMuscleStats(data);
-        } catch (err) {
-            console.error(err);
-        }
-        setLoading(false);
-    };
+        const from = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString();
+        const to = new Date().toISOString();
+        API.get(`/analytics/muscle/${selectedMuscle}?from=${from}&to=${to}`)
+            .then(({ data }) => { if (!ignore) setMuscleStats(data); })
+            .catch(console.error)
+            .finally(() => { if (!ignore) setLoading(false); });
+        return () => { ignore = true; };
+    }, [selectedMuscle, periodDays]);
 
     const handleSelectMuscle = (muscle: string) => {
         setSelectedMuscle(muscle === selectedMuscle ? '' : muscle);
@@ -56,13 +52,22 @@ const BodyMapPage = () => {
 
     const muscleLabel = (m: string) => m.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
+    // Scale based on whichever is larger: actual data peak or ~1 session/week for the period
+    const maxFreq = Math.max(0, ...Object.values(heatmap));
+    const periodBaseline = Math.ceil(periodDays / 7);
+    const scaleMax = Math.max(maxFreq, periodBaseline);
+    const step = Math.max(1, Math.ceil(scaleMax / 4));
+    const thresholds: [number, number, number] = [step, step * 2, step * 3];
+
     const heatmapLegend = [
         { color: '#3a3f5c', label: 'Not trained' },
-        { color: '#90caf9', label: '1-2 sessions' },
-        { color: '#66bb6a', label: '3-4 sessions' },
-        { color: '#ffb74d', label: '5-7 sessions' },
-        { color: '#ef5350', label: '8+ sessions' },
+        { color: '#90caf9', label: `1\u2013${thresholds[0]} sessions` },
+        { color: '#66bb6a', label: `${thresholds[0] + 1}\u2013${thresholds[1]} sessions` },
+        { color: '#ffb74d', label: `${thresholds[1] + 1}\u2013${thresholds[2]} sessions` },
+        { color: '#ef5350', label: `${thresholds[2] + 1}+ sessions` },
     ];
+
+    if (pageLoading) return <PageLoader />;
 
     return (
         <div className="fade-in">
@@ -106,6 +111,7 @@ const BodyMapPage = () => {
                             muscleFrequency={heatmap}
                             selectedMuscle={selectedMuscle}
                             onSelectMuscle={handleSelectMuscle}
+                            thresholds={thresholds}
                         />
                     </div>
 
@@ -125,7 +131,7 @@ const BodyMapPage = () => {
                             <div className="empty-state"><p>Loading...</p></div>
                         ) : (
                             <>
-                                <h3>📊 {muscleLabel(selectedMuscle)} Analysis</h3>
+                                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BarChart3 size={20} /> {muscleLabel(selectedMuscle)} Analysis</h3>
 
                                 <div className="muscle-stat-row">
                                     <span className="label">Total Sessions</span>
@@ -175,7 +181,7 @@ const BodyMapPage = () => {
                         )
                     ) : (
                         <div className="empty-state" style={{ padding: '80px 24px' }}>
-                            <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
+                            <div style={{ marginBottom: 16 }}><Crosshair size={48} strokeWidth={1.5} /></div>
                             <h4>Select a Muscle Group</h4>
                             <p>Click on any muscle in the body map to see detailed analytics for that area</p>
                         </div>

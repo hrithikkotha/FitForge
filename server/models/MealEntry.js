@@ -28,6 +28,10 @@ const mealEntrySchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    servingUnit: {
+        type: String,
+        default: 'g',
+    },
     calories: {
         type: Number,
         default: 0,

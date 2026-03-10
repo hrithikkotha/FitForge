@@ -40,7 +40,9 @@ router.post('/', protect, async (req, res) => {
         const food = await FoodItem.findById(foodItemId);
         if (!food) return res.status(404).json({ message: 'Food item not found' });
 
-        const multiplier = quantity / 100;
+        const gramsPerServing = food.gramsPerServing || 1;
+        const totalGrams = quantity * gramsPerServing;
+        const multiplier = totalGrams / 100;
         const meal = await MealEntry.create({
             userId: req.user._id,
             date,
@@ -48,6 +50,7 @@ router.post('/', protect, async (req, res) => {
             foodItemId,
             foodName: food.name,
             quantity,
+            servingUnit: food.servingUnit || 'g',
             calories: Math.round(food.caloriesPer100g * multiplier),
             protein: Math.round(food.proteinPer100g * multiplier * 10) / 10,
             carbs: Math.round(food.carbsPer100g * multiplier * 10) / 10,
@@ -72,10 +75,13 @@ router.put('/:id', protect, async (req, res) => {
             if (!food) return res.status(404).json({ message: 'Food item not found' });
 
             const qty = req.body.quantity ?? meal.quantity;
-            const multiplier = qty / 100;
+            const gramsPerServing = food.gramsPerServing || 1;
+            const totalGrams = qty * gramsPerServing;
+            const multiplier = totalGrams / 100;
             meal.foodItemId = food._id;
             meal.foodName = food.name;
             meal.quantity = qty;
+            meal.servingUnit = food.servingUnit || 'g';
             meal.calories = Math.round(food.caloriesPer100g * multiplier);
             meal.protein = Math.round(food.proteinPer100g * multiplier * 10) / 10;
             meal.carbs = Math.round(food.carbsPer100g * multiplier * 10) / 10;

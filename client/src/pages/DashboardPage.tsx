@@ -3,18 +3,21 @@ import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { Dumbbell, Flame, TrendingUp, Calendar } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import PageLoader from '../components/PageLoader';
 
 const DashboardPage = () => {
     const { user } = useAuth();
     const [stats, setStats] = useState<any>(null);
     const [nutritionStats, setNutritionStats] = useState<any>(null);
     const [recentWorkouts, setRecentWorkouts] = useState<any[]>([]);
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
         loadDashboardData();
     }, []);
 
     const loadDashboardData = async () => {
+        setPageLoading(true);
         try {
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
             const today = new Date().toISOString();
@@ -30,15 +33,19 @@ const DashboardPage = () => {
             setRecentWorkouts(recentRes.data.slice(0, 5));
         } catch (err) {
             console.error('Failed to load dashboard data:', err);
+        } finally {
+            setPageLoading(false);
         }
     };
 
     const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
+    if (pageLoading) return <PageLoader />;
+
     return (
         <div className="fade-in">
             <div className="page-header">
-                <h2>Welcome back, {user?.displayName || user?.username}! 👋</h2>
+                <h2>Welcome back, {user?.displayName || user?.username}!</h2>
                 <p>Here's your fitness overview for the last 30 days</p>
             </div>
 

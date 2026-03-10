@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Save } from 'lucide-react';
+import { useToast, ToastContainer } from '../components/Toast';
 
 const ProfilePage = () => {
     const { user, updateProfile, logout } = useAuth();
@@ -9,7 +10,7 @@ const ProfilePage = () => {
     const [height, setHeight] = useState(String(user?.height || ''));
     const [age, setAge] = useState(String(user?.age || ''));
     const [dailyCalorieGoal, setDailyCalorieGoal] = useState(String(user?.dailyCalorieGoal || 2000));
-    const [message, setMessage] = useState('');
+    const { toasts, show: showToast, dismiss } = useToast();
 
     const handleSave = async () => {
         try {
@@ -20,15 +21,15 @@ const ProfilePage = () => {
                 age: parseInt(age) || 0,
                 dailyCalorieGoal: parseInt(dailyCalorieGoal) || 2000,
             } as any);
-            setMessage('Profile updated successfully!');
-            setTimeout(() => setMessage(''), 3000);
+            showToast('Profile updated successfully');
         } catch (err) {
-            setMessage('Failed to update profile');
+            showToast('Failed to update profile', 'error');
         }
     };
 
     return (
         <div className="fade-in">
+            <ToastContainer toasts={toasts} dismiss={dismiss} />
             <div className="page-header">
                 <h2>Profile</h2>
                 <p>Manage your account and fitness goals</p>
@@ -55,17 +56,6 @@ const ProfilePage = () => {
                     <div className="card-header">
                         <h3>Edit Profile</h3>
                     </div>
-
-                    {message && (
-                        <div style={{
-                            padding: '10px 16px', borderRadius: 8, marginBottom: 16, fontSize: '0.85rem',
-                            background: message.includes('success') ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
-                            color: message.includes('success') ? 'var(--accent-success)' : 'var(--accent-danger)',
-                            border: `1px solid ${message.includes('success') ? 'rgba(0,230,118,0.3)' : 'rgba(255,82,82,0.3)'}`,
-                        }}>
-                            {message}
-                        </div>
-                    )}
 
                     <div className="form-group">
                         <label>Display Name</label>
