@@ -23,34 +23,56 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
     const [viewYear, setViewYear] = useState(parsed.getFullYear());
     const [viewMonth, setViewMonth] = useState(parsed.getMonth());
     const [open, setOpen] = useState(false);
-    const [dropUp, setDropUp] = useState(false);
+    const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number }>({ left: 0, width: 296 });
     const ref = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close on outside click
     useEffect(() => {
         const handler = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+            if (ref.current && !ref.current.contains(e.target as Node) &&
+                dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    // Auto-position: flip above if not enough space below, and ensure visibility
+    // Calculate fixed position relative to viewport
     useEffect(() => {
         if (!open || !ref.current) return;
-        const triggerRect = ref.current.getBoundingClientRect();
-        const dropdownHeight = 380; // approximate max height of calendar
-        const spaceBelow = window.innerHeight - triggerRect.bottom;
-        const spaceAbove = triggerRect.top;
-        setDropUp(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+        const calculate = () => {
+            const rect = ref.current!.getBoundingClientRect();
+            const dropdownHeight = 370;
+            const dropdownWidth = Math.min(296, window.innerWidth - 24);
+            const spaceBelow = window.innerHeight - rect.bottom - 8;
+            const spaceAbove = rect.top - 8;
 
-        // Scroll trigger into view so the calendar is visible
-        requestAnimationFrame(() => {
-            if (dropdownRef.current) {
-                dropdownRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Center horizontally on the trigger, clamped to viewport
+            let left = rect.left + rect.width / 2 - dropdownWidth / 2;
+            left = Math.max(12, Math.min(left, window.innerWidth - dropdownWidth - 12));
+
+            if (spaceBelow >= dropdownHeight) {
+                setPos({ top: rect.bottom + 6, left, width: dropdownWidth });
+            } else if (spaceAbove >= dropdownHeight) {
+                setPos({ bottom: window.innerHeight - rect.top + 6, left, width: dropdownWidth });
+            } else {
+                // Neither side fits fully — pick whichever has more room
+                if (spaceBelow >= spaceAbove) {
+                    setPos({ top: rect.bottom + 6, left, width: dropdownWidth });
+                } else {
+                    setPos({ bottom: window.innerHeight - rect.top + 6, left, width: dropdownWidth });
+                }
             }
-        });
+        };
+        calculate();
+        window.addEventListener('scroll', calculate, true);
+        window.addEventListener('resize', calculate);
+        return () => {
+            window.removeEventListener('scroll', calculate, true);
+            window.removeEventListener('resize', calculate);
+        };
     }, [open]);
 
     // Sync view when value changes externally
@@ -124,7 +146,17 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
             </button>
 
             {open && (
-                <div ref={dropdownRef} className={`datepicker-dropdown${dropUp ? ' datepicker-dropdown--up' : ''}`}>
+                <div
+                    ref={dropdownRef}
+                    className="datepicker-dropdown"
+                    style={{
+                        position: 'fixed',
+                        ...(pos.top != null ? { top: pos.top } : {}),
+                        ...(pos.bottom != null ? { bottom: pos.bottom } : {}),
+                        left: pos.left,
+                        width: pos.width,
+                    }}
+                >
                     {/* Header */}
                     <div className="datepicker-header">
                         <button type="button" className="datepicker-nav" onClick={prevMonth}>
