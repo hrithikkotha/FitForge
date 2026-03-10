@@ -23,7 +23,9 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
     const [viewYear, setViewYear] = useState(parsed.getFullYear());
     const [viewMonth, setViewMonth] = useState(parsed.getMonth());
     const [open, setOpen] = useState(false);
+    const [dropUp, setDropUp] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close on outside click
     useEffect(() => {
@@ -33,6 +35,23 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    // Auto-position: flip above if not enough space below, and ensure visibility
+    useEffect(() => {
+        if (!open || !ref.current) return;
+        const triggerRect = ref.current.getBoundingClientRect();
+        const dropdownHeight = 380; // approximate max height of calendar
+        const spaceBelow = window.innerHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        setDropUp(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+
+        // Scroll trigger into view so the calendar is visible
+        requestAnimationFrame(() => {
+            if (dropdownRef.current) {
+                dropdownRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }, [open]);
 
     // Sync view when value changes externally
     useEffect(() => {
@@ -105,7 +124,7 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
             </button>
 
             {open && (
-                <div className="datepicker-dropdown">
+                <div ref={dropdownRef} className={`datepicker-dropdown${dropUp ? ' datepicker-dropdown--up' : ''}`}>
                     {/* Header */}
                     <div className="datepicker-header">
                         <button type="button" className="datepicker-nav" onClick={prevMonth}>

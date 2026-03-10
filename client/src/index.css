@@ -588,6 +588,17 @@ select.form-input {
   animation: datepicker-in 0.2s ease;
 }
 
+.datepicker-dropdown--up {
+  top: auto;
+  bottom: calc(100% + 6px);
+  animation: datepicker-in-up 0.2s ease;
+}
+
+@keyframes datepicker-in-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
 @media (max-width: 400px) {
   .datepicker-dropdown {
     left: 0;
@@ -596,8 +607,15 @@ select.form-input {
     padding: 12px;
     animation: datepicker-in-mobile 0.2s ease;
   }
+  .datepicker-dropdown--up {
+    animation: datepicker-in-up-mobile 0.2s ease;
+  }
   @keyframes datepicker-in-mobile {
     from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes datepicker-in-up-mobile {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
   .datepicker-cell {
