@@ -22,4 +22,18 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+// Factory: authorizeRoles('admin', 'super_admin') etc.
+const authorizeRoles = (...roles) => (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ message: 'Not authorized' });
+    }
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Access denied: insufficient role' });
+    }
+    if (req.user.status !== 'active') {
+        return res.status(403).json({ message: 'Account is not active' });
+    }
+    next();
+};
+
+module.exports = { protect, authorizeRoles };

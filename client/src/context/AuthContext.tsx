@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import API from '../api/axios';
 
+export type UserRole = 'user' | 'admin' | 'super_admin';
+export type UserStatus = 'pending' | 'active' | 'suspended';
+
 interface User {
     _id: string;
     username: string;
@@ -10,6 +13,10 @@ interface User {
     height: number;
     age: number;
     dailyCalorieGoal: number;
+    role: UserRole;
+    status: UserStatus;
+    gymName: string;
+    adminId: string | null;
     token: string;
 }
 
@@ -17,7 +24,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (username: string, email: string, password: string) => Promise<void>;
+    register: (username: string, email: string, password: string) => Promise<{ pending: boolean }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
 }
@@ -40,12 +47,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await API.post('/auth/login', { email, password });
         setUser(data);
         localStorage.setItem('fitforge_user', JSON.stringify(data));
+        // Navigation handled in AuthGuard / ProtectedLayout based on role
     };
 
-    const register = async (username: string, email: string, password: string) => {
+    const register = async (username: string, email: string, password: string): Promise<{ pending: boolean }> => {
         const { data } = await API.post('/auth/register', { username, email, password });
+        if (data.pending) {
+            // Account created but awaiting Super Admin approval — do NOT log in
+            return { pending: true };
+        }
+        // Fallback: if somehow token is returned (e.g. future change), log in normally
         setUser(data);
         localStorage.setItem('fitforge_user', JSON.stringify(data));
+        return { pending: false };
     };
 
     const logout = () => {
@@ -71,4 +85,11 @@ export const useAuth = () => {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error('useAuth must be used within AuthProvider');
     return ctx;
+};
+
+/** Returns the home route for the given role */
+export const getRoleHome = (role: UserRole): string => {
+    if (role === 'super_admin') return '/super-admin/dashboard';
+    if (role === 'admin') return '/admin/dashboard';
+    return '/dashboard';
 };

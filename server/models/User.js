@@ -41,6 +41,25 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 2000,
     },
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'super_admin'],
+        default: 'user',
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'active', 'suspended'],
+        default: 'active',
+    },
+    adminId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null,
+    },
+    gymName: {
+        type: String,
+        default: '',
+    },
 }, {
     timestamps: true,
 });

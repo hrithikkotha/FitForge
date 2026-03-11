@@ -9,7 +9,23 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-// POST /api/auth/register
+const buildUserResponse = (user, token) => ({
+    _id: user._id,
+    username: user.username,
+    email: user.email,
+    displayName: user.displayName,
+    weight: user.weight,
+    height: user.height,
+    age: user.age,
+    dailyCalorieGoal: user.dailyCalorieGoal,
+    role: user.role,
+    status: user.status,
+    gymName: user.gymName,
+    adminId: user.adminId,
+    token,
+});
+
+// POST /api/auth/register — regular user (status: pending until Super Admin approves)
 router.post('/register', async (req, res) => {
     try {
         const { username, email, password, displayName } = req.body;
@@ -19,20 +35,50 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'User already exists with that email or username' });
         }
 
-        const user = await User.create({
+        await User.create({
             username,
             email,
             password,
             displayName: displayName || username,
+            role: 'user',
+            status: 'pending',   // Super Admin must approve before login
         });
 
+        // Return pending status — no token issued yet
         res.status(201).json({
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            displayName: user.displayName,
-            token: generateToken(user._id),
+            pending: true,
+            message: 'Account created! Your account is under review by the FitForge team. You will be able to log in once approved.',
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// POST /api/auth/admin-register — gym owner requests access (status: pending)
+router.post('/admin-register', async (req, res) => {
+    try {
+        const { username, email, password, displayName, gymName } = req.body;
+
+        if (!gymName || !gymName.trim()) {
+            return res.status(400).json({ message: 'Gym name is required' });
+        }
+
+        const userExists = await User.findOne({ $or: [{ email }, { username }] });
+        if (userExists) {
+            return res.status(400).json({ message: 'An account already exists with that email or username' });
+        }
+
+        await User.create({
+            username,
+            email,
+            password,
+            displayName: displayName || username,
+            gymName: gymName.trim(),
+            role: 'admin',
+            status: 'pending',   // must be approved by Super Admin before login
+        });
+
+        res.status(201).json({ message: 'Registration submitted. You will be notified once your account is approved.' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -44,21 +90,29 @@ router.post('/login', async (req, res) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
-        if (user && (await user.matchPassword(password))) {
-            res.json({
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                displayName: user.displayName,
-                weight: user.weight,
-                height: user.height,
-                age: user.age,
-                dailyCalorieGoal: user.dailyCalorieGoal,
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        if (!user || !(await user.matchPassword(password))) {
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
+
+        if (user.status === 'pending') {
+            return res.status(403).json({ message: 'Your account is pending approval. Please wait for Super Admin to approve your account.' });
+        }
+        if (user.status === 'suspended') {
+            return res.status(403).json({ message: 'Your account has been suspended. Please contact support.' });
+        }
+
+        // If user belongs to an admin, check if that admin's account is still active
+        if (user.role === 'user' && user.adminId) {
+            const parentAdmin = await User.findById(user.adminId).select('status gymName');
+            if (parentAdmin && parentAdmin.status === 'suspended') {
+                return res.status(403).json({
+                    message: `Access to this platform has been temporarily suspended by your gym (${parentAdmin.gymName || 'your gym'}). Please contact your gym administrator for more information.`,
+                    code: 'GYM_SUSPENDED',
+                });
+            }
+        }
+
+        res.json(buildUserResponse(user, generateToken(user._id)));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -74,7 +128,7 @@ router.get('/me', protect, async (req, res) => {
     }
 });
 
-// PUT /api/auth/me
+// PUT /api/auth/me — profile update (user role only)
 router.put('/me', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -91,16 +145,7 @@ router.put('/me', protect, async (req, res) => {
         }
 
         const updatedUser = await user.save();
-        res.json({
-            _id: updatedUser._id,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            displayName: updatedUser.displayName,
-            weight: updatedUser.weight,
-            height: updatedUser.height,
-            age: updatedUser.age,
-            dailyCalorieGoal: updatedUser.dailyCalorieGoal,
-        });
+        res.json(buildUserResponse(updatedUser, generateToken(updatedUser._id)));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
