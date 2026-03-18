@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth, getRoleHome } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import ForceLogoutOverlay from './components/ForceLogoutOverlay';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkoutsPage from './pages/WorkoutsPage';
@@ -39,7 +40,6 @@ const ProtectedLayout = () => {
     }
 
     if (!user) return <Navigate to="/" replace />;
-    // If somehow a non-user visits /dashboard, send them to their correct home
     if (user.role !== 'user') return <Navigate to={getRoleHome(user.role)} replace />;
 
     return (
@@ -48,8 +48,11 @@ const ProtectedLayout = () => {
                 <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
                     {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
-                    onClick={() => navigate('/dashboard')} title="Go to Dashboard">
+                <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+                    onClick={() => { navigate('/dashboard'); setSidebarOpen(false); }}
+                    title="Go to Dashboard"
+                >
                     <img src="/logo.jpg" alt="FitForge" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
                     <h1>FitForge</h1>
                 </div>
@@ -99,6 +102,9 @@ function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
+                {/* Global force-logout overlay — renders on top of everything */}
+                <ForceLogoutOverlay />
+
                 <Routes>
                     {/* Public */}
                     <Route path="/" element={<AuthGuard />} />

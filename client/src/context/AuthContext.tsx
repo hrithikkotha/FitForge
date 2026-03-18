@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import API from '../api/axios';
 
 export type UserRole = 'user' | 'admin' | 'super_admin';
@@ -23,7 +23,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<{ displayName: string }>;
     register: (username: string, email: string, password: string) => Promise<{ pending: boolean }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
@@ -43,28 +43,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const logout = useCallback(() => {
+        setUser(null);
+        localStorage.removeItem('fitforge_user');
+    }, []);
+
+    const login = async (email: string, password: string): Promise<{ displayName: string }> => {
         const { data } = await API.post('/auth/login', { email, password });
         setUser(data);
         localStorage.setItem('fitforge_user', JSON.stringify(data));
-        // Navigation handled in AuthGuard / ProtectedLayout based on role
+        return { displayName: data.displayName || data.username };
     };
 
     const register = async (username: string, email: string, password: string): Promise<{ pending: boolean }> => {
         const { data } = await API.post('/auth/register', { username, email, password });
         if (data.pending) {
-            // Account created but awaiting Super Admin approval — do NOT log in
             return { pending: true };
         }
-        // Fallback: if somehow token is returned (e.g. future change), log in normally
         setUser(data);
         localStorage.setItem('fitforge_user', JSON.stringify(data));
         return { pending: false };
-    };
-
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('fitforge_user');
     };
 
     const updateProfile = async (updates: Partial<User>) => {

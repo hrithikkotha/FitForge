@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, getRoleHome } from '../context/AuthContext';
 import { CheckCircle } from 'lucide-react';
+import { useToast, ToastContainer } from '../components/Toast';
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -12,16 +13,34 @@ const AuthPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [registrationPending, setRegistrationPending] = useState(false);
+    const [suspendedMsg, setSuspendedMsg] = useState('');
     const { login, register } = useAuth();
     const navigate = useNavigate();
+    const { toasts, show: showToast, dismiss } = useToast();
+
+    // Read and clear any suspend/delete message left by the interceptor
+    useEffect(() => {
+        const msg = localStorage.getItem('fitforge_suspended_msg');
+        if (msg) {
+            setSuspendedMsg(msg);
+            localStorage.removeItem('fitforge_suspended_msg');
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuspendedMsg(''); // clear banner on new attempt
         setLoading(true);
         try {
             if (isLogin) {
-                await login(email, password);
+                const { displayName } = await login(email, password);
+                showToast(`Welcome back, ${displayName}! 👋`, 'success');
+                const stored = localStorage.getItem('fitforge_user');
+                if (stored) {
+                    const u = JSON.parse(stored);
+                    setTimeout(() => navigate(getRoleHome(u.role), { replace: true }), 500);
+                }
             } else {
                 if (!username.trim()) {
                     setError('Username is required');
@@ -80,6 +99,7 @@ const AuthPage = () => {
 
     return (
         <div className="auth-page">
+            <ToastContainer toasts={toasts} dismiss={dismiss} />
             <div className="auth-container fade-in">
                 <div className="auth-brand">
                     <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon-lg" />
@@ -88,6 +108,17 @@ const AuthPage = () => {
                 </div>
 
                 <div className="auth-card">
+                    {/* Suspended / deleted account banner */}
+                    {suspendedMsg && (
+                        <div className="suspended-banner">
+                            <span className="suspended-banner-icon">⛔</span>
+                            <div className="suspended-banner-content">
+                                <div className="suspended-banner-title">Account Access Restricted</div>
+                                <div className="suspended-banner-msg">{suspendedMsg}</div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="tabs">
                         <button
                             className={`tab ${isLogin ? 'active' : ''}`}

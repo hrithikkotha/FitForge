@@ -14,8 +14,11 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    const handleLogout = () => {
+    const confirmLogout = () => {
+        setShowLogoutModal(false);
+        if (onClose) onClose();
         logout();
         navigate('/');
     };
@@ -54,56 +57,79 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     ];
 
     return (
-        <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-            <div
-                className="sidebar-logo"
-                onClick={() => {
-                    navigate('/dashboard');
-                    if (onClose) onClose();
-                }}
-                style={{ cursor: 'pointer' }}
-                title="Go to Dashboard"
-            >
-                <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon" />
-                <h1>FitForge</h1>
-            </div>
-
-            <nav className="sidebar-nav">
-                {navItems.map(item => (
-                    <NavLink
-                        key={item.path}
-                        to={item.path}
-                        onClick={onClose}
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    >
-                        {item.icon}
-                        {item.label}
-                    </NavLink>
-                ))}
-
-                <div style={{ flex: 1 }}></div>
-
-                <div className="theme-toggle-container">
-                    <button onClick={toggleTheme} className="theme-toggle-btn">
-                        <Palette size={18} className="theme-icon" />
-                        <span>{isAlternate ? 'Change Theme' : 'Change Theme'}</span>
-                    </button>
-                </div>
-            </nav>
-
-            <div className="sidebar-footer">
-                <div className="sidebar-user" onClick={handleLogout} title="Click to logout">
-                    <div className="user-avatar">
-                        {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+        <>
+            {/* Logout confirmation modal */}
+            {showLogoutModal && (
+                <div className="logout-modal-overlay" onClick={() => setShowLogoutModal(false)}>
+                    <div className="logout-modal" onClick={e => e.stopPropagation()}>
+                        <div className="logout-modal-icon">
+                            <LogOut size={24} />
+                        </div>
+                        <h3>Log Out?</h3>
+                        <p>You'll be returned to the sign-in page. Any unsaved progress may be lost.</p>
+                        <div className="logout-modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setShowLogoutModal(false)}>
+                                Cancel
+                            </button>
+                            <button className="btn btn-danger" onClick={confirmLogout}>
+                                <LogOut size={15} /> Log Out
+                            </button>
+                        </div>
                     </div>
-                    <div className="user-info">
-                        <div className="name">{user?.displayName || user?.username}</div>
-                        <div className="email">{user?.email}</div>
-                    </div>
-                    <LogOut size={16} style={{ color: 'var(--text-secondary)' }} />
                 </div>
-            </div>
-        </aside>
+            )}
+
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+                <div
+                    className="sidebar-logo"
+                    onClick={() => {
+                        navigate('/dashboard');
+                        if (onClose) onClose();
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    title="Go to Dashboard"
+                >
+                    <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon" />
+                    <h1>FitForge</h1>
+                </div>
+
+                <nav className="sidebar-nav">
+                    {navItems.map(item => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            onClick={onClose}
+                            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                        >
+                            {item.icon}
+                            {item.label}
+                        </NavLink>
+                    ))}
+
+                    <div style={{ flex: 1 }}></div>
+
+                    <div className="theme-toggle-container">
+                        <button onClick={toggleTheme} className="theme-toggle-btn">
+                            <Palette size={18} className="theme-icon" />
+                            <span>Change Theme</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <div className="sidebar-footer">
+                    <div className="sidebar-user" onClick={() => setShowLogoutModal(true)} title="Click to logout">
+                        <div className="user-avatar">
+                            {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div className="user-info">
+                            <div className="name">{user?.displayName || user?.username}</div>
+                            <div className="email">{user?.email}</div>
+                        </div>
+                        <LogOut size={16} style={{ color: 'var(--text-secondary)' }} />
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 };
 
