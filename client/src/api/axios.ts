@@ -17,6 +17,8 @@ API.interceptors.request.use((config) => {
 });
 
 // ── Response interceptor: force-logout suspended / deleted accounts ────────
+let _forceLogoutFired = false;
+
 API.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -32,19 +34,24 @@ API.interceptors.response.use(
             (status === 401 && message.toLowerCase().includes('not authorized')) ||
             (status === 403 && message.toLowerCase().includes('not authorized'));
 
-        if (isSuspended) {
+        if (isSuspended && !_forceLogoutFired) {
+            _forceLogoutFired = true;
             window.dispatchEvent(
                 new CustomEvent('fitforge_force_logout', {
                     detail: 'Your account has been suspended. Please contact your gym admin.',
                 })
             );
-        } else if (isDeleted && localStorage.getItem('fitforge_user')) {
+            // Reset after a short delay so the guard doesn't block future sessions
+            setTimeout(() => { _forceLogoutFired = false; }, 10_000);
+        } else if (isDeleted && localStorage.getItem('fitforge_user') && !_forceLogoutFired) {
+            _forceLogoutFired = true;
             // Only fire if we think we're logged in (avoids triggering on normal 401s)
             window.dispatchEvent(
                 new CustomEvent('fitforge_force_logout', {
                     detail: 'Your account no longer exists. Please contact support.',
                 })
             );
+            setTimeout(() => { _forceLogoutFired = false; }, 10_000);
         }
 
         return Promise.reject(error);

@@ -26,11 +26,13 @@ const ForceLogoutOverlay = () => {
     // Listen for the custom event
     useEffect(() => {
         const handler = (e: Event) => {
+            // If the overlay is already showing, don't reset the countdown
+            if (hasLoggedOut.current) return;
             const msg = (e as CustomEvent<string>).detail || 'Your session has ended.';
             reasonRef.current = msg;
             hasLoggedOut.current = false;
             setReason(msg);
-            setCount(TOTAL);
+            setCount(prev => (prev > 0 && prev < TOTAL ? prev : TOTAL)); // don't reset if already counting
             setVisible(true);
         };
         window.addEventListener('fitforge_force_logout', handler);
