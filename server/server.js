@@ -20,6 +20,7 @@ app.use('/api/workouts', require('./routes/workouts'));
 app.use('/api/foods', require('./routes/foods'));
 app.use('/api/meals', require('./routes/meals'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/voice', require('./routes/voice'));
 app.use('/api/super-admin', require('./routes/superAdmin'));
 app.use('/api/admin', require('./routes/adminPanel'));
 

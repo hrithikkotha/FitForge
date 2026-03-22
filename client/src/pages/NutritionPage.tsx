@@ -5,6 +5,7 @@ import { Plus, Trash2, X, Search, Sunrise, Sun, Moon, Apple, UtensilsCrossed } f
 import { useToast, ToastContainer } from '../components/Toast';
 import PageLoader from '../components/PageLoader';
 import DatePicker from '../components/DatePicker';
+import VoiceAssistant from '../components/VoiceAssistant';
 
 interface FoodItem {
     _id: string;
@@ -526,6 +527,15 @@ const NutritionPage = () => {
                     </div>
                 </div>
             )}
+
+            <VoiceAssistant
+                context={{
+                    exercises: [],
+                    workouts: [],
+                    foods,
+                }}
+                onRefresh={loadData}
+            />
         </div>
     );
 };

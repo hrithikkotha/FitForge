@@ -4,6 +4,7 @@ import { Plus, Dumbbell, Trash2, X, Edit3, Save, ChevronDown, ChevronUp } from '
 import { useToast, ToastContainer } from '../components/Toast';
 import PageLoader from '../components/PageLoader';
 import DatePicker from '../components/DatePicker';
+import VoiceAssistant from '../components/VoiceAssistant';
 
 interface Exercise {
     _id: string;
@@ -519,6 +520,15 @@ const WorkoutsPage = () => {
                     </div>
                 </div>
             )}
+
+            <VoiceAssistant
+                context={{
+                    exercises,
+                    workouts,
+                    activeWorkoutId: expandedWorkout,
+                }}
+                onRefresh={loadData}
+            />
         </div>
     );
 };
