@@ -4,14 +4,14 @@ import type { VoiceAction } from '../utils/voiceCommandParser';
 
 export interface VoiceAIResult {
     transcript: string;
-    action: VoiceAction;
+    actions: VoiceAction[];
 }
 
 export interface UseVoiceCommandReturn {
     isListening: boolean;
     isTranscribing: boolean;
     transcript: string;
-    audioLevel: number;   // 0–1 for visualization
+    audioLevelRef: React.RefObject<number>;   // ref for 60fps reads without re-renders
     error: string | null;
     isSupported: boolean;
     start: () => void;
@@ -57,7 +57,7 @@ const useVoiceCommand = ({
     const [isListening, setIsListening] = useState(false);
     const [isTranscribing, setIsTranscribing] = useState(false);
     const [transcript, setTranscript] = useState('');
-    const [audioLevel, setAudioLevel] = useState(0);
+    const audioLevelRef = useRef(0);
     const [error, setError] = useState<string | null>(null);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -83,7 +83,7 @@ const useVoiceCommand = ({
     const stopAudioAnalysis = useCallback(() => {
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = 0;
-        setAudioLevel(0);
+        audioLevelRef.current = 0;
     }, []);
 
     const releaseStream = useCallback(() => {
@@ -113,9 +113,13 @@ const useVoiceCommand = ({
 
             if (data.transcript) {
                 setTranscript(data.transcript);
+                // Support both `actions` array and legacy `action` single
+                const actions: VoiceAction[] = Array.isArray(data.actions)
+                    ? data.actions
+                    : data.action ? [data.action] : [];
                 onResultRef.current?.({
                     transcript: data.transcript,
-                    action: data.action,
+                    actions,
                 });
             } else {
                 setError('No speech detected. Try again.');
@@ -170,7 +174,7 @@ const useVoiceCommand = ({
                 let sum = 0;
                 for (let i = 0; i < bufferLength; i++) sum += dataArray[i] * dataArray[i];
                 const rms = Math.sqrt(sum / bufferLength) / 255;
-                setAudioLevel(rms);
+                audioLevelRef.current = rms;
 
                 // Silence detection
                 if (rms > silenceThreshold) {
@@ -266,7 +270,7 @@ const useVoiceCommand = ({
         };
     }, []);
 
-    return { isListening, isTranscribing, transcript, audioLevel, error, isSupported, start, stop };
+    return { isListening, isTranscribing, transcript, audioLevelRef, error, isSupported, start, stop };
 };
 
 export default useVoiceCommand;

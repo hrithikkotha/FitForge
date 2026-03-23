@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     LayoutDashboard, Dumbbell, Utensils, Activity,
-    BarChart3, User, LogOut, Palette
+    BarChart3, User, LogOut, Palette, Bot
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -53,6 +53,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         { path: '/nutrition', label: 'Nutrition', icon: <Utensils size={20} /> },
         { path: '/body-map', label: 'Body Map', icon: <Activity size={20} /> },
         { path: '/stats', label: 'Statistics', icon: <BarChart3 size={20} /> },
+        { path: '/ai-assistant', label: 'AI Assistant', icon: <Bot size={20} /> },
         { path: '/profile', label: 'Profile', icon: <User size={20} /> },
     ];
 

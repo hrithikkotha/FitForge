@@ -385,19 +385,37 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
         }
     }, [onActionComplete, onRefresh]);
 
-    const handleVoiceResult = useCallback((result: VoiceAIResult) => {
-        const { action } = result;
+    const handleVoiceResult = useCallback(async (result: VoiceAIResult) => {
+        const { actions } = result;
 
-        if (action && action.type !== 'UNKNOWN') {
-            executeAction(action);
-        } else {
-            const msg = action?.message || `Didn't understand: "${result.transcript}"`;
+        if (!actions || actions.length === 0) {
+            const msg = `Didn't understand: "${result.transcript}"`;
             setFeedback(msg);
             onActionComplete?.({
                 success: false,
-                action: action || { type: 'UNKNOWN', description: result.transcript },
+                action: { type: 'UNKNOWN', description: result.transcript },
                 message: msg,
             });
+            return;
+        }
+
+        // Filter out UNKNOWN actions if there are real ones alongside
+        const validActions = actions.filter(a => a.type !== 'UNKNOWN');
+        const toExecute = validActions.length > 0 ? validActions : actions;
+
+        // Execute each action sequentially
+        for (const action of toExecute) {
+            if (action.type === 'UNKNOWN') {
+                const msg = action.message || `Didn't understand: "${result.transcript}"`;
+                setFeedback(msg);
+                onActionComplete?.({
+                    success: false,
+                    action,
+                    message: msg,
+                });
+            } else {
+                await executeAction(action);
+            }
         }
     }, [executeAction, onActionComplete]);
 

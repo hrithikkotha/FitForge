@@ -26,12 +26,14 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
     const [showPanel, setShowPanel] = useState(false);
     const [history, setHistory] = useState<{ text: string; type: 'success' | 'error' | 'info' }[]>([]);
     const historyEndRef = useRef<HTMLDivElement>(null);
+    const waveformRef = useRef<HTMLDivElement>(null);
+    const animRef = useRef<number>(0);
 
     const {
         isListening,
         isTranscribing,
         transcript,
-        audioLevel,
+        audioLevelRef,
         error,
         isSupported,
         start,
@@ -80,6 +82,32 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
 
     const isBusy = isListening || isTranscribing || processing;
 
+    // Drive waveform bars via direct DOM updates — avoids re-rendering at 60fps
+    useEffect(() => {
+        if (!isListening) {
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+            return;
+        }
+        const bars = 5;
+        const animate = () => {
+            const container = waveformRef.current;
+            if (container) {
+                const level = audioLevelRef.current;
+                for (let i = 0; i < bars; i++) {
+                    const bar = container.children[i] as HTMLElement;
+                    if (!bar) continue;
+                    const center = Math.abs(i - Math.floor(bars / 2));
+                    const base = 0.2;
+                    const h = Math.min(1, base + level * (1 - base) * (1 - center * 0.15));
+                    bar.style.height = `${h * 100}%`;
+                }
+            }
+            animRef.current = requestAnimationFrame(animate);
+        };
+        animRef.current = requestAnimationFrame(animate);
+        return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+    }, [isListening, audioLevelRef]);
+
     if (!isSupported) return null;
 
     const toggleListening = () => {
@@ -91,15 +119,6 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
             setShowPanel(true);
         }
     };
-
-    // Generate waveform bars based on audio level
-    const bars = 5;
-    const barHeights = Array.from({ length: bars }, (_, i) => {
-        const center = Math.abs(i - Math.floor(bars / 2));
-        const base = 0.2;
-        const level = base + audioLevel * (1 - base) * (1 - center * 0.15);
-        return Math.min(1, level);
-    });
 
     return (
         <>
@@ -150,13 +169,9 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
 
                     {/* Audio level waveform */}
                     {isListening && (
-                        <div className="voice-panel-waveform">
-                            {barHeights.map((h, i) => (
-                                <div
-                                    key={i}
-                                    className="voice-waveform-bar"
-                                    style={{ height: `${h * 100}%` }}
-                                />
+                        <div className="voice-panel-waveform" ref={waveformRef}>
+                            {Array.from({ length: 5 }, (_, i) => (
+                                <div key={i} className="voice-waveform-bar" />
                             ))}
                         </div>
                     )}
@@ -177,8 +192,8 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
                         </div>
                     )}
 
-                    {/* Command hint when listening but idle */}
-                    {isListening && audioLevel < 0.05 && (
+                    {/* Command hint when listening */}
+                    {isListening && (
                         <div className="voice-panel-hint">
                             Try: {COMMAND_HINTS[currentHint]}
                         </div>
