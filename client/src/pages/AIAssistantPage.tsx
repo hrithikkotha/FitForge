@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Mic, MicOff, Send, Loader, Bot, User, Trash2, AudioLines } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import API from '../api/axios';
 
 interface ChatMessage {
@@ -463,20 +464,12 @@ const AIAssistantPage = () => {
         sessionStorage.removeItem(CHAT_STORAGE_KEY);
     };
 
-    // Format message content with basic markdown-like rendering
-    const formatContent = (text: string) => {
-        // Split by double newline for paragraphs
-        return text.split('\n').map((line, i) => {
-            // Bold
-            const formatted = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            // Bullet points
-            if (line.trim().startsWith('- ') || line.trim().startsWith('• ')) {
-                return <div key={i} className="ai-chat-bullet" dangerouslySetInnerHTML={{ __html: '• ' + formatted.replace(/^[-•]\s*/, '') }} />;
-            }
-            if (line.trim() === '') return <br key={i} />;
-            return <div key={i} dangerouslySetInnerHTML={{ __html: formatted }} />;
-        });
-    };
+    // Rich markdown renderer for assistant messages
+    const MarkdownMessage = memo(({ content }: { content: string }) => (
+        <div className="ai-markdown-body">
+            <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
+    ));
 
     return (
         <div className="ai-assistant-page">
@@ -529,7 +522,7 @@ const AIAssistantPage = () => {
                                 {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
                             </div>
                             <div className="ai-chat-message-content">
-                                {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
+                                {msg.role === 'assistant' ? <MarkdownMessage content={msg.content} /> : msg.content}
                             </div>
                         </div>
                     ))}
