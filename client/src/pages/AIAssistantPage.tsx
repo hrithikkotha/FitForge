@@ -313,9 +313,12 @@ const AIAssistantPage = () => {
         return () => { if (waveAnimRef.current) cancelAnimationFrame(waveAnimRef.current); };
     }, [recording, audioLevelRef]);
 
-    // Build history for context
+    // Build trimmed history for context (cap each message at 300 chars to keep payload small)
     const getHistory = useCallback(() => {
-        return messages.map(m => ({ role: m.role, content: m.content }));
+        return messages.map(m => ({
+            role: m.role,
+            content: m.content.slice(0, 300),
+        }));
     }, [messages]);
 
     // Send text message
@@ -333,14 +336,10 @@ const AIAssistantPage = () => {
         setLoading(true);
 
         try {
-            const formData = new FormData();
-            formData.append('message', text.trim());
-            formData.append('history', JSON.stringify(getHistory()));
-
-            const { data } = await API.post('/voice/chat', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 30000,
-            });
+            const { data } = await API.post('/voice/chat',
+                { message: text.trim(), history: JSON.stringify(getHistory()) },
+                { timeout: 35000 },
+            );
 
             // Execute any actions returned by the AI
             let actionResults: string[] = [];
@@ -360,10 +359,14 @@ const AIAssistantPage = () => {
             };
             setMessages(prev => [...prev, assistantMsg]);
         } catch (err: any) {
+            const serverMsg = err?.response?.data?.message;
+            const isTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
             const errMsg: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: err?.response?.data?.message || 'Sorry, something went wrong. Please try again.',
+                content: isTimeout
+                    ? 'The AI took too long to respond. Please try a shorter question.'
+                    : serverMsg || 'Sorry, something went wrong. Please try again.',
                 timestamp: new Date(),
             };
             setMessages(prev => [...prev, errMsg]);
@@ -420,15 +423,19 @@ const AIAssistantPage = () => {
             };
             setMessages(prev => [...prev, assistantMsg]);
         } catch (err: any) {
+            const serverMsg = err?.response?.data?.message;
+            const isTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
             setMessages(prev => prev.map(m =>
                 m.id === placeholderId
-                    ? { ...m, content: 'Failed to transcribe voice' }
+                    ? { ...m, content: '🎤 Voice message (transcription failed)' }
                     : m
             ));
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: err?.response?.data?.message || 'Sorry, something went wrong.',
+                content: isTimeout
+                    ? 'The AI took too long to respond. Please try again.'
+                    : serverMsg || 'Sorry, something went wrong. Please try again.',
                 timestamp: new Date(),
             }]);
         } finally {
