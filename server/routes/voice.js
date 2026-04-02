@@ -311,14 +311,15 @@ router.post('/transcribe', protect, upload.single('audio'), async (req, res) => 
         const audioFile = new File(
             [req.file.buffer],
             req.file.originalname || 'audio.webm',
-            { type: req.file.mimetype || 'audio/webm' }
+            // Normalize MIME type — Groq Whisper prefers bare mime without codec params
+            { type: (req.file.mimetype || 'audio/webm').split(';')[0] }
         );
 
         const transcription = await groq.audio.transcriptions.create({
             file: audioFile,
             model: 'whisper-large-v3-turbo',
             language: 'en',
-            response_format: 'verbose_json',
+            response_format: 'json',
         });
 
         const transcript = (transcription.text || '').trim();
@@ -326,26 +327,65 @@ router.post('/transcribe', protect, upload.single('audio'), async (req, res) => 
             return res.json({ transcript: '', action: { type: 'UNKNOWN', message: 'No speech detected' } });
         }
 
-        // Build compact exercise/food list for voice command parsing
+        // Build exercise/food lists for voice command parsing
         const exerciseList = (context.exercises || [])
-            .slice(0, 30)
-            .map(e => `${e.id}|${e.name}|${e.category}`)
+            .slice(0, 40)
+            .map(e => `  - id:"${e.id}", name:"${e.name}", category:"${e.category}"`)
             .join('\n');
 
         const foodList = (context.foods || [])
-            .slice(0, 30)
-            .map(f => `${f.id}|${f.name}${f.servingUnit ? `|${f.servingUnit}` : ''}`)
+            .slice(0, 40)
+            .map(f => `  - id:"${f.id}", name:"${f.name}"${f.servingUnit ? `, unit:"${f.servingUnit}"` : ''}`)
             .join('\n');
 
-        const systemPrompt = `You are a fitness voice command parser. Convert the transcript to JSON actions.
-Respond ONLY with: {"actions":[...]}
+        const systemPrompt = `You are a fitness app voice command parser. Convert the user's spoken transcript into structured JSON actions.
 
-EXERCISES (id|name|category): ${exerciseList || '(none)'}
-FOODS (id|name|unit): ${foodList || '(none)'}
-Active workout: ${context.activeWorkoutId || 'none'}
+IMPORTANT: The user may mention MULTIPLE items in one sentence. Return ALL of them.
 
-Action types: CREATE_WORKOUT(title), ADD_EXERCISE_WITH_SETS(exerciseId,exerciseName,category,setCount,reps,weight), LOG_MEAL(foodId,foodName,quantity,mealType), DELETE_WORKOUT, UNKNOWN(message)
-Rules: Fuzzy match names. Weight in kg. Default meal: snack. Extract ALL actions.`;
+AVAILABLE EXERCISES:
+${exerciseList || '  (none)'}
+
+AVAILABLE FOODS:
+${foodList || '  (none)'}
+
+Active workout ID: ${context.activeWorkoutId || 'none'}
+Last exercise added: ${context.lastExerciseName || 'none'}
+
+ACTION TYPES (respond with {"actions":[...]} — valid JSON only):
+
+1. CREATE_WORKOUT — create a new workout session
+   {"type":"CREATE_WORKOUT","title":"<name>","description":"Created workout <name>"}
+
+2. ADD_EXERCISE_WITH_SETS — add exercise to current workout
+   {"type":"ADD_EXERCISE_WITH_SETS","exerciseId":"<exact id from list>","exerciseName":"<name>","category":"<category>","setCount":<n>,"reps":<n>,"weight":<kg or 0>,"description":"Added <name>"}
+
+3. ADD_EXERCISE_CARDIO — add cardio exercise with duration
+   {"type":"ADD_EXERCISE_CARDIO","exerciseId":"<exact id from list>","exerciseName":"<name>","duration":<minutes>,"distance":<km or 0>,"description":"Added <name>"}
+
+4. LOG_MEAL — log a food item for a meal
+   {"type":"LOG_MEAL","foodId":"<exact id from list>","foodName":"<name>","quantity":<grams>,"mealType":"<breakfast|lunch|dinner|snack>","description":"Logged <name>"}
+
+5. ADD_SET — add a set to last exercise
+   {"type":"ADD_SET","reps":<n>,"weight":<kg or 0>,"description":"Added set"}
+
+6. ADD_MULTIPLE_SETS — add multiple identical sets
+   {"type":"ADD_MULTIPLE_SETS","count":<n>,"reps":<n>,"weight":<kg or 0>,"description":"Added <n> sets"}
+
+7. DELETE_WORKOUT — delete current workout
+   {"type":"DELETE_WORKOUT","description":"Deleted workout"}
+
+8. UNKNOWN — cannot determine intent
+   {"type":"UNKNOWN","message":"<explanation>"}
+
+RULES:
+- Fuzzy match names: "banana" → "Banana", "bench" → "Barbell Bench Press", "chicken" → "Chicken Breast (cooked)"
+- You MUST use the EXACT id string from the lists above. Copy it exactly.
+- If a food/exercise is not in the list at all, set the id to null.
+- Weight is in kg. Convert lbs to kg (divide by 2.205).
+- If no meal type specified, default to "snack".
+- If user says "for lunch/dinner/breakfast", use that meal type.
+- If user mentions multiple foods (e.g. "banana and rice"), return multiple LOG_MEAL actions.
+- Always respond with {"actions":[...]} — valid JSON, no markdown.`;
 
         const chatCompletion = await groq.chat.completions.create({
             messages: [
@@ -370,14 +410,23 @@ Rules: Fuzzy match names. Weight in kg. Default meal: snack. Extract ALL actions
 
         res.json({ transcript, actions });
     } catch (err) {
-        console.error('Voice transcribe error:', err?.message || err);
-        if (err?.status === 413 || err?.message?.includes('too large')) {
+        const status = err?.status || err?.statusCode;
+        const errMsg = err?.error?.error?.message || err?.message || 'Unknown error';
+        console.error(`[Voice transcribe] status=${status} msg=${errMsg}`);
+
+        if (status === 401) {
+            return res.status(500).json({ message: 'AI service authentication failed. Check API key.' });
+        }
+        if (status === 413 || errMsg.includes('too large')) {
             return res.status(413).json({ message: 'Audio file too large. Keep recordings under 25 seconds.' });
         }
-        if (err?.status === 429) {
+        if (status === 429) {
             return res.status(429).json({ message: 'Rate limited. Please wait a moment and try again.' });
         }
-        res.status(500).json({ message: 'Voice processing failed. Please try again.' });
+        if (status === 400) {
+            return res.status(400).json({ message: `Audio could not be processed: ${errMsg}` });
+        }
+        res.status(500).json({ message: `Voice processing failed: ${errMsg}` });
     }
 });
 
@@ -408,13 +457,13 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
             const audioFile = new File(
                 [req.file.buffer],
                 req.file.originalname || 'audio.webm',
-                { type: req.file.mimetype || 'audio/webm' }
+                { type: (req.file.mimetype || 'audio/webm').split(';')[0] }
             );
             const transcription = await groq.audio.transcriptions.create({
                 file: audioFile,
                 model: 'whisper-large-v3-turbo',
                 language: 'en',
-                response_format: 'verbose_json',
+                response_format: 'json',
             });
             userMessage = (transcription.text || '').trim();
         }
@@ -512,22 +561,21 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
 
         res.json({ transcript: userMessage, response, actions });
     } catch (err) {
-        console.error('AI chat error:', err?.message || err);
+        const status = err?.status || err?.statusCode;
+        const errMsg = err?.error?.error?.message || err?.message || 'Unknown error';
+        console.error(`[AI chat] status=${status} msg=${errMsg}`);
 
-        if (err?.status === 429) {
-            return res.status(429).json({
-                message: 'The AI is busy right now. Please wait a moment and try again.',
-            });
+        if (status === 429) {
+            return res.status(429).json({ message: 'The AI is busy right now. Please wait a moment and try again.' });
         }
-        if (err?.status === 401) {
-            return res.status(500).json({
-                message: 'AI service authentication failed. Please contact support.',
-            });
+        if (status === 401) {
+            return res.status(500).json({ message: 'AI service authentication failed. Check API key.' });
+        }
+        if (status === 400) {
+            return res.status(400).json({ message: `AI request failed: ${errMsg}` });
         }
 
-        res.status(500).json({
-            message: 'Something went wrong with the AI. Please try again.',
-        });
+        res.status(500).json({ message: `AI error: ${errMsg}` });
     }
 });
 

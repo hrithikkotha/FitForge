@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const PlatformSettings = require('../models/PlatformSettings');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
@@ -25,7 +26,9 @@ const buildUserResponse = (user, token) => ({
     token,
 });
 
-// POST /api/auth/register — regular user (status: pending until Super Admin approves)
+// POST /api/auth/register — regular user
+// If auto-approve is ON: user is created as 'active' and can log in immediately
+// If auto-approve is OFF: user is created as 'pending' and must wait for Super Admin approval
 router.post('/register', async (req, res) => {
     try {
         const { username, email, password, displayName } = req.body;
@@ -35,16 +38,33 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'User already exists with that email or username' });
         }
 
-        await User.create({
+        // Check if auto-approve is enabled
+        const settings = await PlatformSettings.getSettings();
+        const userStatus = settings.autoApproveUsers ? 'active' : 'pending';
+
+        const user = await User.create({
             username,
             email,
             password,
             displayName: displayName || username,
             role: 'user',
-            status: 'pending',   // Super Admin must approve before login
+            status: userStatus,
         });
 
-        // Return pending status — no token issued yet
+        if (settings.autoApproveUsers) {
+            // Auto-approved — return credentials popup info (no token yet, user must log in)
+            return res.status(201).json({
+                pending: false,
+                autoApproved: true,
+                message: 'Account created and approved! You can now log in with your credentials.',
+                credentials: {
+                    email,
+                    username,
+                },
+            });
+        }
+
+        // Requires approval — no token issued yet
         res.status(201).json({
             pending: true,
             message: 'Account created! Your account is under review by the FitForge team. You will be able to log in once approved.',

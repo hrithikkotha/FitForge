@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, getRoleHome } from '../context/AuthContext';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Copy, Check } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
 
 const AuthPage = () => {
@@ -13,6 +13,8 @@ const AuthPage = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [registrationPending, setRegistrationPending] = useState(false);
+    const [autoApprovedCreds, setAutoApprovedCreds] = useState<{ email: string; username: string } | null>(null);
+    const [copiedField, setCopiedField] = useState('');
     const [suspendedMsg, setSuspendedMsg] = useState('');
     const { login, register } = useAuth();
     const navigate = useNavigate();
@@ -58,6 +60,11 @@ const AuthPage = () => {
                     setLoading(false);
                     return;
                 }
+                if (result.autoApproved && result.credentials) {
+                    setAutoApprovedCreds(result.credentials);
+                    setLoading(false);
+                    return;
+                }
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Something went wrong');
@@ -90,6 +97,82 @@ const AuthPage = () => {
                             onClick={() => { setRegistrationPending(false); setIsLogin(true); setEmail(''); setPassword(''); setUsername(''); setConfirmPassword(''); }}
                         >
                             Back to Sign In
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show auto-approved credentials popup
+    if (autoApprovedCreds) {
+        const copyToClipboard = (text: string, field: string) => {
+            navigator.clipboard.writeText(text).then(() => {
+                setCopiedField(field);
+                setTimeout(() => setCopiedField(''), 2000);
+            });
+        };
+
+        return (
+            <div className="auth-page">
+                <div className="auth-container fade-in">
+                    <div className="auth-brand">
+                        <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon-lg" />
+                        <h1>FitForge</h1>
+                    </div>
+                    <div className="auth-card" style={{ textAlign: 'center' }}>
+                        <CheckCircle size={56} style={{ color: 'var(--accent-success)', margin: '0 auto 16px' }} />
+                        <h2 style={{ marginBottom: 10 }}>Account Created!</h2>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: 20, fontSize: '0.9rem' }}>
+                            Your account has been <strong style={{ color: 'var(--accent-success)' }}>approved automatically</strong>. Use these credentials to log in:
+                        </p>
+
+                        <div style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: 16, marginBottom: 20, textAlign: 'left' }}>
+                            <div style={{ marginBottom: 12 }}>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{ flex: 1, fontWeight: 600, fontSize: '0.92rem', wordBreak: 'break-all' }}>{autoApprovedCreds.email}</span>
+                                    <button
+                                        onClick={() => copyToClipboard(autoApprovedCreds.email, 'email')}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 4, borderRadius: 6, display: 'flex' }}
+                                        title="Copy email"
+                                    >
+                                        {copiedField === 'email' ? <Check size={14} style={{ color: 'var(--accent-success)' }} /> : <Copy size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Username</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{ flex: 1, fontWeight: 600, fontSize: '0.92rem' }}>{autoApprovedCreds.username}</span>
+                                    <button
+                                        onClick={() => copyToClipboard(autoApprovedCreds.username, 'username')}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 4, borderRadius: 6, display: 'flex' }}
+                                        title="Copy username"
+                                    >
+                                        {copiedField === 'username' ? <Check size={14} style={{ color: 'var(--accent-success)' }} /> : <Copy size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: 20 }}>
+                            Your password is the one you just entered. Click below to log in now.
+                        </p>
+
+                        <button
+                            className="btn btn-primary"
+                            style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }}
+                            onClick={() => {
+                                setEmail(autoApprovedCreds.email);
+                                setPassword('');
+                                setAutoApprovedCreds(null);
+                                setIsLogin(true);
+                                setUsername('');
+                                setConfirmPassword('');
+                            }}
+                        >
+                            Go to Sign In
                         </button>
                     </div>
                 </div>

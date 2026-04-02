@@ -4,6 +4,7 @@ const WorkoutSession = require('../models/WorkoutSession');
 const MealEntry = require('../models/MealEntry');
 const FoodItem = require('../models/FoodItem');
 const Exercise = require('../models/Exercise');
+const PlatformSettings = require('../models/PlatformSettings');
 const { protect, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
@@ -262,6 +263,32 @@ router.delete('/exercises/:id', guard, async (req, res) => {
         if (!exercise) return res.status(404).json({ message: 'Exercise not found' });
         await exercise.deleteOne();
         res.json({ message: 'Exercise deleted' });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// ─── Platform Settings ───────────────────────────────────────────────────────
+
+// GET /api/super-admin/settings — get platform settings
+router.get('/settings', guard, async (req, res) => {
+    try {
+        const settings = await PlatformSettings.getSettings();
+        res.json(settings);
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// PUT /api/super-admin/settings — update platform settings
+router.put('/settings', guard, async (req, res) => {
+    try {
+        const update = {};
+        if (req.body.autoApproveUsers !== undefined) {
+            update.autoApproveUsers = !!req.body.autoApproveUsers;
+        }
+        const settings = await PlatformSettings.findByIdAndUpdate(
+            'platform',
+            { $set: update },
+            { new: true, upsert: true }
+        );
+        res.json(settings);
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 

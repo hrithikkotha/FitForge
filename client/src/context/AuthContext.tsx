@@ -24,7 +24,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<{ displayName: string }>;
-    register: (username: string, email: string, password: string) => Promise<{ pending: boolean }>;
+    register: (username: string, email: string, password: string) => Promise<{ pending: boolean; autoApproved?: boolean; credentials?: { email: string; username: string } }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
 }
@@ -77,10 +77,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { displayName: data.displayName || data.username };
     };
 
-    const register = async (username: string, email: string, password: string): Promise<{ pending: boolean }> => {
+    const register = async (username: string, email: string, password: string): Promise<{ pending: boolean; autoApproved?: boolean; credentials?: { email: string; username: string } }> => {
         const { data } = await API.post('/auth/register', { username, email, password });
         if (data.pending) {
             return { pending: true };
+        }
+        if (data.autoApproved) {
+            return { pending: false, autoApproved: true, credentials: data.credentials };
         }
         setUser(data);
         localStorage.setItem('fitforge_user', JSON.stringify(data));

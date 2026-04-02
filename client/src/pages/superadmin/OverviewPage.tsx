@@ -1,18 +1,38 @@
 import { useState, useEffect } from 'react';
 import API from '../../api/axios';
-import { Shield, Users, Clock, Dumbbell, UtensilsCrossed, Activity, TrendingUp, UserCheck } from 'lucide-react';
+import { Shield, Users, Clock, Dumbbell, UtensilsCrossed, Activity, TrendingUp, UserCheck, ToggleLeft, ToggleRight } from 'lucide-react';
 import PageLoader from '../../components/PageLoader';
 
 const OverviewPage = () => {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [autoApprove, setAutoApprove] = useState(false);
+    const [settingsLoading, setSettingsLoading] = useState(false);
 
     useEffect(() => {
-        API.get('/super-admin/stats')
-            .then(r => setStats(r.data))
+        Promise.all([
+            API.get('/super-admin/stats'),
+            API.get('/super-admin/settings'),
+        ])
+            .then(([statsRes, settingsRes]) => {
+                setStats(statsRes.data);
+                setAutoApprove(settingsRes.data.autoApproveUsers ?? false);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
+
+    const toggleAutoApprove = async () => {
+        setSettingsLoading(true);
+        try {
+            const { data } = await API.put('/super-admin/settings', { autoApproveUsers: !autoApprove });
+            setAutoApprove(data.autoApproveUsers);
+        } catch (err) {
+            console.error('Failed to toggle auto-approve:', err);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     if (loading) return <PageLoader />;
 
@@ -48,7 +68,80 @@ const OverviewPage = () => {
                 </div>
             </div>
 
-            {/* Pending admin alert */}
+            {/* ── Auto-Approve Toggle ────────────────────────────────────────── */}
+            <div style={{
+                background: autoApprove
+                    ? 'rgba(74,222,128,0.08)'
+                    : 'rgba(252,163,17,0.06)',
+                border: `1px solid ${autoApprove ? 'rgba(74,222,128,0.3)' : 'rgba(252,163,17,0.25)'}`,
+                borderRadius: 14,
+                padding: '16px 20px',
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+            }}>
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {autoApprove
+                            ? <ToggleRight size={20} style={{ color: '#4ade80' }} />
+                            : <ToggleLeft size={20} style={{ color: 'var(--sa-accent)' }} />
+                        }
+                        Auto-Approve New Signups
+                        <span style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '1px 8px',
+                            borderRadius: 99,
+                            background: autoApprove ? 'rgba(74,222,128,0.2)' : 'rgba(252,163,17,0.2)',
+                            color: autoApprove ? '#4ade80' : 'var(--sa-accent)',
+                        }}>
+                            {autoApprove ? 'ON' : 'OFF'}
+                        </span>
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                        {autoApprove
+                            ? 'New users are instantly approved when they sign up — no manual review needed.'
+                            : 'New users must be manually approved before they can log in.'}
+                    </div>
+                </div>
+                <button
+                    onClick={toggleAutoApprove}
+                    disabled={settingsLoading}
+                    style={{
+                        flexShrink: 0,
+                        width: 52,
+                        height: 28,
+                        borderRadius: 99,
+                        border: 'none',
+                        cursor: settingsLoading ? 'not-allowed' : 'pointer',
+                        background: autoApprove
+                            ? 'linear-gradient(135deg, #4ade80, #22c55e)'
+                            : 'var(--bg-card)',
+                        boxShadow: autoApprove
+                            ? '0 2px 8px rgba(74,222,128,0.4)'
+                            : '0 2px 6px rgba(0,0,0,0.3)',
+                        position: 'relative',
+                        transition: 'background 0.25s, box-shadow 0.25s',
+                        opacity: settingsLoading ? 0.6 : 1,
+                    }}
+                    title={autoApprove ? 'Turn OFF auto-approve' : 'Turn ON auto-approve'}
+                >
+                    <span style={{
+                        position: 'absolute',
+                        top: 3,
+                        left: autoApprove ? 26 : 3,
+                        width: 22,
+                        height: 22,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                        transition: 'left 0.25s',
+                    }} />
+                </button>
+            </div>
+
+            {/* Pending admin alert — hide when auto-approve is on */}
             {stats?.pendingAdmins > 0 && (
                 <div style={{ background: 'rgba(252,163,17,0.1)', border: '1px solid rgba(252,163,17,0.3)', borderRadius: 14, padding: '14px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={20} style={{ color: 'var(--sa-accent)', flexShrink: 0 }} />
@@ -61,8 +154,8 @@ const OverviewPage = () => {
                 </div>
             )}
 
-            {/* Pending user approval alert */}
-            {stats?.pendingUsers > 0 && (
+            {/* Pending user approval alert — only relevant when auto-approve is OFF */}
+            {!autoApprove && stats?.pendingUsers > 0 && (
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 14, padding: '14px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={20} style={{ color: '#ef4444', flexShrink: 0 }} />
                     <div>
