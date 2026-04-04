@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import API from '../api/axios';
-import type { VoiceAction, ParserContext } from '../utils/voiceCommandParser';
+import type { VoiceAction, ParserContext, SuggestionResult } from '../utils/voiceCommandParser';
+import { generateSuggestions } from '../utils/voiceCommandParser';
 import useVoiceCommand, { type VoiceAIResult, type VoiceContext } from './useVoiceCommand';
 
 interface VoiceActionResult {
@@ -15,10 +16,48 @@ interface UseVoiceActionsProps {
     onRefresh?: () => void;
 }
 
+// ── Confirmation state ────────────────────────────────────────────────────────
+// When the LLM returns an action, it is held here pending user confirmation
+// instead of auto-executing — prevents false-positive executions.
+export interface PendingConfirmation {
+    transcript: string;
+    action: VoiceAction;
+    /** Human-readable description of what WILL happen if the user confirms */
+    summary: string;
+    /** Alternative suggestions the user can tap instead */
+    suggestions: SuggestionResult[];
+}
+
+// ── Pretty-print a recognized action for the confirmation card ───────────────
+function describeAction(action: VoiceAction): string {
+    switch (action.type) {
+        case 'LOG_MEAL':
+            return `Log ${action.quantity} ${action.servingUnit ?? 'serving(s) of'} ${action.foodName} for ${action.mealType}`;
+        case 'ADD_EXERCISE':
+        case 'ADD_EXERCISE_WITH_SETS':
+            return `Add ${action.exerciseName}${action.setCount ? ` — ${action.setCount} sets × ${action.reps} reps` : ''}${action.weight ? ` @ ${action.weight}kg` : ''}`;
+        case 'ADD_EXERCISE_CARDIO':
+            return `Add ${action.exerciseName} — ${action.duration} min${action.distance ? `, ${action.distance}km` : ''}`;
+        case 'ADD_SET':
+            return `Add set — ${action.reps} reps${action.weight ? ` @ ${action.weight}kg` : ''}`;
+        case 'ADD_MULTIPLE_SETS':
+            return `Add ${action.count} sets × ${action.reps} reps${action.weight ? ` @ ${action.weight}kg` : ''}`;
+        case 'CREATE_WORKOUT':
+            return `Create workout "${action.title}"`;
+        case 'DELETE_WORKOUT':
+            return 'Delete current workout';
+        default:
+            return action.description ?? action.type;
+    }
+}
+
 const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActionsProps) => {
     const [processing, setProcessing] = useState(false);
     const [lastAction, setLastAction] = useState<VoiceAction | null>(null);
     const [feedback, setFeedback] = useState<string>('');
+    const [suggestions, setSuggestions] = useState<SuggestionResult[]>([]);
+    // Confirmation gate — set when the LLM parses an action; cleared after confirm/dismiss
+    const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
     const contextRef = useRef(context);
     contextRef.current = context;
 
@@ -58,7 +97,12 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
 
                 case 'ADD_EXERCISE': {
                     if (!action.exerciseId) {
-                        onActionComplete?.({ success: false, action, message: `Exercise "${action.exerciseName}" not found` });
+                        const msg = `Couldn't find exercise "${action.exerciseName}" — did you mean one of these?`;
+                        setSuggestions(generateSuggestions(
+                            `add ${action.exerciseName}`,
+                            contextRef.current,
+                        ));
+                        onActionComplete?.({ success: false, action, message: msg });
                         return;
                     }
                     if (!activeWorkoutId) {
@@ -180,7 +224,6 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
                         return;
                     }
 
-                    // Use last exercise entry, or the last entry if no context
                     const entryIndex = conv.lastExerciseEntryIndex ?? (workout.entries.length - 1);
 
                     const updatedEntries = workout.entries.map((e: any, i: number) => ({
@@ -242,7 +285,7 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
                     if (!workout) return;
 
                     const entryIndex = conv.lastExerciseEntryIndex ?? (workout.entries.length - 1);
-                    const setIndex = action.setNumber - 1; // 1-indexed to 0-indexed
+                    const setIndex = action.setNumber - 1;
 
                     const entry = workout.entries[entryIndex];
                     if (!entry?.sets?.[setIndex]) {
@@ -285,7 +328,6 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
                         return;
                     }
 
-                    // -1 means last set
                     const setIdx = action.setNumber === -1 ? entry.sets.length - 1 : action.setNumber - 1;
 
                     const updatedEntries = workout.entries.map((e: any, i: number) => ({
@@ -332,7 +374,6 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
 
                     await API.put(`/workouts/${activeWorkoutId}`, { entries: updatedEntries });
 
-                    // Update conversation context
                     if (conv.lastExerciseEntryIndex === removeIndex) {
                         conv.lastExerciseEntryIndex = null;
                         conv.lastExerciseId = null;
@@ -344,7 +385,12 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
 
                 case 'LOG_MEAL': {
                     if (!action.foodId) {
-                        onActionComplete?.({ success: false, action, message: `Food "${action.foodName}" not found` });
+                        const msg = `Couldn't find "${action.foodName}" — did you mean one of these?`;
+                        setSuggestions(generateSuggestions(
+                            `add ${action.quantity ?? 1} ${action.foodName} for ${action.mealType}`,
+                            contextRef.current,
+                        ));
+                        onActionComplete?.({ success: false, action, message: msg });
                         return;
                     }
 
@@ -385,15 +431,43 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
         }
     }, [onActionComplete, onRefresh]);
 
-    const handleVoiceResult = useCallback(async (result: VoiceAIResult) => {
-        const { actions } = result;
+    // ── Confirmation gate ─────────────────────────────────────────────────────
+    // Accepts confirmed pending action and executes it
+    const confirmPending = useCallback(async () => {
+        if (!pendingConfirmation) return;
+        const action = pendingConfirmation.action;
+        setPendingConfirmation(null);
+        setSuggestions([]);
+        await executeAction(action);
+    }, [pendingConfirmation, executeAction]);
 
+    // Dismiss without executing
+    const dismissConfirmation = useCallback(() => {
+        setPendingConfirmation(null);
+        setSuggestions([]);
+    }, []);
+
+    // Execute a suggestion alternative (replaces pending)
+    const executeSuggestionAction = useCallback(async (s: SuggestionResult) => {
+        setPendingConfirmation(null);
+        setSuggestions([]);
+        await executeAction(s.action);
+    }, [executeAction]);
+
+    const handleVoiceResult = useCallback(async (result: VoiceAIResult) => {
+        const { actions, transcript } = result;
+
+        // ── No recognizable action ─────────────────────────────────────────────
         if (!actions || actions.length === 0) {
-            const msg = `Didn't understand: "${result.transcript}"`;
-            setFeedback(msg);
+            const sug = generateSuggestions(transcript, contextRef.current);
+            setSuggestions(sug);
+            setFeedback('');
+            const msg = sug.length > 0
+                ? `Couldn't understand "${transcript}" — did you mean one of these?`
+                : `Couldn't understand: "${transcript}"`;
             onActionComplete?.({
                 success: false,
-                action: { type: 'UNKNOWN', description: result.transcript },
+                action: { type: 'UNKNOWN', description: transcript },
                 message: msg,
             });
             return;
@@ -401,20 +475,32 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
 
         // Filter out UNKNOWN actions if there are real ones alongside
         const validActions = actions.filter(a => a.type !== 'UNKNOWN');
-        const toExecute = validActions.length > 0 ? validActions : actions;
+        const toProcess = validActions.length > 0 ? validActions : actions;
 
-        // Execute each action sequentially
-        for (const action of toExecute) {
+        for (const action of toProcess) {
             if (action.type === 'UNKNOWN') {
-                const msg = action.message || `Didn't understand: "${result.transcript}"`;
-                setFeedback(msg);
-                onActionComplete?.({
-                    success: false,
-                    action,
-                    message: msg,
-                });
+                const sug = generateSuggestions(transcript, contextRef.current);
+                setSuggestions(sug);
+                setFeedback('');
+                const msg = sug.length > 0
+                    ? `Couldn't understand "${transcript}" — did you mean one of these?`
+                    : action.message || `Couldn't understand: "${transcript}"`;
+                onActionComplete?.({ success: false, action, message: msg });
             } else {
-                await executeAction(action);
+                // ── CONFIRMATION GATE: don't execute yet — show confirmation card ──
+                setSuggestions([]);
+                const summary = describeAction(action);
+                const altSuggestions = generateSuggestions(transcript, contextRef.current)
+                    .filter(s => s.action.type !== action.type || s.label !== summary)
+                    .slice(0, 4);
+
+                setPendingConfirmation({
+                    transcript,
+                    action,
+                    summary,
+                    suggestions: altSuggestions,
+                });
+                // Don't call executeAction — wait for user to confirm
             }
         }
     }, [executeAction, onActionComplete]);
@@ -445,11 +531,26 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
         conversationRef.current.lastWorkoutId = context.activeWorkoutId;
     }
 
+    // ── clearAll: wipe history/suggestions/pending when user records again ────
+    const clearAll = useCallback(() => {
+        setSuggestions([]);
+        setPendingConfirmation(null);
+        setFeedback('');
+    }, []);
+
     return {
         ...voice,
         processing,
         lastAction,
         feedback,
+        suggestions,
+        clearSuggestions: () => setSuggestions([]),
+        clearAll,
+        executeSuggestion: executeSuggestionAction,
+        // Confirmation API
+        pendingConfirmation,
+        confirmPending,
+        dismissConfirmation,
     };
 };
 

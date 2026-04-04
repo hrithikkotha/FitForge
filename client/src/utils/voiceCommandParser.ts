@@ -92,6 +92,165 @@ function fuzzyMatchFood(spoken: string, foods?: FoodItem[]): FoodItem | null {
     return bestScore >= 3 ? bestMatch : null;
 }
 
+// ── Suggestion engine ─────────────────────────────────────────────────────────
+// Returns top N foods/exercises closest to the misspelled spoken query
+
+export interface SuggestionResult {
+    /** Human-readable clickable string, e.g. "Add 3 bananas to breakfast" */
+    label: string;
+    /** Pre-built partial action payload so the UI can execute without re-parsing */
+    action: VoiceAction;
+}
+
+/**
+ * Compute top-N food suggestions that best match a misspelled/misheard spoken fragment.
+ * Uses character-bigram overlap so "banas" → "banana", "idly" → "idli", etc.
+ */
+function bigramSimilarity(a: string, b: string): number {
+    const bigrams = (str: string) => {
+        const set: string[] = [];
+        for (let i = 0; i < str.length - 1; i++) set.push(str.slice(i, i + 2));
+        return set;
+    };
+    const ba = bigrams(a.toLowerCase());
+    const bb = bigrams(b.toLowerCase());
+    if (!ba.length || !bb.length) return 0;
+    const intersection = ba.filter(g => bb.includes(g)).length;
+    return (2 * intersection) / (ba.length + bb.length);
+}
+
+function topFoodMatches(spoken: string, foods: FoodItem[], topN = 5): FoodItem[] {
+    return foods
+        .map(f => ({ food: f, score: bigramSimilarity(spoken, f.name) }))
+        .filter(x => x.score > 0.15)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, topN)
+        .map(x => x.food);
+}
+
+function topExerciseMatches(
+    spoken: string,
+    exercises: ParserContext['exercises'],
+    topN = 5,
+): ParserContext['exercises'] {
+    return exercises
+        .map(e => ({ ex: e, score: bigramSimilarity(spoken, e.name) }))
+        .filter(x => x.score > 0.15)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, topN)
+        .map(x => x.ex);
+}
+
+/**
+ * Generate 3-5 suggestion commands based on what the user likely meant.
+ * Called when the main parser returns null or a not-found result.
+ */
+export function generateSuggestions(
+    transcript: string,
+    context: ParserContext,
+): SuggestionResult[] {
+    const t = transcript.toLowerCase().trim();
+    const suggestions: SuggestionResult[] = [];
+
+    // ── Detect intent ─────────────────────────────────────────────────────────
+    const isMealIntent = /(?:log|add|record).*(?:breakfast|lunch|dinner|snack)/.test(t)
+        || /(?:breakfast|lunch|dinner|snack).*(?:log|add|record)/.test(t);
+    const mealTypeMatch = t.match(/\b(breakfast|lunch|dinner|snack)\b/i);
+    const mealType = mealTypeMatch?.[1]?.toLowerCase() ?? 'lunch';
+
+    // Extract quantity from transcript
+    const qtyMatch = t.match(/\b(\d+(?:\.\d+)?)\b/);
+    const quantity = qtyMatch ? parseFloat(qtyMatch[1]) : 1;
+
+    // Extract likely food/exercise name: strip command words
+    const stripped = t
+        .replace(/^(?:log|add|record|include)\s+/, '')
+        .replace(/\b(\d+(?:\.\d+)?)\s*(?:grams?|g|kg|sets?|reps?|pieces?)?\b/gi, '')
+        .replace(/\b(?:for|to|at|in|into|as|my|the|a|an)\b/gi, '')
+        .replace(/\b(?:breakfast|lunch|dinner|snack)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!stripped) return [];
+
+    // ── FOOD suggestions ──────────────────────────────────────────────────────
+    if (isMealIntent && context.foods?.length) {
+        const matches = topFoodMatches(stripped, context.foods, 5);
+        for (const food of matches) {
+            const qty = food.servingUnit === 'g' || food.servingUnit === 'ml' ? 100 : quantity;
+            const label = `Add ${qty} ${food.servingUnit === 'g' ? 'g of' : food.servingUnit === 'ml' ? 'ml of' : ''} ${food.name} to ${mealType}`;
+            suggestions.push({
+                label,
+                action: {
+                    type: 'LOG_MEAL',
+                    foodId: food._id,
+                    foodName: food.name,
+                    quantity: qty,
+                    mealType,
+                    description: label,
+                },
+            });
+        }
+        return suggestions;
+    }
+
+    // ── EXERCISE suggestions (add / workout context) ───────────────────────────
+    const isExerciseIntent = /(?:add|include)/.test(t) && !isMealIntent;
+    if (isExerciseIntent && context.exercises?.length) {
+        const matches = topExerciseMatches(stripped, context.exercises, 5);
+        for (const ex of matches) {
+            const label = `Add ${ex.name}`;
+            suggestions.push({
+                label,
+                action: {
+                    type: 'ADD_EXERCISE',
+                    exerciseId: ex._id,
+                    exerciseName: ex.name,
+                    category: ex.category,
+                    description: label,
+                },
+            });
+        }
+        return suggestions;
+    }
+
+    // ── Fallback: suggest both food and exercise top matches ──────────────────
+    if (context.foods?.length) {
+        topFoodMatches(stripped, context.foods, 3).forEach(food => {
+            const qty = food.servingUnit === 'g' || food.servingUnit === 'ml' ? 100 : 1;
+            const label = `Log ${qty} ${food.servingUnit === 'g' ? 'g of' : ''} ${food.name} for lunch`;
+            suggestions.push({
+                label,
+                action: {
+                    type: 'LOG_MEAL',
+                    foodId: food._id,
+                    foodName: food.name,
+                    quantity: qty,
+                    mealType: 'lunch',
+                    description: label,
+                },
+            });
+        });
+    }
+    if (context.exercises?.length) {
+        topExerciseMatches(stripped, context.exercises, 2).forEach(ex => {
+            const label = `Add ${ex.name}`;
+            suggestions.push({
+                label,
+                action: {
+                    type: 'ADD_EXERCISE',
+                    exerciseId: ex._id,
+                    exerciseName: ex.name,
+                    category: ex.category,
+                    description: label,
+                },
+            });
+        });
+    }
+
+    return suggestions.slice(0, 5);
+}
+
 // Extract numbers from speech, handling words like "twenty five"
 function extractNumber(text: string): number | null {
     // Direct digits

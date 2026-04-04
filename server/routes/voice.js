@@ -329,12 +329,12 @@ router.post('/transcribe', protect, upload.single('audio'), async (req, res) => 
 
         // Build exercise/food lists for voice command parsing
         const exerciseList = (context.exercises || [])
-            .slice(0, 40)
+            .slice(0, 120)
             .map(e => `  - id:"${e.id}", name:"${e.name}", category:"${e.category}"`)
             .join('\n');
 
         const foodList = (context.foods || [])
-            .slice(0, 40)
+            .slice(0, 200)
             .map(f => `  - id:"${f.id}", name:"${f.name}"${f.servingUnit ? `, unit:"${f.servingUnit}"` : ''}`)
             .join('\n');
 
@@ -376,6 +376,13 @@ ACTION TYPES (respond with {"actions":[...]} — valid JSON only):
 
 8. UNKNOWN — cannot determine intent
    {"type":"UNKNOWN","message":"<explanation>"}
+
+CONFIDENCE RULE (CRITICAL):
+- Only match a food or exercise if the user's transcript EXPLICITLY mentions that item by name or a clear abbreviation.
+- "support of food", "random noise", "sabota frut", "one support" etc. — these do NOT match any food. Return UNKNOWN.
+- Do NOT guess or infer based on vague phonetic similarity. The user must have clearly said the food/exercise name.
+- If ANY food or exercise name is uncertain, set its id to null and type to UNKNOWN.
+- Only match when confidence is ≥ 90%.
 
 RULES:
 - Fuzzy match names: "banana" → "Banana", "bench" → "Barbell Bench Press", "chicken" → "Chicken Breast (cooked)"

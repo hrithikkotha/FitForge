@@ -48,12 +48,13 @@ const HEALTHY_FAT_KEYWORDS = [
 
 const HIGH_FIBER_KEYWORDS = [
     'oats', 'dal', 'lentil', 'rajma', 'chole', 'chickpea', 'bean', 'quinoa',
-    'broccoli', 'spinach', 'kale', 'apple', 'pear', 'chia', 'flax', 'sweet potato'
+    'broccoli', 'spinach', 'kale', 'apple', 'pear', 'chia', 'flax', 'sweet potato',
+    'sambar', 'bisibelebath', 'kootu', 'aviyal', 'methi', 'thoran', 'idli', 'dosa'
 ];
 
-const TIER1_CARBS = ['sweet potato', 'quinoa', 'oats', 'dal', 'lentil', 'broccoli', 'spinach', 'kale', 'cauliflower', 'rajma', 'chole', 'chickpea', 'bean'];
-const TIER3_CARBS = ['white rice', 'dosa', 'idli', 'pasta', 'paratha'];
-const TIER4_CARBS = ['maida', 'fried', 'samosa', 'biscuit', 'cake', 'candy', 'soda', 'juice'];
+const TIER1_CARBS = ['sweet potato', 'quinoa', 'oats', 'dal', 'lentil', 'broccoli', 'spinach', 'kale', 'cauliflower', 'rajma', 'chole', 'chickpea', 'bean', 'bisibelebath', 'sambar', 'idli', 'appam', 'puttu'];
+const TIER3_CARBS = ['white rice', 'dosa', 'idli', 'pasta', 'paratha', 'uttapam', 'upma', 'poha', 'pongal', 'khichdi', 'bhatura', 'puri', 'naan', 'kulcha', 'rava', 'lemon rice', 'coconut rice', 'tamarind rice', 'curd rice', 'tomato rice', 'vangi bath'];
+const TIER4_CARBS = ['maida', 'fried', 'samosa', 'biscuit', 'cake', 'candy', 'soda', 'juice', 'vada', 'bonda', 'bajji', 'murukku', 'chakli', 'jalebi', 'gulab jamun', 'ladoo', 'barfi', 'halwa', 'kheer', 'payasam', 'mysore pak', 'kachori', 'sev puri', 'bhujia', 'mixture', 'mathri', 'namak pare'];
 
 function scoreMeal(meals: any[]): MealScore {
     const totalProtein = meals.reduce((s, m) => s + (m.protein || 0), 0);
@@ -470,7 +471,7 @@ const NutritionPage = () => {
                             <div style={{ position: 'relative', display: 'flex', gap: '8px' }}>
                                 <div style={{ position: 'relative', flex: 1 }}>
                                     <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)' }} />
-                                    <input className="form-input" style={{ paddingLeft: 36 }} placeholder="Search 200+ foods..."
+                                    <input className="form-input" style={{ paddingLeft: 36 }} placeholder="Search 350+ foods..."
                                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                 </div>
                                 <button className="btn btn-secondary" onClick={() => setShowFoodModal(true)} title="Create custom food" style={{ padding: '0 12px' }}>
