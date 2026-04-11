@@ -67,11 +67,15 @@ const useVoiceCommand = ({
     const animFrameRef = useRef<number>(0);
     const chunksRef = useRef<Blob[]>([]);
     const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const maxRecordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hadSpeechRef = useRef(false);
     const isStoppedRef = useRef(false);
     const silenceStoppedRef = useRef(false);
     const onResultRef = useRef(onResult);
     const contextRef = useRef(context);
+
+    const MAX_AUDIO_BYTES = 4 * 1024 * 1024; // 4 MB — well above any normal voice command
+    const MAX_RECORD_MS = 30_000;             // 30 s hard cap
 
     const isSupported = typeof MediaRecorder !== 'undefined'
         && typeof navigator.mediaDevices?.getUserMedia === 'function';
@@ -98,6 +102,10 @@ const useVoiceCommand = ({
     const processAudio = useCallback(async (blob: Blob) => {
         if (blob.size < 1000) return;  // skip tiny/empty recordings
 
+        if (blob.size > MAX_AUDIO_BYTES) {
+            setError('Recording too long. Please keep voice commands under 30 seconds.');
+            return;
+        }
         setIsTranscribing(true);
         setError(null);
 
@@ -107,7 +115,6 @@ const useVoiceCommand = ({
             formData.append('context', JSON.stringify(contextRef.current));
 
             const { data } = await API.post('/voice/transcribe', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
                 timeout: 30000,
             });
 
@@ -152,6 +159,14 @@ const useVoiceCommand = ({
                 },
             });
             streamRef.current = stream;
+
+            // Hard-cap: auto-stop after MAX_RECORD_MS to prevent oversized files
+            maxRecordTimerRef.current = setTimeout(() => {
+                if (mediaRecorderRef.current?.state === 'recording') {
+                    hadSpeechRef.current = true; // treat as speech so it gets processed
+                    mediaRecorderRef.current.stop();
+                }
+            }, MAX_RECORD_MS);
 
             // ── Audio analysis for level meter + silence detection ──
             const audioCtx = new AudioContext();
@@ -247,6 +262,11 @@ const useVoiceCommand = ({
             silenceTimerRef.current = null;
         }
 
+        if (maxRecordTimerRef.current) {
+            clearTimeout(maxRecordTimerRef.current);
+            maxRecordTimerRef.current = null;
+        }
+
         if (mediaRecorderRef.current?.state === 'recording') {
             mediaRecorderRef.current.stop();
         } else {
@@ -261,6 +281,7 @@ const useVoiceCommand = ({
         return () => {
             isStoppedRef.current = true;
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            if (maxRecordTimerRef.current) clearTimeout(maxRecordTimerRef.current);
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
             if (mediaRecorderRef.current?.state === 'recording') {
                 mediaRecorderRef.current.stop();

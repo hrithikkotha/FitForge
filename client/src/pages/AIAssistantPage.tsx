@@ -147,8 +147,12 @@ function useAudioRecorder() {
     const audioCtxRef = useRef<AudioContext | null>(null);
     const animRef = useRef<number>(0);
     const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const maxRecordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hadSpeechRef = useRef(false);
     const onStopRef = useRef<((blob: Blob) => void) | null>(null);
+
+    const MAX_AUDIO_BYTES = 4 * 1024 * 1024; // 4 MB
+    const MAX_RECORD_MS = 30_000;             // 30 s hard cap
 
     const cleanup = useCallback(() => {
         if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -156,6 +160,8 @@ function useAudioRecorder() {
         audioLevelRef.current = 0;
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
+        if (maxRecordTimerRef.current) clearTimeout(maxRecordTimerRef.current);
+        maxRecordTimerRef.current = null;
         streamRef.current?.getTracks().forEach(t => t.stop());
         streamRef.current = null;
         audioCtxRef.current?.close().catch(() => {});
@@ -229,13 +235,24 @@ function useAudioRecorder() {
                 setRecording(false);
                 const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
                 chunksRef.current = [];
-                if (hadSpeechRef.current && blob.size > 1000) {
+                if (hadSpeechRef.current && blob.size > 1000 && blob.size <= MAX_AUDIO_BYTES) {
+                    onStopRef.current?.(blob);
+                } else if (blob.size > MAX_AUDIO_BYTES) {
+                    // Oversized — caller (handleVoiceDone) won't be invoked; surface error there
                     onStopRef.current?.(blob);
                 }
             };
 
             recorder.start(250);
             setRecording(true);
+
+            // Hard-cap: auto-stop after MAX_RECORD_MS to prevent oversized files
+            maxRecordTimerRef.current = setTimeout(() => {
+                if (recorder.state === 'recording') {
+                    hadSpeechRef.current = true;
+                    recorder.stop();
+                }
+            }, MAX_RECORD_MS);
         } catch {
             cleanup();
         }
@@ -244,6 +261,8 @@ function useAudioRecorder() {
     const stopRecording = useCallback(() => {
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
+        if (maxRecordTimerRef.current) clearTimeout(maxRecordTimerRef.current);
+        maxRecordTimerRef.current = null;
         if (mediaRecorderRef.current?.state === 'recording') {
             mediaRecorderRef.current.stop();
         } else {
@@ -378,6 +397,17 @@ const AIAssistantPage = () => {
 
     // Send voice message
     const handleVoiceDone = useCallback(async (blob: Blob) => {
+        const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
+        if (blob.size > MAX_AUDIO_BYTES) {
+            setMessages(prev => [...prev, {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: 'Recording was too long. Please keep voice messages under 30 seconds and try again.',
+                timestamp: new Date(),
+            }]);
+            return;
+        }
+
         setTranscribing(true);
 
         // Show a placeholder user message
@@ -395,7 +425,6 @@ const AIAssistantPage = () => {
             formData.append('history', JSON.stringify(getHistory()));
 
             const { data } = await API.post('/voice/chat', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
                 timeout: 30000,
             });
 
