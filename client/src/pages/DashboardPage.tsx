@@ -30,7 +30,8 @@ const DashboardPage = () => {
 
             setStats(workoutRes.data);
             setNutritionStats(nutritionRes.data);
-            setRecentWorkouts(recentRes.data.slice(0, 5));
+            const workoutsArray = recentRes.data.sessions ?? recentRes.data;
+            setRecentWorkouts(workoutsArray.slice(0, 5));
         } catch (err) {
             console.error('Failed to load dashboard data:', err);
         } finally {

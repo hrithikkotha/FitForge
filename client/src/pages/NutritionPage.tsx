@@ -219,10 +219,11 @@ const NutritionPage = () => {
     const loadData = async () => {
         try {
             const [foodRes, mealRes] = await Promise.all([API.get('/foods'), API.get('/meals')]);
+            const mealsArray = mealRes.data.meals ?? mealRes.data;
             setFoods(foodRes.data);
-            setMeals(mealRes.data);
+            setMeals(mealsArray);
             const today = new Date().toISOString().split('T')[0];
-            setTodayMeals(mealRes.data.filter((m: any) => new Date(m.date).toISOString().split('T')[0] === today));
+            setTodayMeals(mealsArray.filter((m: any) => new Date(m.date).toISOString().split('T')[0] === today));
         } catch (err) {
             console.error(err);
         } finally {

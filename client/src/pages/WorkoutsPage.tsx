@@ -55,7 +55,7 @@ const WorkoutsPage = () => {
                 API.get('/workouts'),
             ]);
             setExercises(exRes.data);
-            setWorkouts(wkRes.data);
+            setWorkouts(wkRes.data.sessions ?? wkRes.data);
         } catch (err) {
             console.error(err);
         } finally {

@@ -121,6 +121,7 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
     if (!isSupported) return null;
 
     const toggleListening = () => {
+        setShowHints(false); // always dismiss hints on tap/click
         if (isListening) {
             stop();
         } else if (!isTranscribing && !processing) {
@@ -169,8 +170,9 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
                 className={`voice-fab ${isListening ? 'voice-fab--active' : ''} ${isTranscribing ? 'voice-fab--transcribing' : ''} ${processing ? 'voice-fab--processing' : ''}`}
                 onClick={toggleListening}
                 title={isListening ? 'Stop listening' : isTranscribing ? 'Transcribing...' : 'Voice assistant'}
-                onMouseEnter={() => !isBusy && setShowHints(true)}
+                onMouseEnter={() => !isBusy && !showPanel && setShowHints(true)}
                 onMouseLeave={() => setShowHints(false)}
+                onTouchStart={() => setShowHints(false)}
                 disabled={isTranscribing || processing}
             >
                 {isTranscribing || processing ? (
@@ -184,8 +186,8 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
                 {isListening && <span className="voice-fab-pulse voice-fab-pulse--delayed" />}
             </button>
 
-            {/* Hints tooltip */}
-            {showHints && !isListening && (
+            {/* Hints tooltip — desktop hover only, never when panel is open */}
+            {showHints && !isListening && !showPanel && (
                 <div className="voice-hints">
                     <div className="voice-hints-title">Voice Commands</div>
                     {COMMAND_HINTS.slice(0, 5).map((h, i) => (
