@@ -353,6 +353,10 @@ const AIAssistantPage = () => {
         };
         setMessages(prev => [...prev, userMsg]);
         setInputText('');
+        if (inputRef.current) {
+            inputRef.current.style.height = 'auto';
+            inputRef.current.classList.remove('has-overflow');
+        }
         setLoading(true);
 
         try {
@@ -595,7 +599,17 @@ const AIAssistantPage = () => {
                         ref={inputRef}
                         className="ai-chat-input"
                         value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
+                        onChange={(e) => {
+                            setInputText(e.target.value);
+                            // Auto-grow: reset, then expand to scrollHeight (capped by CSS max-height).
+                            // Toggle overflow only when the cap is reached so the scrollbar
+                            // never appears for empty / single-line input.
+                            const ta = e.currentTarget;
+                            ta.style.height = 'auto';
+                            const next = ta.scrollHeight;
+                            ta.style.height = `${next}px`;
+                            ta.classList.toggle('has-overflow', next >= 120);
+                        }}
                         onKeyDown={handleKeyDown}
                         placeholder="Ask about your fitness, nutrition, or workout plans..."
                         rows={1}

@@ -66,6 +66,17 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    // ── Activity tracking ─────────────────────────────────────────────────
+    // Updated by middleware on every authenticated request (throttled to once
+    // per minute per user). Powers the super-admin "last seen" view.
+    lastSeenAt: {
+        type: Date,
+        default: null,
+    },
+    lastLoginAt: {
+        type: Date,
+        default: null,
+    },
 }, {
     timestamps: true,
 });

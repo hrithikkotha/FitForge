@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import API from '../../api/axios';
-import { Users, Search, CheckCircle, UserX, UserCheck, Trash2, X, Clock } from 'lucide-react';
+import { Users, Search, CheckCircle, UserX, UserCheck, Trash2, X, Clock, Activity, Dumbbell, Utensils } from 'lucide-react';
 import { useToast, ToastContainer } from '../../components/Toast';
 import PageLoader from '../../components/PageLoader';
 
@@ -17,7 +17,38 @@ const StatusBadge = ({ status }: { status: string }) => (
     </span>
 );
 
-type FilterTab = 'all' | 'pending' | 'active' | 'suspended';
+// Coloured "last seen" pill — green ≤7d, amber ≤30d, red >30d, grey never.
+const formatRelative = (iso: string | null | undefined): { label: string; color: string; days: number | null } => {
+    if (!iso) return { label: 'Never', color: '#777', days: null };
+    const ms = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(ms / 60000);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    let label: string;
+    if (mins < 1) label = 'Just now';
+    else if (mins < 60) label = `${mins}m ago`;
+    else if (hrs < 24) label = `${hrs}h ago`;
+    else if (days < 30) label = `${days}d ago`;
+    else if (days < 365) label = `${Math.floor(days / 30)}mo ago`;
+    else label = `${Math.floor(days / 365)}y ago`;
+    const color = days <= 7 ? '#4ade80' : days <= 30 ? '#fca311' : '#ef4444';
+    return { label, color, days };
+};
+
+const LastSeenBadge = ({ iso }: { iso: string | null | undefined }) => {
+    const { label, color } = formatRelative(iso);
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '2px 8px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 600,
+            background: `${color}1f`, color,
+        }} title={iso ? new Date(iso).toLocaleString() : 'No recorded activity'}>
+            <Activity size={10} /> {label}
+        </span>
+    );
+};
+
+type FilterTab = 'all' | 'pending' | 'active' | 'suspended' | 'inactive';
 
 const AllUsersPage = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -25,6 +56,9 @@ const AllUsersPage = () => {
     const [search, setSearch] = useState('');
     const [filterTab, setFilterTab] = useState<FilterTab>('pending');
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+    const [activityTarget, setActivityTarget] = useState<any | null>(null);
+    const [activityData, setActivityData] = useState<any | null>(null);
+    const [activityLoading, setActivityLoading] = useState(false);
     const { toasts, show: showToast, dismiss } = useToast();
 
     const load = () => {
@@ -32,6 +66,21 @@ const AllUsersPage = () => {
         API.get('/super-admin/users').then(r => setUsers(r.data)).catch(console.error).finally(() => setLoading(false));
     };
     useEffect(() => { load(); }, []);
+
+    const openActivity = async (u: any) => {
+        setActivityTarget(u);
+        setActivityData(null);
+        setActivityLoading(true);
+        try {
+            const { data } = await API.get(`/super-admin/users/${u._id}/activity`);
+            setActivityData(data);
+        } catch {
+            showToast('Failed to load activity', 'error');
+            setActivityTarget(null);
+        } finally {
+            setActivityLoading(false);
+        }
+    };
 
     const approve = async (id: string, name: string) => {
         try {
@@ -69,12 +118,31 @@ const AllUsersPage = () => {
 
     const pendingCount = users.filter(u => u.status === 'pending').length;
 
+    // Engagement breakdown — drives the summary chips and the "inactive" tab.
+    const engagement = useMemo(() => {
+        const buckets = { active7: 0, active30: 0, dormant: 0, never: 0 };
+        users.forEach(u => {
+            const { days } = formatRelative(u.lastSeenAt);
+            if (days === null) buckets.never++;
+            else if (days <= 7) buckets.active7++;
+            else if (days <= 30) buckets.active30++;
+            else buckets.dormant++;
+        });
+        return buckets;
+    }, [users]);
+
     const filtered = users.filter(u => {
         const matchesSearch =
             u.email.toLowerCase().includes(search.toLowerCase()) ||
             (u.displayName || '').toLowerCase().includes(search.toLowerCase()) ||
             (u.username || '').toLowerCase().includes(search.toLowerCase());
-        const matchesTab = filterTab === 'all' || u.status === filterTab;
+        let matchesTab = true;
+        if (filterTab === 'inactive') {
+            const { days } = formatRelative(u.lastSeenAt);
+            matchesTab = days === null || days > 30;
+        } else if (filterTab !== 'all') {
+            matchesTab = u.status === filterTab;
+        }
         return matchesSearch && matchesTab;
     });
 
@@ -84,12 +152,81 @@ const AllUsersPage = () => {
         { key: 'pending', label: `Pending${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
         { key: 'active', label: 'Active' },
         { key: 'suspended', label: 'Suspended' },
+        { key: 'inactive', label: `Inactive 30d+${engagement.dormant + engagement.never > 0 ? ` (${engagement.dormant + engagement.never})` : ''}` },
         { key: 'all', label: 'All' },
     ];
 
     return (
         <div className="fade-in">
             <ToastContainer toasts={toasts} dismiss={dismiss} />
+
+            {/* Activity drilldown modal */}
+            {activityTarget && (
+                <div className="modal-overlay" onClick={() => setActivityTarget(null)} style={{ zIndex: 1200 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 460 }}>
+                        <div className="modal-header">
+                            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Activity size={18} style={{ color: 'var(--sa-accent)' }} />
+                                Activity · {activityTarget.displayName || activityTarget.username}
+                            </h3>
+                            <button className="btn-icon" onClick={() => setActivityTarget(null)}><X size={18} /></button>
+                        </div>
+                        {activityLoading || !activityData ? (
+                            <p style={{ color: 'var(--text-muted)', padding: '12px 0' }}>Loading activity…</p>
+                        ) : (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+                                    <div style={{ padding: 12, borderRadius: 10, background: 'var(--bg-elevated)' }}>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 4 }}>LAST SEEN</div>
+                                        <LastSeenBadge iso={activityData.user.lastSeenAt} />
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6 }}>
+                                            {activityData.user.lastSeenAt ? new Date(activityData.user.lastSeenAt).toLocaleString() : '—'}
+                                        </div>
+                                    </div>
+                                    <div style={{ padding: 12, borderRadius: 10, background: 'var(--bg-elevated)' }}>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 4 }}>LAST LOGIN</div>
+                                        <LastSeenBadge iso={activityData.user.lastLoginAt} />
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6 }}>
+                                            {activityData.user.lastLoginAt ? new Date(activityData.user.lastLoginAt).toLocaleString() : '—'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-elevated)' }}>
+                                        <Dumbbell size={16} style={{ color: '#4ade80' }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>Workouts</div>
+                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                {activityData.activity.lastWorkoutAt
+                                                    ? `Last: ${activityData.activity.lastWorkoutName || 'Workout'} · ${formatRelative(activityData.activity.lastWorkoutAt).label}`
+                                                    : 'No workouts logged yet'}
+                                            </div>
+                                        </div>
+                                        <strong style={{ fontSize: '1.1rem' }}>{activityData.activity.totalWorkouts}</strong>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-elevated)' }}>
+                                        <Utensils size={16} style={{ color: '#fca311' }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>Meals</div>
+                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                {activityData.activity.lastMealAt
+                                                    ? `Last: ${activityData.activity.lastMealType || 'Meal'} · ${formatRelative(activityData.activity.lastMealAt).label}`
+                                                    : 'No meals logged yet'}
+                                            </div>
+                                        </div>
+                                        <strong style={{ fontSize: '1.1rem' }}>{activityData.activity.totalMeals}</strong>
+                                    </div>
+                                </div>
+
+                                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 14 }}>
+                                    Joined {new Date(activityData.user.createdAt).toLocaleDateString()}
+                                </p>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Delete confirm */}
             {deleteTarget && (
@@ -127,6 +264,26 @@ const AllUsersPage = () => {
                         )}
                     </p>
                 </div>
+            </div>
+
+            {/* Engagement summary chips */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {[
+                    { label: 'Active 7d', value: engagement.active7, color: '#4ade80' },
+                    { label: 'Active 30d', value: engagement.active30, color: '#fca311' },
+                    { label: 'Dormant 30d+', value: engagement.dormant, color: '#ef4444' },
+                    { label: 'Never seen', value: engagement.never, color: '#777' },
+                ].map(c => (
+                    <div key={c.label} style={{
+                        padding: '8px 14px', borderRadius: 12,
+                        background: `${c.color}14`, border: `1px solid ${c.color}33`,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                        <Activity size={13} style={{ color: c.color }} />
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{c.label}</span>
+                        <strong style={{ color: c.color, fontSize: '0.95rem' }}>{c.value}</strong>
+                    </div>
+                ))}
             </div>
 
             {/* Pending attention banner */}
@@ -167,6 +324,7 @@ const AllUsersPage = () => {
                                 <th>Email</th>
                                 <th>Gym</th>
                                 <th>Status</th>
+                                <th>Last seen</th>
                                 <th>Joined</th>
                                 <th>Actions</th>
                             </tr>
@@ -196,11 +354,20 @@ const AllUsersPage = () => {
                                         )}
                                     </td>
                                     <td><StatusBadge status={u.status} /></td>
+                                    <td><LastSeenBadge iso={u.lastSeenAt} /></td>
                                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
                                         {new Date(u.createdAt).toLocaleDateString()}
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 6 }}>
+                                            <button
+                                                className="btn-icon btn-sm"
+                                                title="View activity"
+                                                onClick={() => openActivity(u)}
+                                                style={{ color: 'var(--sa-accent)' }}
+                                            >
+                                                <Activity size={14} />
+                                            </button>
                                             {u.status === 'pending' && (
                                                 <button
                                                     className="btn btn-primary btn-sm"

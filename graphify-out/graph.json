@@ -100,7 +100,7 @@
       "file_type": "code",
       "source_file": "client\\eslint.config.js",
       "source_location": "L1",
-      "community": 55,
+      "community": 57,
       "norm_label": "eslint.config.js",
       "id": "client_eslint_config_js"
     },
@@ -109,7 +109,7 @@
       "file_type": "code",
       "source_file": "client\\vite.config.ts",
       "source_location": "L1",
-      "community": 56,
+      "community": 58,
       "norm_label": "vite.config.ts",
       "id": "client_vite_config_ts"
     },
@@ -118,7 +118,7 @@
       "file_type": "code",
       "source_file": "client\\src\\App.tsx",
       "source_location": "L1",
-      "community": 9,
+      "community": 8,
       "norm_label": "app.tsx",
       "id": "client_src_app_tsx"
     },
@@ -126,8 +126,8 @@
       "label": "SuperAdminGuard()",
       "file_type": "code",
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L79",
-      "community": 9,
+      "source_location": "L91",
+      "community": 8,
       "norm_label": "superadminguard()",
       "id": "app_superadminguard"
     },
@@ -135,8 +135,8 @@
       "label": "AdminGuard()",
       "file_type": "code",
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L88",
-      "community": 9,
+      "source_location": "L100",
+      "community": 8,
       "norm_label": "adminguard()",
       "id": "app_adminguard"
     },
@@ -144,8 +144,8 @@
       "label": "App()",
       "file_type": "code",
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L97",
-      "community": 9,
+      "source_location": "L109",
+      "community": 8,
       "norm_label": "app()",
       "id": "app_app"
     },
@@ -154,7 +154,7 @@
       "file_type": "code",
       "source_file": "client\\src\\main.tsx",
       "source_location": "L1",
-      "community": 9,
+      "community": 8,
       "norm_label": "main.tsx",
       "id": "client_src_main_tsx"
     },
@@ -163,7 +163,7 @@
       "file_type": "code",
       "source_file": "client\\src\\vite-env.d.ts",
       "source_location": "L1",
-      "community": 57,
+      "community": 59,
       "norm_label": "vite-env.d.ts",
       "id": "client_src_vite_env_d_ts"
     },
@@ -172,7 +172,7 @@
       "file_type": "code",
       "source_file": "client\\src\\api\\axios.ts",
       "source_location": "L1",
-      "community": 58,
+      "community": 60,
       "norm_label": "axios.ts",
       "id": "client_src_api_axios_ts"
     },
@@ -181,7 +181,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\BackBodySvg.tsx",
       "source_location": "L1",
-      "community": 42,
+      "community": 45,
       "norm_label": "backbodysvg.tsx",
       "id": "client_src_components_backbodysvg_tsx"
     },
@@ -190,7 +190,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\BackBodySvg.tsx",
       "source_location": "L2",
-      "community": 42,
+      "community": 45,
       "norm_label": "backbodysvg()",
       "id": "backbodysvg_backbodysvg"
     },
@@ -316,7 +316,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\ForceLogoutOverlay.tsx",
       "source_location": "L1",
-      "community": 9,
+      "community": 8,
       "norm_label": "forcelogoutoverlay.tsx",
       "id": "client_src_components_forcelogoutoverlay_tsx"
     },
@@ -325,7 +325,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\ForceLogoutOverlay.tsx",
       "source_location": "L8",
-      "community": 9,
+      "community": 8,
       "norm_label": "forcelogoutoverlay()",
       "id": "forcelogoutoverlay_forcelogoutoverlay"
     },
@@ -334,7 +334,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\FrontBodySvg.tsx",
       "source_location": "L1",
-      "community": 43,
+      "community": 46,
       "norm_label": "frontbodysvg.tsx",
       "id": "client_src_components_frontbodysvg_tsx"
     },
@@ -343,7 +343,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\FrontBodySvg.tsx",
       "source_location": "L2",
-      "community": 43,
+      "community": 46,
       "norm_label": "frontbodysvg()",
       "id": "frontbodysvg_frontbodysvg"
     },
@@ -352,7 +352,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\PageLoader.tsx",
       "source_location": "L1",
-      "community": 44,
+      "community": 47,
       "norm_label": "pageloader.tsx",
       "id": "client_src_components_pageloader_tsx"
     },
@@ -361,7 +361,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\PageLoader.tsx",
       "source_location": "L1",
-      "community": 44,
+      "community": 47,
       "norm_label": "pageloader()",
       "id": "pageloader_pageloader"
     },
@@ -370,7 +370,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\Sidebar.tsx",
       "source_location": "L1",
-      "community": 29,
+      "community": 32,
       "norm_label": "sidebar.tsx",
       "id": "client_src_components_sidebar_tsx"
     },
@@ -379,7 +379,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\Sidebar.tsx",
       "source_location": "L19",
-      "community": 29,
+      "community": 32,
       "norm_label": "confirmlogout()",
       "id": "sidebar_confirmlogout"
     },
@@ -388,7 +388,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\Sidebar.tsx",
       "source_location": "L31",
-      "community": 29,
+      "community": 32,
       "norm_label": "handlestoragechange()",
       "id": "sidebar_handlestoragechange"
     },
@@ -397,7 +397,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\Sidebar.tsx",
       "source_location": "L38",
-      "community": 29,
+      "community": 32,
       "norm_label": "toggletheme()",
       "id": "sidebar_toggletheme"
     },
@@ -406,7 +406,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\test.js",
       "source_location": "L1",
-      "community": 59,
+      "community": 61,
       "norm_label": "test.js",
       "id": "client_src_components_test_js"
     },
@@ -415,7 +415,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\Toast.tsx",
       "source_location": "L1",
-      "community": 45,
+      "community": 48,
       "norm_label": "toast.tsx",
       "id": "client_src_components_toast_tsx"
     },
@@ -424,7 +424,7 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\Toast.tsx",
       "source_location": "L14",
-      "community": 45,
+      "community": 48,
       "norm_label": "usetoast()",
       "id": "toast_usetoast"
     },
@@ -433,7 +433,7 @@
       "file_type": "code",
       "source_file": "client\\src\\context\\AuthContext.tsx",
       "source_location": "L1",
-      "community": 9,
+      "community": 8,
       "norm_label": "authcontext.tsx",
       "id": "client_src_context_authcontext_tsx"
     },
@@ -441,8 +441,8 @@
       "label": "useAuth()",
       "file_type": "code",
       "source_file": "client\\src\\context\\AuthContext.tsx",
-      "source_location": "L107",
-      "community": 9,
+      "source_location": "L127",
+      "community": 8,
       "norm_label": "useauth()",
       "id": "authcontext_useauth"
     },
@@ -450,8 +450,8 @@
       "label": "getRoleHome()",
       "file_type": "code",
       "source_file": "client\\src\\context\\AuthContext.tsx",
-      "source_location": "L114",
-      "community": 9,
+      "source_location": "L134",
+      "community": 8,
       "norm_label": "getrolehome()",
       "id": "authcontext_getrolehome"
     },
@@ -514,7 +514,7 @@
       "file_type": "code",
       "source_file": "client\\src\\layouts\\AdminLayout.tsx",
       "source_location": "L1",
-      "community": 30,
+      "community": 33,
       "norm_label": "adminlayout.tsx",
       "id": "client_src_layouts_adminlayout_tsx"
     },
@@ -522,8 +522,8 @@
       "label": "confirmLogout()",
       "file_type": "code",
       "source_file": "client\\src\\layouts\\AdminLayout.tsx",
-      "source_location": "L14",
-      "community": 30,
+      "source_location": "L16",
+      "community": 33,
       "norm_label": "confirmlogout()",
       "id": "adminlayout_confirmlogout"
     },
@@ -532,7 +532,7 @@
       "file_type": "code",
       "source_file": "client\\src\\layouts\\AdminLayout.tsx",
       "source_location": "L25",
-      "community": 30,
+      "community": 33,
       "norm_label": "handlestorage()",
       "id": "adminlayout_handlestorage"
     },
@@ -541,7 +541,7 @@
       "file_type": "code",
       "source_file": "client\\src\\layouts\\AdminLayout.tsx",
       "source_location": "L29",
-      "community": 30,
+      "community": 33,
       "norm_label": "toggletheme()",
       "id": "adminlayout_toggletheme"
     },
@@ -550,7 +550,7 @@
       "file_type": "code",
       "source_file": "client\\src\\layouts\\SuperAdminLayout.tsx",
       "source_location": "L1",
-      "community": 31,
+      "community": 34,
       "norm_label": "superadminlayout.tsx",
       "id": "client_src_layouts_superadminlayout_tsx"
     },
@@ -558,8 +558,8 @@
       "label": "confirmLogout()",
       "file_type": "code",
       "source_file": "client\\src\\layouts\\SuperAdminLayout.tsx",
-      "source_location": "L14",
-      "community": 31,
+      "source_location": "L16",
+      "community": 34,
       "norm_label": "confirmlogout()",
       "id": "superadminlayout_confirmlogout"
     },
@@ -568,7 +568,7 @@
       "file_type": "code",
       "source_file": "client\\src\\layouts\\SuperAdminLayout.tsx",
       "source_location": "L25",
-      "community": 31,
+      "community": 34,
       "norm_label": "handlestorage()",
       "id": "superadminlayout_handlestorage"
     },
@@ -577,7 +577,7 @@
       "file_type": "code",
       "source_file": "client\\src\\layouts\\SuperAdminLayout.tsx",
       "source_location": "L29",
-      "community": 31,
+      "community": 34,
       "norm_label": "toggletheme()",
       "id": "superadminlayout_toggletheme"
     },
@@ -586,7 +586,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
       "source_location": "L1",
-      "community": 11,
+      "community": 4,
       "norm_label": "aiassistantpage.tsx",
       "id": "client_src_pages_aiassistantpage_tsx"
     },
@@ -595,7 +595,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
       "source_location": "L32",
-      "community": 11,
+      "community": 4,
       "norm_label": "loadchathistory()",
       "id": "aiassistantpage_loadchathistory"
     },
@@ -604,7 +604,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
       "source_location": "L43",
-      "community": 11,
+      "community": 4,
       "norm_label": "savechathistory()",
       "id": "aiassistantpage_savechathistory"
     },
@@ -613,7 +613,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
       "source_location": "L51",
-      "community": 11,
+      "community": 4,
       "norm_label": "executeactions()",
       "id": "aiassistantpage_executeactions"
     },
@@ -622,7 +622,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
       "source_location": "L139",
-      "community": 11,
+      "community": 4,
       "norm_label": "useaudiorecorder()",
       "id": "aiassistantpage_useaudiorecorder"
     },
@@ -631,7 +631,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
       "source_location": "L318",
-      "community": 11,
+      "community": 4,
       "norm_label": "animate()",
       "id": "aiassistantpage_animate"
     },
@@ -639,8 +639,8 @@
       "label": "handleVoiceClick()",
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
-      "source_location": "L476",
-      "community": 11,
+      "source_location": "L480",
+      "community": 4,
       "norm_label": "handlevoiceclick()",
       "id": "aiassistantpage_handlevoiceclick"
     },
@@ -648,8 +648,8 @@
       "label": "handleKeyDown()",
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
-      "source_location": "L484",
-      "community": 11,
+      "source_location": "L488",
+      "community": 4,
       "norm_label": "handlekeydown()",
       "id": "aiassistantpage_handlekeydown"
     },
@@ -657,8 +657,8 @@
       "label": "clearChat()",
       "file_type": "code",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
-      "source_location": "L491",
-      "community": 11,
+      "source_location": "L495",
+      "community": 4,
       "norm_label": "clearchat()",
       "id": "aiassistantpage_clearchat"
     },
@@ -667,7 +667,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\AuthPage.tsx",
       "source_location": "L1",
-      "community": 46,
+      "community": 35,
       "norm_label": "authpage.tsx",
       "id": "client_src_pages_authpage_tsx"
     },
@@ -675,8 +675,8 @@
       "label": "handleSubmit()",
       "file_type": "code",
       "source_file": "client\\src\\pages\\AuthPage.tsx",
-      "source_location": "L32",
-      "community": 46,
+      "source_location": "L38",
+      "community": 35,
       "norm_label": "handlesubmit()",
       "id": "authpage_handlesubmit"
     },
@@ -685,7 +685,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\BodyMapPage.tsx",
       "source_location": "L1",
-      "community": 35,
+      "community": 38,
       "norm_label": "bodymappage.tsx",
       "id": "client_src_pages_bodymappage_tsx"
     },
@@ -694,7 +694,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\BodyMapPage.tsx",
       "source_location": "L49",
-      "community": 35,
+      "community": 38,
       "norm_label": "handleselectmuscle()",
       "id": "bodymappage_handleselectmuscle"
     },
@@ -703,7 +703,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\BodyMapPage.tsx",
       "source_location": "L53",
-      "community": 35,
+      "community": 38,
       "norm_label": "musclelabel()",
       "id": "bodymappage_musclelabel"
     },
@@ -712,7 +712,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\ProfilePage.tsx",
       "source_location": "L1",
-      "community": 47,
+      "community": 49,
       "norm_label": "profilepage.tsx",
       "id": "client_src_pages_profilepage_tsx"
     },
@@ -721,7 +721,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\ProfilePage.tsx",
       "source_location": "L15",
-      "community": 47,
+      "community": 49,
       "norm_label": "handlesave()",
       "id": "profilepage_handlesave"
     },
@@ -730,7 +730,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\StatisticsPage.tsx",
       "source_location": "L1",
-      "community": 32,
+      "community": 36,
       "norm_label": "statisticspage.tsx",
       "id": "client_src_pages_statisticspage_tsx"
     },
@@ -739,7 +739,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\StatisticsPage.tsx",
       "source_location": "L32",
-      "community": 32,
+      "community": 36,
       "norm_label": "loadstats()",
       "id": "statisticspage_loadstats"
     },
@@ -748,7 +748,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\StatisticsPage.tsx",
       "source_location": "L52",
-      "community": 32,
+      "community": 36,
       "norm_label": "musclelabel()",
       "id": "statisticspage_musclelabel"
     },
@@ -757,7 +757,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\StatisticsPage.tsx",
       "source_location": "L59",
-      "community": 32,
+      "community": 36,
       "norm_label": "formatdate()",
       "id": "statisticspage_formatdate"
     },
@@ -766,7 +766,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\admin\\AdminDashboardPage.tsx",
       "source_location": "L1",
-      "community": 60,
+      "community": 62,
       "norm_label": "admindashboardpage.tsx",
       "id": "client_src_pages_admin_admindashboardpage_tsx"
     },
@@ -775,7 +775,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\admin\\AdminRegisterPage.tsx",
       "source_location": "L1",
-      "community": 36,
+      "community": 39,
       "norm_label": "adminregisterpage.tsx",
       "id": "client_src_pages_admin_adminregisterpage_tsx"
     },
@@ -784,7 +784,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\admin\\AdminRegisterPage.tsx",
       "source_location": "L13",
-      "community": 36,
+      "community": 39,
       "norm_label": "handlesubmit()",
       "id": "adminregisterpage_handlesubmit"
     },
@@ -793,7 +793,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\admin\\AdminRegisterPage.tsx",
       "source_location": "L43",
-      "community": 36,
+      "community": 39,
       "norm_label": "f()",
       "id": "adminregisterpage_f"
     },
@@ -910,7 +910,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\superadmin\\AdminDetailPage.tsx",
       "source_location": "L1",
-      "community": 48,
+      "community": 50,
       "norm_label": "admindetailpage.tsx",
       "id": "client_src_pages_superadmin_admindetailpage_tsx"
     },
@@ -919,7 +919,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\superadmin\\AdminDetailPage.tsx",
       "source_location": "L7",
-      "community": 48,
+      "community": 50,
       "norm_label": "statusbadge()",
       "id": "admindetailpage_statusbadge"
     },
@@ -991,7 +991,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\superadmin\\AllUsersPage.tsx",
       "source_location": "L1",
-      "community": 49,
+      "community": 51,
       "norm_label": "alluserspage.tsx",
       "id": "client_src_pages_superadmin_alluserspage_tsx"
     },
@@ -1000,7 +1000,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\superadmin\\AllUsersPage.tsx",
       "source_location": "L9",
-      "community": 49,
+      "community": 51,
       "norm_label": "statusbadge()",
       "id": "alluserspage_statusbadge"
     },
@@ -1153,7 +1153,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\superadmin\\OverviewPage.tsx",
       "source_location": "L1",
-      "community": 50,
+      "community": 52,
       "norm_label": "overviewpage.tsx",
       "id": "client_src_pages_superadmin_overviewpage_tsx"
     },
@@ -1162,7 +1162,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\superadmin\\OverviewPage.tsx",
       "source_location": "L25",
-      "community": 50,
+      "community": 52,
       "norm_label": "toggleautoapprove()",
       "id": "overviewpage_toggleautoapprove"
     },
@@ -1252,7 +1252,7 @@
       "file_type": "code",
       "source_file": "scripts\\convert_front.js",
       "source_location": "L1",
-      "community": 61,
+      "community": 63,
       "norm_label": "convert_front.js",
       "id": "scripts_convert_front_js"
     },
@@ -1297,7 +1297,7 @@
       "file_type": "code",
       "source_file": "server\\middleware\\auth.js",
       "source_location": "L1",
-      "community": 37,
+      "community": 40,
       "norm_label": "auth.js",
       "id": "server_middleware_auth_js"
     },
@@ -1306,7 +1306,7 @@
       "file_type": "code",
       "source_file": "server\\middleware\\auth.js",
       "source_location": "L4",
-      "community": 37,
+      "community": 40,
       "norm_label": "protect()",
       "id": "auth_protect"
     },
@@ -1314,8 +1314,8 @@
       "label": "authorizeRoles()",
       "file_type": "code",
       "source_file": "server\\middleware\\auth.js",
-      "source_location": "L47",
-      "community": 37,
+      "source_location": "L55",
+      "community": 40,
       "norm_label": "authorizeroles()",
       "id": "auth_authorizeroles"
     },
@@ -1324,7 +1324,7 @@
       "file_type": "code",
       "source_file": "server\\models\\Exercise.js",
       "source_location": "L1",
-      "community": 62,
+      "community": 64,
       "norm_label": "exercise.js",
       "id": "server_models_exercise_js"
     },
@@ -1333,7 +1333,7 @@
       "file_type": "code",
       "source_file": "server\\models\\FoodItem.js",
       "source_location": "L1",
-      "community": 63,
+      "community": 65,
       "norm_label": "fooditem.js",
       "id": "server_models_fooditem_js"
     },
@@ -1342,7 +1342,7 @@
       "file_type": "code",
       "source_file": "server\\models\\MealEntry.js",
       "source_location": "L1",
-      "community": 64,
+      "community": 66,
       "norm_label": "mealentry.js",
       "id": "server_models_mealentry_js"
     },
@@ -1351,7 +1351,7 @@
       "file_type": "code",
       "source_file": "server\\models\\PlatformSettings.js",
       "source_location": "L1",
-      "community": 65,
+      "community": 67,
       "norm_label": "platformsettings.js",
       "id": "server_models_platformsettings_js"
     },
@@ -1360,7 +1360,7 @@
       "file_type": "code",
       "source_file": "server\\models\\User.js",
       "source_location": "L1",
-      "community": 66,
+      "community": 68,
       "norm_label": "user.js",
       "id": "server_models_user_js"
     },
@@ -1369,7 +1369,7 @@
       "file_type": "code",
       "source_file": "server\\models\\WorkoutSession.js",
       "source_location": "L1",
-      "community": 67,
+      "community": 69,
       "norm_label": "workoutsession.js",
       "id": "server_models_workoutsession_js"
     },
@@ -1378,7 +1378,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\adminPanel.js",
       "source_location": "L1",
-      "community": 68,
+      "community": 70,
       "norm_label": "adminpanel.js",
       "id": "server_routes_adminpanel_js"
     },
@@ -1387,7 +1387,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\analytics.js",
       "source_location": "L1",
-      "community": 38,
+      "community": 41,
       "norm_label": "analytics.js",
       "id": "server_routes_analytics_js"
     },
@@ -1396,7 +1396,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\analytics.js",
       "source_location": "L13",
-      "community": 38,
+      "community": 41,
       "norm_label": "getcached()",
       "id": "analytics_getcached"
     },
@@ -1405,7 +1405,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\analytics.js",
       "source_location": "L20",
-      "community": 38,
+      "community": 41,
       "norm_label": "setcache()",
       "id": "analytics_setcache"
     },
@@ -1414,7 +1414,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\auth.js",
       "source_location": "L1",
-      "community": 33,
+      "community": 4,
       "norm_label": "auth.js",
       "id": "server_routes_auth_js"
     },
@@ -1422,8 +1422,8 @@
       "label": "isValidEmail()",
       "file_type": "code",
       "source_file": "server\\routes\\auth.js",
-      "source_location": "L20",
-      "community": 33,
+      "source_location": "L35",
+      "community": 4,
       "norm_label": "isvalidemail()",
       "id": "auth_isvalidemail"
     },
@@ -1431,8 +1431,8 @@
       "label": "generateToken()",
       "file_type": "code",
       "source_file": "server\\routes\\auth.js",
-      "source_location": "L22",
-      "community": 33,
+      "source_location": "L37",
+      "community": 4,
       "norm_label": "generatetoken()",
       "id": "auth_generatetoken"
     },
@@ -1440,8 +1440,8 @@
       "label": "buildUserResponse()",
       "file_type": "code",
       "source_file": "server\\routes\\auth.js",
-      "source_location": "L26",
-      "community": 33,
+      "source_location": "L39",
+      "community": 4,
       "norm_label": "builduserresponse()",
       "id": "auth_builduserresponse"
     },
@@ -1450,7 +1450,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\exercises.js",
       "source_location": "L1",
-      "community": 69,
+      "community": 71,
       "norm_label": "exercises.js",
       "id": "server_routes_exercises_js"
     },
@@ -1459,7 +1459,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\foods.js",
       "source_location": "L1",
-      "community": 70,
+      "community": 72,
       "norm_label": "foods.js",
       "id": "server_routes_foods_js"
     },
@@ -1468,7 +1468,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\meals.js",
       "source_location": "L1",
-      "community": 71,
+      "community": 73,
       "norm_label": "meals.js",
       "id": "server_routes_meals_js"
     },
@@ -1477,7 +1477,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\superAdmin.js",
       "source_location": "L1",
-      "community": 72,
+      "community": 74,
       "norm_label": "superadmin.js",
       "id": "server_routes_superadmin_js"
     },
@@ -1486,7 +1486,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L1",
-      "community": 7,
+      "community": 9,
       "norm_label": "voice.js",
       "id": "server_routes_voice_js"
     },
@@ -1495,7 +1495,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L17",
-      "community": 7,
+      "community": 9,
       "norm_label": "getgroq()",
       "id": "voice_getgroq"
     },
@@ -1504,7 +1504,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L29",
-      "community": 7,
+      "community": 9,
       "norm_label": "getcacheduserdata()",
       "id": "voice_getcacheduserdata"
     },
@@ -1513,7 +1513,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L40",
-      "community": 7,
+      "community": 9,
       "norm_label": "setcacheduserdata()",
       "id": "voice_setcacheduserdata"
     },
@@ -1522,7 +1522,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L58",
-      "community": 7,
+      "community": 9,
       "norm_label": "invalidateusercache()",
       "id": "voice_invalidateusercache"
     },
@@ -1531,7 +1531,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L71",
-      "community": 7,
+      "community": 9,
       "norm_label": "messageneedsactiondata()",
       "id": "voice_messageneedsactiondata"
     },
@@ -1540,7 +1540,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L86",
-      "community": 7,
+      "community": 9,
       "norm_label": "gatheruserdata()",
       "id": "voice_gatheruserdata"
     },
@@ -1549,7 +1549,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L221",
-      "community": 7,
+      "community": 9,
       "norm_label": "buildchatsystemprompt()",
       "id": "voice_buildchatsystemprompt"
     },
@@ -1558,7 +1558,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L297",
-      "community": 7,
+      "community": 9,
       "norm_label": "extractjson()",
       "id": "voice_extractjson"
     },
@@ -1567,7 +1567,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L316",
-      "community": 7,
+      "community": 9,
       "norm_label": "transcribeupload()",
       "id": "voice_transcribeupload"
     },
@@ -1576,7 +1576,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\voice.js",
       "source_location": "L439",
-      "community": 7,
+      "community": 9,
       "norm_label": "chatbodyparser()",
       "id": "voice_chatbodyparser"
     },
@@ -1585,7 +1585,7 @@
       "file_type": "code",
       "source_file": "server\\routes\\workouts.js",
       "source_location": "L1",
-      "community": 73,
+      "community": 75,
       "norm_label": "workouts.js",
       "id": "server_routes_workouts_js"
     },
@@ -1998,7 +1998,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "iron forge fitness logo",
       "id": "logo1_iron_forge_fitness"
     },
@@ -2011,7 +2011,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "iron forge fitness (brand)",
       "id": "logo1_brand_iron_forge_fitness"
     },
@@ -2024,7 +2024,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "anvil symbol",
       "id": "logo1_anvil_symbol"
     },
@@ -2037,7 +2037,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "barbell / dumbbell symbol",
       "id": "logo1_barbell_symbol"
     },
@@ -2050,7 +2050,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "gold / bronze color palette",
       "id": "logo1_color_gold"
     },
@@ -2063,7 +2063,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "bold sans-serif typography",
       "id": "logo1_typography_bold_sans"
     },
@@ -2076,7 +2076,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "flat minimalist design style",
       "id": "logo1_style_flat_minimalist"
     },
@@ -2089,7 +2089,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "forging strength concept",
       "id": "logo1_concept_strength_forging"
     },
@@ -2102,7 +2102,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "fitness / gym domain",
       "id": "logo1_domain_fitness"
     },
@@ -2115,7 +2115,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 11,
       "norm_label": "blacksmithing / metalworking domain",
       "id": "logo1_domain_blacksmithing"
     },
@@ -2336,7 +2336,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 28,
       "norm_label": "react logo (svg)",
       "id": "react_svg_reactlogo"
     },
@@ -2349,7 +2349,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 28,
       "norm_label": "react.js framework",
       "id": "react_svg_reactjs"
     },
@@ -2362,7 +2362,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 28,
       "norm_label": "iconify icon library",
       "id": "react_svg_iconify"
     },
@@ -2375,7 +2375,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 28,
       "norm_label": "atom symbol (visual element)",
       "id": "react_svg_atomsymbol"
     },
@@ -2388,7 +2388,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 28,
       "norm_label": "cyan color (#00d8ff)",
       "id": "react_svg_cyancolor"
     },
@@ -2401,7 +2401,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "back body svg diagram",
       "id": "back_body_svg"
     },
@@ -2414,7 +2414,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "trapezius (upper traps)",
       "id": "back_body_traps"
     },
@@ -2427,7 +2427,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "middle trapezius",
       "id": "back_body_traps_middle"
     },
@@ -2440,7 +2440,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "rear shoulders (posterior deltoids)",
       "id": "back_body_rear_shoulders"
     },
@@ -2453,7 +2453,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "latissimus dorsi (lats)",
       "id": "back_body_lats"
     },
@@ -2466,7 +2466,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "lower back",
       "id": "back_body_lowerback"
     },
@@ -2479,7 +2479,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "triceps",
       "id": "back_body_triceps"
     },
@@ -2492,7 +2492,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "forearms",
       "id": "back_body_forearms"
     },
@@ -2505,7 +2505,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "glutes (gluteus maximus)",
       "id": "back_body_glutes"
     },
@@ -2518,7 +2518,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "hamstrings",
       "id": "back_body_hamstrings"
     },
@@ -2531,7 +2531,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "calves (gastrocnemius)",
       "id": "back_body_calves"
     },
@@ -2544,7 +2544,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "full body outline (back view)",
       "id": "back_body_body"
     },
@@ -2830,7 +2830,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "build tooling (vite/eslint)",
       "id": "community_build_tooling"
     },
@@ -2843,7 +2843,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "admin member & food mgmt",
       "id": "community_admin_member_food_mgmt"
     },
@@ -2869,7 +2869,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "workout session ui",
       "id": "community_workout_session_ui"
     },
@@ -2895,7 +2895,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 37,
       "norm_label": "voice ai route (server)",
       "id": "community_voice_ai_route"
     },
@@ -2921,7 +2921,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 30,
       "norm_label": "brand identity assets",
       "id": "community_brand_identity"
     },
@@ -2934,7 +2934,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 74,
+      "community": 76,
       "norm_label": "ai chat interface",
       "id": "community_ai_chat"
     },
@@ -2947,7 +2947,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "exercises admin crud",
       "id": "community_exercises_admin"
     },
@@ -2960,7 +2960,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 37,
       "norm_label": "voice command parsing",
       "id": "community_voice_command_parsing"
     },
@@ -2973,7 +2973,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 30,
       "norm_label": "fitforge brand assets",
       "id": "community_fitforge_brand"
     },
@@ -2986,7 +2986,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 37,
       "norm_label": "voice assistant component",
       "id": "community_voice_assistant"
     },
@@ -3012,7 +3012,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 30,
       "norm_label": "projectx logo assets",
       "id": "community_projectx_logo_assets"
     },
@@ -3025,7 +3025,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 77,
       "norm_label": "date picker component",
       "id": "community_date_picker"
     },
@@ -3038,7 +3038,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "admin approval workflow",
       "id": "community_admin_approval"
     },
@@ -3051,7 +3051,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 76,
+      "community": 78,
       "norm_label": "vite brand svg assets",
       "id": "community_vite_brand_svg"
     },
@@ -3077,7 +3077,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 37,
       "norm_label": "voice hooks (client)",
       "id": "community_voice_hooks"
     },
@@ -3090,7 +3090,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 77,
+      "community": 79,
       "norm_label": "react brand assets",
       "id": "community_react_brand"
     },
@@ -3103,7 +3103,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 78,
+      "community": 80,
       "norm_label": "sidebar component",
       "id": "community_sidebar"
     },
@@ -3116,7 +3116,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 52,
+      "community": 53,
       "norm_label": "admin layout",
       "id": "community_admin_layout"
     },
@@ -3129,7 +3129,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 51,
+      "community": 55,
       "norm_label": "superadmin layout",
       "id": "community_superadmin_layout"
     },
@@ -3142,7 +3142,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 39,
+      "community": 42,
       "norm_label": "statistics page",
       "id": "community_statistics_page"
     },
@@ -3168,7 +3168,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 39,
+      "community": 42,
       "norm_label": "dashboard page",
       "id": "community_dashboard_page"
     },
@@ -3181,7 +3181,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 29,
       "norm_label": "nutrition page",
       "id": "community_nutrition_page"
     },
@@ -3194,7 +3194,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "admin registration",
       "id": "community_admin_registration"
     },
@@ -3350,7 +3350,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "eslint config",
       "id": "community_eslint_config"
     },
@@ -3363,7 +3363,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "vite config",
       "id": "community_vite_config"
     },
@@ -3376,7 +3376,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "vite env types",
       "id": "community_vite_env_types"
     },
@@ -3402,7 +3402,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 79,
+      "community": 81,
       "norm_label": "test file",
       "id": "community_test_file"
     },
@@ -3415,7 +3415,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 52,
+      "community": 53,
       "norm_label": "admin dashboard page",
       "id": "community_admin_dashboard"
     },
@@ -3441,7 +3441,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 53,
+      "community": 54,
       "norm_label": "exercise model",
       "id": "community_exercise_model"
     },
@@ -3454,7 +3454,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 29,
       "norm_label": "food item model",
       "id": "community_food_item_model"
     },
@@ -3467,7 +3467,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 29,
       "norm_label": "meal entry model",
       "id": "community_meal_entry_model"
     },
@@ -3480,7 +3480,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 80,
+      "community": 82,
       "norm_label": "platform settings model",
       "id": "community_platform_settings_model"
     },
@@ -3506,7 +3506,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 54,
+      "community": 56,
       "norm_label": "workout session model",
       "id": "community_workout_session_model"
     },
@@ -3519,7 +3519,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "admin panel routes",
       "id": "community_admin_panel_routes"
     },
@@ -3532,7 +3532,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 39,
+      "community": 42,
       "norm_label": "analytics routes",
       "id": "community_analytics_routes"
     },
@@ -3545,7 +3545,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 53,
+      "community": 54,
       "norm_label": "exercises routes",
       "id": "community_exercises_routes"
     },
@@ -3558,7 +3558,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 29,
       "norm_label": "foods routes",
       "id": "community_foods_routes"
     },
@@ -3571,7 +3571,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 29,
       "norm_label": "meals routes",
       "id": "community_meals_routes"
     },
@@ -3584,7 +3584,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 51,
+      "community": 55,
       "norm_label": "superadmin routes",
       "id": "community_superadmin_routes"
     },
@@ -3597,7 +3597,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 54,
+      "community": 56,
       "norm_label": "workouts routes",
       "id": "community_workouts_routes"
     },
@@ -3623,7 +3623,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "client project template (react + ts + vite)",
       "id": "godnode_client_template"
     },
@@ -3662,7 +3662,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "load()",
       "id": "godnode_load_fn"
     },
@@ -3675,7 +3675,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 30,
       "norm_label": "projectx logo",
       "id": "godnode_projectx_logo"
     },
@@ -3688,7 +3688,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 30,
       "norm_label": "iron forge fitness logo",
       "id": "godnode_iron_forge_logo"
     },
@@ -3714,7 +3714,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "@vitejs/plugin-react (babel)",
       "id": "godnode_vitejs_plugin_react"
     },
@@ -3727,7 +3727,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "suspend()",
       "id": "fn_suspend"
     },
@@ -3740,7 +3740,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "activate()",
       "id": "fn_activate"
     },
@@ -3753,7 +3753,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "bulksuspend()",
       "id": "fn_bulk_suspend"
     },
@@ -3766,7 +3766,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "bulkactivate()",
       "id": "fn_bulk_activate"
     },
@@ -3779,7 +3779,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 10,
       "norm_label": "handleadd()",
       "id": "fn_handle_add"
     },
@@ -3792,7 +3792,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "low cohesion communities",
       "id": "concern_low_cohesion"
     },
@@ -3805,7 +3805,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "isolated tool nodes",
       "id": "concern_isolated_nodes"
     },
@@ -3831,7 +3831,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "vite + react + typescript client stack",
       "id": "hyperedge_vite_react_ts"
     },
@@ -3844,7 +3844,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "fast refresh plugin options",
       "id": "hyperedge_fast_refresh"
     },
@@ -3857,7 +3857,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "eslint configuration ecosystem",
       "id": "hyperedge_eslint_ecosystem"
     },
@@ -3938,7 +3938,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\DashboardPage.tsx",
       "source_location": "L1",
-      "community": 40,
+      "community": 43,
       "norm_label": "dashboardpage.tsx",
       "id": "client_src_pages_dashboardpage_tsx"
     },
@@ -3947,7 +3947,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\DashboardPage.tsx",
       "source_location": "L19",
-      "community": 40,
+      "community": 43,
       "norm_label": "loaddashboarddata()",
       "id": "dashboardpage_loaddashboarddata"
     },
@@ -3956,7 +3956,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\DashboardPage.tsx",
       "source_location": "L42",
-      "community": 40,
+      "community": 43,
       "norm_label": "formatdate()",
       "id": "dashboardpage_formatdate"
     },
@@ -3965,7 +3965,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\NutritionPage.tsx",
       "source_location": "L1",
-      "community": 41,
+      "community": 44,
       "norm_label": "nutritionpage.tsx",
       "id": "client_src_pages_nutritionpage_tsx"
     },
@@ -3974,7 +3974,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\NutritionPage.tsx",
       "source_location": "L59",
-      "community": 41,
+      "community": 44,
       "norm_label": "scoremeal()",
       "id": "nutritionpage_scoremeal"
     },
@@ -3983,7 +3983,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\NutritionPage.tsx",
       "source_location": "L388",
-      "community": 41,
+      "community": 44,
       "norm_label": "mealtypelabel()",
       "id": "nutritionpage_mealtypelabel"
     },
@@ -3992,7 +3992,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L1",
-      "community": 4,
+      "community": 5,
       "norm_label": "workoutspage.tsx",
       "id": "client_src_pages_workoutspage_tsx"
     },
@@ -4001,7 +4001,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L67",
-      "community": 4,
+      "community": 5,
       "norm_label": "createworkout()",
       "id": "workoutspage_createworkout"
     },
@@ -4010,7 +4010,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L88",
-      "community": 4,
+      "community": 5,
       "norm_label": "addexercisetoworkout()",
       "id": "workoutspage_addexercisetoworkout"
     },
@@ -4019,7 +4019,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L126",
-      "community": 4,
+      "community": 5,
       "norm_label": "removeexercisefromworkout()",
       "id": "workoutspage_removeexercisefromworkout"
     },
@@ -4028,7 +4028,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L150",
-      "community": 4,
+      "community": 5,
       "norm_label": "addsettoexercise()",
       "id": "workoutspage_addsettoexercise"
     },
@@ -4037,7 +4037,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L170",
-      "community": 4,
+      "community": 5,
       "norm_label": "deleteset()",
       "id": "workoutspage_deleteset"
     },
@@ -4046,7 +4046,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L190",
-      "community": 4,
+      "community": 5,
       "norm_label": "updateset()",
       "id": "workoutspage_updateset"
     },
@@ -4055,7 +4055,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L216",
-      "community": 4,
+      "community": 5,
       "norm_label": "updatecardiofield()",
       "id": "workoutspage_updatecardiofield"
     },
@@ -4064,7 +4064,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L236",
-      "community": 4,
+      "community": 5,
       "norm_label": "confirmdeleteworkout()",
       "id": "workoutspage_confirmdeleteworkout"
     },
@@ -4073,7 +4073,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L240",
-      "community": 4,
+      "community": 5,
       "norm_label": "handledeleteworkout()",
       "id": "workoutspage_handledeleteworkout"
     },
@@ -4082,7 +4082,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L254",
-      "community": 4,
+      "community": 5,
       "norm_label": "createcustomexercise()",
       "id": "workoutspage_createcustomexercise"
     },
@@ -4091,7 +4091,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L274",
-      "community": 4,
+      "community": 5,
       "norm_label": "togglemuscle()",
       "id": "workoutspage_togglemuscle"
     },
@@ -4100,7 +4100,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L278",
-      "community": 4,
+      "community": 5,
       "norm_label": "musclelabel()",
       "id": "workoutspage_musclelabel"
     },
@@ -4109,7 +4109,7 @@
       "file_type": "code",
       "source_file": "client\\src\\pages\\WorkoutsPage.tsx",
       "source_location": "L280",
-      "community": 4,
+      "community": 5,
       "norm_label": "totalsets()",
       "id": "workoutspage_totalsets"
     },
@@ -4118,9 +4118,9 @@
       "file_type": "code",
       "source_file": "client\\src\\components\\BottomNav.tsx",
       "source_location": "L1",
-      "id": "client_src_components_bottomnav_tsx",
-      "community": 81,
-      "norm_label": "bottomnav.tsx"
+      "community": 83,
+      "norm_label": "bottomnav.tsx",
+      "id": "client_src_components_bottomnav_tsx"
     },
     {
       "label": "Non-Destructive Overlay Strategy",
@@ -4131,9 +4131,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_overlay_strategy",
-      "community": 19,
-      "norm_label": "non-destructive overlay strategy"
+      "community": 20,
+      "norm_label": "non-destructive overlay strategy",
+      "id": "mobilefirstchanges_overlay_strategy"
     },
     {
       "label": "mobile-first.css overlay stylesheet",
@@ -4144,9 +4144,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_mobile_first_css",
-      "community": 19,
-      "norm_label": "mobile-first.css overlay stylesheet"
+      "community": 20,
+      "norm_label": "mobile-first.css overlay stylesheet",
+      "id": "mobilefirstchanges_mobile_first_css"
     },
     {
       "label": "Mobile Bottom Tab Bar (BottomNav)",
@@ -4157,9 +4157,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_bottom_nav_concept",
-      "community": 20,
-      "norm_label": "mobile bottom tab bar (bottomnav)"
+      "community": 19,
+      "norm_label": "mobile bottom tab bar (bottomnav)",
+      "id": "mobilefirstchanges_bottom_nav_concept"
     },
     {
       "label": "Audit C1: iOS input force-zoom",
@@ -4170,9 +4170,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_audit_C1",
-      "community": 19,
-      "norm_label": "audit c1: ios input force-zoom"
+      "community": 20,
+      "norm_label": "audit c1: ios input force-zoom",
+      "id": "mobilefirstchanges_audit_C1"
     },
     {
       "label": "Audit C2: Touch targets <44px",
@@ -4183,9 +4183,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_audit_C2",
-      "community": 19,
-      "norm_label": "audit c2: touch targets <44px"
+      "community": 20,
+      "norm_label": "audit c2: touch targets <44px",
+      "id": "mobilefirstchanges_audit_C2"
     },
     {
       "label": "Audit C3: Missing safe-area insets",
@@ -4196,9 +4196,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_audit_C3",
-      "community": 19,
-      "norm_label": "audit c3: missing safe-area insets"
+      "community": 20,
+      "norm_label": "audit c3: missing safe-area insets",
+      "id": "mobilefirstchanges_audit_C3"
     },
     {
       "label": "Audit C5: AI chat input not keyboard-aware",
@@ -4209,9 +4209,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_audit_C5",
-      "community": 19,
-      "norm_label": "audit c5: ai chat input not keyboard-aware"
+      "community": 20,
+      "norm_label": "audit c5: ai chat input not keyboard-aware",
+      "id": "mobilefirstchanges_audit_C5"
     },
     {
       "label": "Audit H2: Hamburger drawer instead of bottom tab",
@@ -4222,9 +4222,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_audit_H2",
-      "community": 20,
-      "norm_label": "audit h2: hamburger drawer instead of bottom tab"
+      "community": 19,
+      "norm_label": "audit h2: hamburger drawer instead of bottom tab",
+      "id": "mobilefirstchanges_audit_H2"
     },
     {
       "label": "Audit H1: Missing inputMode/autoComplete/enterKeyHint",
@@ -4235,9 +4235,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_audit_H1",
-      "community": 82,
-      "norm_label": "audit h1: missing inputmode/autocomplete/enterkeyhint"
+      "community": 84,
+      "norm_label": "audit h1: missing inputmode/autocomplete/enterkeyhint",
+      "id": "mobilefirstchanges_audit_H1"
     },
     {
       "label": "Thumb-zone reachability rationale for tab choices",
@@ -4248,9 +4248,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_thumb_zone_rationale",
-      "community": 20,
-      "norm_label": "thumb-zone reachability rationale for tab choices"
+      "community": 19,
+      "norm_label": "thumb-zone reachability rationale for tab choices",
+      "id": "mobilefirstchanges_thumb_zone_rationale"
     },
     {
       "label": "Admin layouts intentionally untouched (desktop-primary)",
@@ -4261,9 +4261,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_admin_untouched_rationale",
-      "community": 20,
-      "norm_label": "admin layouts intentionally untouched (desktop-primary)"
+      "community": 19,
+      "norm_label": "admin layouts intentionally untouched (desktop-primary)",
+      "id": "mobilefirstchanges_admin_untouched_rationale"
     },
     {
       "label": "Overlay loaded after index.css so it wins",
@@ -4274,9 +4274,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "mobilefirstchanges_overlay_load_order",
-      "community": 19,
-      "norm_label": "overlay loaded after index.css so it wins"
+      "community": 20,
+      "norm_label": "overlay loaded after index.css so it wins",
+      "id": "mobilefirstchanges_overlay_load_order"
     },
     {
       "label": "BottomNav component",
@@ -4287,9 +4287,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "bottomnav_component",
-      "community": 20,
-      "norm_label": "bottomnav component"
+      "community": 19,
+      "norm_label": "bottomnav component",
+      "id": "bottomnav_component"
     },
     {
       "label": "BottomNav routes array (/dashboard,/workouts,/nutrition,/ai-assistant,/profile)",
@@ -4300,9 +4300,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "bottomnav_routes_data",
-      "community": 20,
-      "norm_label": "bottomnav routes array (/dashboard,/workouts,/nutrition,/ai-assistant,/profile)"
+      "community": 19,
+      "norm_label": "bottomnav routes array (/dashboard,/workouts,/nutrition,/ai-assistant,/profile)",
+      "id": "bottomnav_routes_data"
     },
     {
       "label": "ProtectedLayout (regular user layout)",
@@ -4313,9 +4313,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "app_protected_layout",
-      "community": 20,
-      "norm_label": "protectedlayout (regular user layout)"
+      "community": 19,
+      "norm_label": "protectedlayout (regular user layout)",
+      "id": "app_protected_layout"
     },
     {
       "label": "User route definitions",
@@ -4326,9 +4326,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "app_routes_user",
-      "community": 20,
-      "norm_label": "user route definitions"
+      "community": 19,
+      "norm_label": "user route definitions",
+      "id": "app_routes_user"
     },
     {
       "label": "main.tsx CSS import order (index.css then mobile-first.css)",
@@ -4339,9 +4339,252 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "main_css_import_order",
-      "community": 19,
-      "norm_label": "main.tsx css import order (index.css then mobile-first.css)"
+      "community": 20,
+      "norm_label": "main.tsx css import order (index.css then mobile-first.css)",
+      "id": "main_css_import_order"
+    },
+    {
+      "label": "ThemeToggle.tsx",
+      "file_type": "code",
+      "source_file": "client\\src\\components\\ThemeToggle.tsx",
+      "source_location": "L1",
+      "id": "client_src_components_themetoggle_tsx",
+      "community": 26,
+      "norm_label": "themetoggle.tsx"
+    },
+    {
+      "label": "ThemeToggle()",
+      "file_type": "code",
+      "source_file": "client\\src\\components\\ThemeToggle.tsx",
+      "source_location": "L12",
+      "id": "themetoggle_themetoggle",
+      "community": 26,
+      "norm_label": "themetoggle()"
+    },
+    {
+      "label": "AuthProvider()",
+      "file_type": "code",
+      "source_file": "client\\src\\context\\AuthContext.tsx",
+      "source_location": "L41",
+      "id": "authcontext_authprovider",
+      "community": 8,
+      "norm_label": "authprovider()"
+    },
+    {
+      "label": "useTheme.ts",
+      "file_type": "code",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L1",
+      "id": "client_src_hooks_usetheme_ts",
+      "community": 26,
+      "norm_label": "usetheme.ts"
+    },
+    {
+      "label": "readInitialTheme()",
+      "file_type": "code",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L15",
+      "id": "usetheme_readinitialtheme",
+      "community": 26,
+      "norm_label": "readinitialtheme()"
+    },
+    {
+      "label": "applyTheme()",
+      "file_type": "code",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L25",
+      "id": "usetheme_applytheme",
+      "community": 26,
+      "norm_label": "applytheme()"
+    },
+    {
+      "label": "useTheme()",
+      "file_type": "code",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L35",
+      "id": "usetheme_usetheme",
+      "community": 26,
+      "norm_label": "usetheme()"
+    },
+    {
+      "label": "handleVerifyOtp()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\AuthPage.tsx",
+      "source_location": "L83",
+      "id": "authpage_handleverifyotp",
+      "community": 35,
+      "norm_label": "handleverifyotp()"
+    },
+    {
+      "label": "handleResendOtp()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\AuthPage.tsx",
+      "source_location": "L106",
+      "id": "authpage_handleresendotp",
+      "community": 35,
+      "norm_label": "handleresendotp()"
+    },
+    {
+      "label": "SettingsPage.tsx",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L1",
+      "id": "client_src_pages_settingspage_tsx",
+      "community": 27,
+      "norm_label": "settingspage.tsx"
+    },
+    {
+      "label": "initialCard()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L18",
+      "id": "settingspage_initialcard",
+      "community": 27,
+      "norm_label": "initialcard()"
+    },
+    {
+      "label": "requestOtp()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L55",
+      "id": "settingspage_requestotp",
+      "community": 27,
+      "norm_label": "requestotp()"
+    },
+    {
+      "label": "handleChangeUsername()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L75",
+      "id": "settingspage_handlechangeusername",
+      "community": 27,
+      "norm_label": "handlechangeusername()"
+    },
+    {
+      "label": "handleChangePassword()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L96",
+      "id": "settingspage_handlechangepassword",
+      "community": 27,
+      "norm_label": "handlechangepassword()"
+    },
+    {
+      "label": "handleResetData()",
+      "file_type": "code",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L125",
+      "id": "settingspage_handleresetdata",
+      "community": 27,
+      "norm_label": "handleresetdata()"
+    },
+    {
+      "label": "Otp.js",
+      "file_type": "code",
+      "source_file": "server\\models\\Otp.js",
+      "source_location": "L1",
+      "id": "server_models_otp_js",
+      "community": 85,
+      "norm_label": "otp.js"
+    },
+    {
+      "label": "trySendOtp()",
+      "file_type": "code",
+      "source_file": "server\\routes\\auth.js",
+      "source_location": "L57",
+      "id": "auth_trysendotp",
+      "community": 4,
+      "norm_label": "trysendotp()"
+    },
+    {
+      "label": "mailer.js",
+      "file_type": "code",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L1",
+      "id": "server_utils_mailer_js",
+      "community": 4,
+      "norm_label": "mailer.js"
+    },
+    {
+      "label": "getTransport()",
+      "file_type": "code",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L5",
+      "id": "mailer_gettransport",
+      "community": 4,
+      "norm_label": "gettransport()"
+    },
+    {
+      "label": "FROM()",
+      "file_type": "code",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L19",
+      "id": "mailer_from",
+      "community": 4,
+      "norm_label": "from()"
+    },
+    {
+      "label": "buildHtml()",
+      "file_type": "code",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L28",
+      "id": "mailer_buildhtml",
+      "community": 4,
+      "norm_label": "buildhtml()"
+    },
+    {
+      "label": "sendOtpEmail()",
+      "file_type": "code",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L52",
+      "id": "mailer_sendotpemail",
+      "community": 4,
+      "norm_label": "sendotpemail()"
+    },
+    {
+      "label": "otp.js",
+      "file_type": "code",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L1",
+      "id": "server_utils_otp_js",
+      "community": 31,
+      "norm_label": "otp.js"
+    },
+    {
+      "label": "generateCode()",
+      "file_type": "code",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L7",
+      "id": "otp_generatecode",
+      "community": 31,
+      "norm_label": "generatecode()"
+    },
+    {
+      "label": "hashCode()",
+      "file_type": "code",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L8",
+      "id": "otp_hashcode",
+      "community": 31,
+      "norm_label": "hashcode()"
+    },
+    {
+      "label": "issueOtp()",
+      "file_type": "code",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L10",
+      "id": "otp_issueotp",
+      "community": 31,
+      "norm_label": "issueotp()"
+    },
+    {
+      "label": "consumeOtp()",
+      "file_type": "code",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L24",
+      "id": "otp_consumeotp",
+      "community": 31,
+      "norm_label": "consumeotp()"
     }
   ],
   "links": [
@@ -4349,7 +4592,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L79",
+      "source_location": "L91",
       "weight": 1.0,
       "_src": "client_src_app_tsx",
       "_tgt": "app_superadminguard",
@@ -4361,7 +4604,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L88",
+      "source_location": "L100",
       "weight": 1.0,
       "_src": "client_src_app_tsx",
       "_tgt": "app_adminguard",
@@ -4373,7 +4616,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L97",
+      "source_location": "L109",
       "weight": 1.0,
       "_src": "client_src_app_tsx",
       "_tgt": "app_app",
@@ -4398,7 +4641,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L78",
+      "source_location": "L92",
       "weight": 1.0,
       "_src": "app_superadminguard",
       "_tgt": "authcontext_useauth",
@@ -4410,7 +4653,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "client\\src\\App.tsx",
-      "source_location": "L87",
+      "source_location": "L101",
       "weight": 1.0,
       "_src": "app_adminguard",
       "_tgt": "authcontext_useauth",
@@ -4661,7 +4904,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\context\\AuthContext.tsx",
-      "source_location": "L107",
+      "source_location": "L127",
       "weight": 1.0,
       "_src": "client_src_context_authcontext_tsx",
       "_tgt": "authcontext_useauth",
@@ -4673,13 +4916,25 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\context\\AuthContext.tsx",
-      "source_location": "L114",
+      "source_location": "L134",
       "weight": 1.0,
       "_src": "client_src_context_authcontext_tsx",
       "_tgt": "authcontext_getrolehome",
       "confidence_score": 1.0,
       "source": "client_src_context_authcontext_tsx",
       "target": "authcontext_getrolehome"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\context\\AuthContext.tsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_src": "client_src_context_authcontext_tsx",
+      "_tgt": "authcontext_authprovider",
+      "source": "client_src_context_authcontext_tsx",
+      "target": "authcontext_authprovider",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -4745,7 +5000,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\layouts\\AdminLayout.tsx",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0,
       "_src": "client_src_layouts_adminlayout_tsx",
       "_tgt": "adminlayout_confirmlogout",
@@ -4781,7 +5036,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\layouts\\SuperAdminLayout.tsx",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0,
       "_src": "client_src_layouts_superadminlayout_tsx",
       "_tgt": "superadminlayout_confirmlogout",
@@ -4877,7 +5132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
-      "source_location": "L476",
+      "source_location": "L480",
       "weight": 1.0,
       "_src": "client_src_pages_aiassistantpage_tsx",
       "_tgt": "aiassistantpage_handlevoiceclick",
@@ -4889,7 +5144,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
-      "source_location": "L484",
+      "source_location": "L488",
       "weight": 1.0,
       "_src": "client_src_pages_aiassistantpage_tsx",
       "_tgt": "aiassistantpage_handlekeydown",
@@ -4901,7 +5156,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
-      "source_location": "L491",
+      "source_location": "L495",
       "weight": 1.0,
       "_src": "client_src_pages_aiassistantpage_tsx",
       "_tgt": "aiassistantpage_clearchat",
@@ -4910,16 +5165,52 @@
       "target": "aiassistantpage_clearchat"
     },
     {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "client\\src\\pages\\AIAssistantPage.tsx",
+      "source_location": "L86",
+      "weight": 1.0,
+      "_src": "aiassistantpage_executeactions",
+      "_tgt": "mailer_from",
+      "source": "aiassistantpage_executeactions",
+      "target": "mailer_from"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client\\src\\pages\\AuthPage.tsx",
-      "source_location": "L32",
+      "source_location": "L38",
       "weight": 1.0,
       "_src": "client_src_pages_authpage_tsx",
       "_tgt": "authpage_handlesubmit",
       "confidence_score": 1.0,
       "source": "client_src_pages_authpage_tsx",
       "target": "authpage_handlesubmit"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\AuthPage.tsx",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_src": "client_src_pages_authpage_tsx",
+      "_tgt": "authpage_handleverifyotp",
+      "source": "client_src_pages_authpage_tsx",
+      "target": "authpage_handleverifyotp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\AuthPage.tsx",
+      "source_location": "L106",
+      "weight": 1.0,
+      "_src": "client_src_pages_authpage_tsx",
+      "_tgt": "authpage_handleresendotp",
+      "source": "client_src_pages_authpage_tsx",
+      "target": "authpage_handleresendotp",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -5849,7 +6140,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "server\\middleware\\auth.js",
-      "source_location": "L47",
+      "source_location": "L55",
       "weight": 1.0,
       "_src": "server_middleware_auth_js",
       "_tgt": "auth_authorizeroles",
@@ -5885,7 +6176,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "server\\routes\\auth.js",
-      "source_location": "L20",
+      "source_location": "L35",
       "weight": 1.0,
       "_src": "server_routes_auth_js",
       "_tgt": "auth_isvalidemail",
@@ -5897,7 +6188,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "server\\routes\\auth.js",
-      "source_location": "L22",
+      "source_location": "L37",
       "weight": 1.0,
       "_src": "server_routes_auth_js",
       "_tgt": "auth_generatetoken",
@@ -5909,13 +6200,25 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "server\\routes\\auth.js",
-      "source_location": "L26",
+      "source_location": "L39",
       "weight": 1.0,
       "_src": "server_routes_auth_js",
       "_tgt": "auth_builduserresponse",
       "confidence_score": 1.0,
       "source": "server_routes_auth_js",
       "target": "auth_builduserresponse"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\routes\\auth.js",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_src": "server_routes_auth_js",
+      "_tgt": "auth_trysendotp",
+      "source": "server_routes_auth_js",
+      "target": "auth_trysendotp",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9108,6 +9411,342 @@
       "_tgt": "app_routes_user",
       "source": "app_protected_layout",
       "target": "app_routes_user"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\components\\ThemeToggle.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_src": "client_src_components_themetoggle_tsx",
+      "_tgt": "themetoggle_themetoggle",
+      "source": "client_src_components_themetoggle_tsx",
+      "target": "themetoggle_themetoggle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "client\\src\\components\\ThemeToggle.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_src": "themetoggle_themetoggle",
+      "_tgt": "usetheme_usetheme",
+      "source": "themetoggle_themetoggle",
+      "target": "usetheme_usetheme"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "client_src_hooks_usetheme_ts",
+      "_tgt": "usetheme_readinitialtheme",
+      "source": "client_src_hooks_usetheme_ts",
+      "target": "usetheme_readinitialtheme",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "_src": "client_src_hooks_usetheme_ts",
+      "_tgt": "usetheme_applytheme",
+      "source": "client_src_hooks_usetheme_ts",
+      "target": "usetheme_applytheme",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\hooks\\useTheme.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_src": "client_src_hooks_usetheme_ts",
+      "_tgt": "usetheme_usetheme",
+      "source": "client_src_hooks_usetheme_ts",
+      "target": "usetheme_usetheme",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_src": "client_src_pages_settingspage_tsx",
+      "_tgt": "settingspage_initialcard",
+      "source": "client_src_pages_settingspage_tsx",
+      "target": "settingspage_initialcard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_src": "client_src_pages_settingspage_tsx",
+      "_tgt": "settingspage_requestotp",
+      "source": "client_src_pages_settingspage_tsx",
+      "target": "settingspage_requestotp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L75",
+      "weight": 1.0,
+      "_src": "client_src_pages_settingspage_tsx",
+      "_tgt": "settingspage_handlechangeusername",
+      "source": "client_src_pages_settingspage_tsx",
+      "target": "settingspage_handlechangeusername",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L96",
+      "weight": 1.0,
+      "_src": "client_src_pages_settingspage_tsx",
+      "_tgt": "settingspage_handlechangepassword",
+      "source": "client_src_pages_settingspage_tsx",
+      "target": "settingspage_handlechangepassword",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L125",
+      "weight": 1.0,
+      "_src": "client_src_pages_settingspage_tsx",
+      "_tgt": "settingspage_handleresetdata",
+      "source": "client_src_pages_settingspage_tsx",
+      "target": "settingspage_handleresetdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_src": "settingspage_handlechangeusername",
+      "_tgt": "settingspage_initialcard",
+      "source": "settingspage_initialcard",
+      "target": "settingspage_handlechangeusername",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L117",
+      "weight": 1.0,
+      "_src": "settingspage_handlechangepassword",
+      "_tgt": "settingspage_initialcard",
+      "source": "settingspage_initialcard",
+      "target": "settingspage_handlechangepassword",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "client\\src\\pages\\SettingsPage.tsx",
+      "source_location": "L143",
+      "weight": 1.0,
+      "_src": "settingspage_handleresetdata",
+      "_tgt": "settingspage_initialcard",
+      "source": "settingspage_initialcard",
+      "target": "settingspage_handleresetdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "server\\routes\\auth.js",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_src": "auth_trysendotp",
+      "_tgt": "mailer_sendotpemail",
+      "source": "auth_trysendotp",
+      "target": "mailer_sendotpemail"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "server_utils_mailer_js",
+      "_tgt": "mailer_gettransport",
+      "source": "server_utils_mailer_js",
+      "target": "mailer_gettransport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_src": "server_utils_mailer_js",
+      "_tgt": "mailer_from",
+      "source": "server_utils_mailer_js",
+      "target": "mailer_from",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_src": "server_utils_mailer_js",
+      "_tgt": "mailer_buildhtml",
+      "source": "server_utils_mailer_js",
+      "target": "mailer_buildhtml",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_src": "server_utils_mailer_js",
+      "_tgt": "mailer_sendotpemail",
+      "source": "server_utils_mailer_js",
+      "target": "mailer_sendotpemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_src": "mailer_sendotpemail",
+      "_tgt": "mailer_gettransport",
+      "source": "mailer_gettransport",
+      "target": "mailer_sendotpemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L56",
+      "weight": 1.0,
+      "_src": "mailer_sendotpemail",
+      "_tgt": "mailer_from",
+      "source": "mailer_from",
+      "target": "mailer_sendotpemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\mailer.js",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_src": "mailer_sendotpemail",
+      "_tgt": "mailer_buildhtml",
+      "source": "mailer_buildhtml",
+      "target": "mailer_sendotpemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_src": "server_utils_otp_js",
+      "_tgt": "otp_generatecode",
+      "source": "server_utils_otp_js",
+      "target": "otp_generatecode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "server_utils_otp_js",
+      "_tgt": "otp_hashcode",
+      "source": "server_utils_otp_js",
+      "target": "otp_hashcode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_src": "server_utils_otp_js",
+      "_tgt": "otp_issueotp",
+      "source": "server_utils_otp_js",
+      "target": "otp_issueotp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "server_utils_otp_js",
+      "_tgt": "otp_consumeotp",
+      "source": "server_utils_otp_js",
+      "target": "otp_consumeotp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_src": "otp_issueotp",
+      "_tgt": "otp_generatecode",
+      "source": "otp_generatecode",
+      "target": "otp_issueotp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_src": "otp_issueotp",
+      "_tgt": "otp_hashcode",
+      "source": "otp_hashcode",
+      "target": "otp_issueotp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "server\\utils\\otp.js",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_src": "otp_consumeotp",
+      "_tgt": "otp_hashcode",
+      "source": "otp_hashcode",
+      "target": "otp_consumeotp",
+      "confidence_score": 1.0
     }
   ],
   "hyperedges": [

@@ -248,6 +248,10 @@ router.post('/login', authLimiter, async (req, res) => {
             }
         }
 
+        // Stamp login + first heartbeat (fire-and-forget).
+        const now = new Date();
+        User.updateOne({ _id: user._id }, { $set: { lastLoginAt: now, lastSeenAt: now } }).catch(() => {});
+
         res.json(buildUserResponse(user, generateToken(user._id)));
     } catch (error) {
         res.status(500).json({ message: error.message });

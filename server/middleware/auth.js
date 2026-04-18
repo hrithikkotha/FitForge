@@ -36,6 +36,14 @@ const protect = async (req, res, next) => {
             }
         }
 
+        // ── Heartbeat: bump lastSeenAt at most once a minute. We do this
+        //    fire-and-forget so it never adds latency to the response.
+        const HEARTBEAT_MS = 60 * 1000;
+        const last = req.user.lastSeenAt ? req.user.lastSeenAt.getTime() : 0;
+        if (Date.now() - last > HEARTBEAT_MS) {
+            User.updateOne({ _id: req.user._id }, { $set: { lastSeenAt: new Date() } }).catch(() => {});
+        }
+
         next();
     } catch (error) {
         console.error('Auth token error:', error.message);

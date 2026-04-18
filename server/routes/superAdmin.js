@@ -122,6 +122,44 @@ router.get('/users', guard, async (req, res) => {
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
+// GET /api/super-admin/users/:id/activity — engagement summary for a single user.
+// Returns last-seen + last-logged workout/meal + lifetime counts so the
+// super-admin can judge whether a user is actively using the app.
+router.get('/users/:id/activity', guard, async (req, res) => {
+    try {
+        const user = await User.findOne({ _id: req.params.id, role: 'user' })
+            .select('lastSeenAt lastLoginAt createdAt displayName username email');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const [lastWorkout, lastMeal, totalWorkouts, totalMeals] = await Promise.all([
+            WorkoutSession.findOne({ userId: user._id }).sort({ date: -1 }).select('date title'),
+            MealEntry.findOne({ userId: user._id }).sort({ date: -1 }).select('date mealType'),
+            WorkoutSession.countDocuments({ userId: user._id }),
+            MealEntry.countDocuments({ userId: user._id }),
+        ]);
+
+        res.json({
+            user: {
+                _id: user._id,
+                displayName: user.displayName,
+                username: user.username,
+                email: user.email,
+                createdAt: user.createdAt,
+                lastSeenAt: user.lastSeenAt,
+                lastLoginAt: user.lastLoginAt,
+            },
+            activity: {
+                lastWorkoutAt: lastWorkout ? lastWorkout.date : null,
+                lastWorkoutName: lastWorkout ? lastWorkout.title : null,
+                lastMealAt: lastMeal ? lastMeal.date : null,
+                lastMealType: lastMeal ? lastMeal.mealType : null,
+                totalWorkouts,
+                totalMeals,
+            },
+        });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
 // PUT /api/super-admin/users/:id/approve — approve a pending user
 router.put('/users/:id/approve', guard, async (req, res) => {
     try {

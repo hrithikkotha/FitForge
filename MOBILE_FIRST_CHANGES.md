@@ -190,3 +190,22 @@ are confined to this branch and the overlay strategy means nothing in
 - `client/src/layouts/AdminLayout.tsx`
 - `client/src/layouts/SuperAdminLayout.tsx`
 - `client/src/styles/mobile-first.css`
+
+---
+
+## 5. AI assistant textarea + super-admin user activity tracking
+
+### AI assistant textarea (mobile + desktop)
+- `client/src/pages/AIAssistantPage.tsx` — auto-grow textarea on every keystroke (`style.height = scrollHeight`). Reset height + remove `has-overflow` class after the message is sent.
+- `client/src/index.css` — `.ai-chat-input` now starts with `overflow-y: hidden` and `line-height: 1.4`. The scrollbar only appears once the user types past the 120 px max-height (via the `has-overflow` class). Empty / single-line input no longer shows a phantom scrollbar on mobile.
+
+### Super-admin: per-user activity insight
+- `server/models/User.js` — added `lastSeenAt` and `lastLoginAt` date fields.
+- `server/middleware/auth.js` — `protect` middleware now bumps `lastSeenAt` once per minute per user (fire-and-forget, throttled to avoid write amplification).
+- `server/routes/auth.js` — login stamps `lastLoginAt` + `lastSeenAt`.
+- `server/routes/superAdmin.js` — new `GET /super-admin/users/:id/activity` endpoint returning `lastSeenAt`, `lastLoginAt`, last logged workout, last logged meal, total workouts, total meals.
+- `client/src/pages/superadmin/AllUsersPage.tsx`:
+  - Added a **Last seen** column with a colour-coded relative-time pill (green ≤ 7 d, amber ≤ 30 d, red > 30 d, grey never).
+  - Added an engagement summary strip (Active 7 d / Active 30 d / Dormant 30 d+ / Never seen) above the table.
+  - Added an **Inactive 30 d+** filter tab so the super-admin can quickly find disengaged users.
+  - Added a per-row **Activity** action that opens a modal with last-seen, last-login, last workout, last meal and lifetime totals — fetched lazily from the new endpoint.
