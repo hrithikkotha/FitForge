@@ -90,21 +90,21 @@ const FoodsPage = () => {
                 <div className="form-row">
                     <div className="form-group">
                         <label>Calories / 100g</label>
-                        <input className="form-input" type="number" value={form.caloriesPer100g} onChange={e => setForm({ ...form, caloriesPer100g: e.target.value })} />
+                        <input className="form-input" type="number" inputMode="numeric" min="0" enterKeyHint="next" value={form.caloriesPer100g} onChange={e => setForm({ ...form, caloriesPer100g: e.target.value })} />
                     </div>
                     <div className="form-group">
                         <label>Protein / 100g (g)</label>
-                        <input className="form-input" type="number" value={form.proteinPer100g} onChange={e => setForm({ ...form, proteinPer100g: e.target.value })} />
+                        <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={form.proteinPer100g} onChange={e => setForm({ ...form, proteinPer100g: e.target.value })} />
                     </div>
                 </div>
                 <div className="form-row">
                     <div className="form-group">
                         <label>Carbs / 100g (g)</label>
-                        <input className="form-input" type="number" value={form.carbsPer100g} onChange={e => setForm({ ...form, carbsPer100g: e.target.value })} />
+                        <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={form.carbsPer100g} onChange={e => setForm({ ...form, carbsPer100g: e.target.value })} />
                     </div>
                     <div className="form-group">
                         <label>Fat / 100g (g)</label>
-                        <input className="form-input" type="number" value={form.fatPer100g} onChange={e => setForm({ ...form, fatPer100g: e.target.value })} />
+                        <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={form.fatPer100g} onChange={e => setForm({ ...form, fatPer100g: e.target.value })} />
                     </div>
                 </div>
                 <div className="form-row">
@@ -116,7 +116,7 @@ const FoodsPage = () => {
                     </div>
                     <div className="form-group">
                         <label>Grams per Serving</label>
-                        <input className="form-input" type="number" value={form.gramsPerServing} onChange={e => setForm({ ...form, gramsPerServing: e.target.value })} />
+                        <input className="form-input" type="number" inputMode="decimal" min="0" step="1" enterKeyHint="done" value={form.gramsPerServing} onChange={e => setForm({ ...form, gramsPerServing: e.target.value })} />
                     </div>
                 </div>
                 <div className="modal-actions">
@@ -162,7 +162,7 @@ const FoodsPage = () => {
             {/* Search */}
             <div style={{ position: 'relative', marginBottom: 20, maxWidth: 340 }}>
                 <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input className="form-input" style={{ paddingLeft: 40 }} placeholder="Search foods…" value={search} onChange={e => setSearch(e.target.value)} />
+                <input className="form-input" style={{ paddingLeft: 40 }} type="search" inputMode="search" enterKeyHint="search" autoCapitalize="none" autoCorrect="off" placeholder="Search foods…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
             <div className="card" style={{ padding: 0 }}>

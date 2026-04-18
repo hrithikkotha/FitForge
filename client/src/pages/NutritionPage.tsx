@@ -473,6 +473,7 @@ const NutritionPage = () => {
                                 <div style={{ position: 'relative', flex: 1 }}>
                                     <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)' }} />
                                     <input className="form-input" style={{ paddingLeft: 36 }} placeholder="Search 350+ foods..."
+                                        type="search" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" autoCapitalize="none"
                                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                 </div>
                                 <button className="btn btn-secondary" onClick={() => setShowFoodModal(true)} title="Create custom food" style={{ padding: '0 12px' }}>
@@ -513,7 +514,7 @@ const NutritionPage = () => {
                         {selectedFood && (
                             <div className="form-group">
                                 <label>Quantity ({selectedFood.servingUnit === 'g' ? 'grams' : selectedFood.servingUnit === 'ml' ? 'ml' : selectedFood.servingUnit === 'piece' ? 'pieces' : selectedFood.servingUnit === 'slice' ? 'slices' : selectedFood.servingUnit === 'scoop' ? 'scoops' : selectedFood.servingUnit === 'tbsp' ? 'tablespoons' : selectedFood.servingUnit === 'cup' ? 'cups' : 'grams'})</label>
-                                <input className="form-input" type="number" value={quantity} onChange={e => setQuantity(e.target.value)} min="0" step={selectedFood.servingUnit === 'g' || selectedFood.servingUnit === 'ml' ? '10' : '1'} />
+                                <input className="form-input" type="number" inputMode="decimal" enterKeyHint="done" value={quantity} onChange={e => setQuantity(e.target.value)} min="0" step={selectedFood.servingUnit === 'g' || selectedFood.servingUnit === 'ml' ? '10' : '1'} />
                                 <div style={{ marginTop: 8, padding: 12, background: 'var(--bg-primary)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                     {(() => {
                                         const gps = selectedFood.gramsPerServing || 1;
@@ -554,26 +555,26 @@ const NutritionPage = () => {
                         </div>
                         <div className="form-group">
                             <label>Food Name *</label>
-                            <input className="form-input" value={customFood.name} onChange={e => setCustomFood({ ...customFood, name: e.target.value })} placeholder="E.g., Mom's Dal Tadka" />
+                            <input className="form-input" value={customFood.name} onChange={e => setCustomFood({ ...customFood, name: e.target.value })} placeholder="E.g., Mom's Dal Tadka" autoCapitalize="words" enterKeyHint="next" />
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Calories (per 100g) *</label>
-                                <input type="number" className="form-input" value={customFood.calories} onChange={e => setCustomFood({ ...customFood, calories: e.target.value })} />
+                                <input type="number" inputMode="numeric" min="0" enterKeyHint="next" className="form-input" value={customFood.calories} onChange={e => setCustomFood({ ...customFood, calories: e.target.value })} />
                             </div>
                             <div className="form-group">
                                 <label>Protein (per 100g)</label>
-                                <input type="number" className="form-input" value={customFood.protein} onChange={e => setCustomFood({ ...customFood, protein: e.target.value })} />
+                                <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.protein} onChange={e => setCustomFood({ ...customFood, protein: e.target.value })} />
                             </div>
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Carbs (per 100g)</label>
-                                <input type="number" className="form-input" value={customFood.carbs} onChange={e => setCustomFood({ ...customFood, carbs: e.target.value })} />
+                                <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.carbs} onChange={e => setCustomFood({ ...customFood, carbs: e.target.value })} />
                             </div>
                             <div className="form-group">
                                 <label>Fat (per 100g)</label>
-                                <input type="number" className="form-input" value={customFood.fat} onChange={e => setCustomFood({ ...customFood, fat: e.target.value })} />
+                                <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.fat} onChange={e => setCustomFood({ ...customFood, fat: e.target.value })} />
                             </div>
                         </div>
                         <div className="form-row">
@@ -592,7 +593,7 @@ const NutritionPage = () => {
                             {customFood.servingUnit !== 'g' && customFood.servingUnit !== 'ml' && (
                                 <div className="form-group">
                                     <label>Grams per {customFood.servingUnit}</label>
-                                    <input type="number" className="form-input" value={customFood.gramsPerServing} onChange={e => setCustomFood({ ...customFood, gramsPerServing: e.target.value })} placeholder="e.g., 50 for one egg" />
+                                    <input type="number" inputMode="decimal" min="0" step="1" enterKeyHint="done" className="form-input" value={customFood.gramsPerServing} onChange={e => setCustomFood({ ...customFood, gramsPerServing: e.target.value })} placeholder="e.g., 50 for one egg" />
                                 </div>
                             )}
                         </div>

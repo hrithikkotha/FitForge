@@ -130,21 +130,21 @@ const MembersPage = () => {
                         </div>
                         <div className="form-group">
                             <label>Display Name</label>
-                            <input className="form-input" placeholder="e.g. John Doe" value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} />
+                            <input className="form-input" placeholder="e.g. John Doe" value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} autoComplete="name" autoCapitalize="words" enterKeyHint="next" />
                         </div>
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Username *</label>
-                                <input className="form-input" placeholder="johndoe" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
+                                <input className="form-input" placeholder="johndoe" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" />
                             </div>
                             <div className="form-group">
                                 <label>Email *</label>
-                                <input className="form-input" type="email" placeholder="john@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                                <input className="form-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="john@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                             </div>
                         </div>
                         <div className="form-group">
                             <label>Password *</label>
-                            <input className="form-input" type="password" placeholder="Temporary password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+                            <input className="form-input" type="password" autoComplete="new-password" enterKeyHint="done" placeholder="Temporary password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
                         </div>
                         <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: 16 }}>Share credentials with member so they can log in.</p>
                         <div className="modal-actions">
@@ -168,7 +168,7 @@ const MembersPage = () => {
                         </p>
                         <div className="form-group">
                             <label>New Password *</label>
-                            <input className="form-input" type="password" placeholder="Min. 6 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                            <input className="form-input" type="password" autoComplete="new-password" enterKeyHint="done" placeholder="Min. 6 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                         </div>
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => { setResetTarget(null); setNewPassword(''); }}>Cancel</button>

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth, getRoleHome } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import BottomNav from './components/BottomNav';
 import ForceLogoutOverlay from './components/ForceLogoutOverlay';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
@@ -61,6 +62,7 @@ const ProtectedLayout = () => {
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <main className="app-main"><Outlet /></main>
+            <BottomNav />
         </div>
     );
 };

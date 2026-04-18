@@ -230,6 +230,11 @@ const AuthPage = () => {
                                     placeholder="Choose a username"
                                     value={username}
                                     onChange={e => setUsername(e.target.value)}
+                                    autoComplete="username"
+                                    autoCapitalize="none"
+                                    autoCorrect="off"
+                                    spellCheck={false}
+                                    enterKeyHint="next"
                                 />
                             </div>
                         )}
@@ -244,6 +249,12 @@ const AuthPage = () => {
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 required
+                                inputMode="email"
+                                autoComplete="email"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                enterKeyHint="next"
                             />
                         </div>
 
@@ -258,6 +269,8 @@ const AuthPage = () => {
                                 onChange={e => setPassword(e.target.value)}
                                 required
                                 minLength={6}
+                                autoComplete={isLogin ? 'current-password' : 'new-password'}
+                                enterKeyHint={isLogin ? 'go' : 'next'}
                             />
                         </div>
 
@@ -273,6 +286,8 @@ const AuthPage = () => {
                                     onChange={e => setConfirmPassword(e.target.value)}
                                     required
                                     minLength={6}
+                                    autoComplete="new-password"
+                                    enterKeyHint="go"
                                 />
                             </div>
                         )}

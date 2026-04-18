@@ -148,7 +148,7 @@ const ExercisesPage = () => {
             <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flex: '1 1 240px' }}>
                     <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input className="form-input" style={{ paddingLeft: 40 }} placeholder="Search exercises…" value={search} onChange={e => setSearch(e.target.value)} />
+                    <input className="form-input" style={{ paddingLeft: 40 }} type="search" inputMode="search" enterKeyHint="search" autoCapitalize="none" autoCorrect="off" placeholder="Search exercises…" value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
                 <div className="date-pills" style={{ margin: 0 }}>
                     {(['all', ...CATEGORIES] as const).map(c => (

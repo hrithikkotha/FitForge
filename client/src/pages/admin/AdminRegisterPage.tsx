@@ -89,33 +89,33 @@ const AdminRegisterPage = () => {
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
                             <label>Gym Name *</label>
-                            <input className="form-input" placeholder="e.g. PowerHouse Fitness" required value={form.gymName} onChange={e => f('gymName', e.target.value)} />
+                            <input className="form-input" placeholder="e.g. PowerHouse Fitness" required value={form.gymName} onChange={e => f('gymName', e.target.value)} autoCapitalize="words" enterKeyHint="next" />
                         </div>
 
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Your Name</label>
-                                <input className="form-input" placeholder="Display name" value={form.displayName} onChange={e => f('displayName', e.target.value)} />
+                                <input className="form-input" placeholder="Display name" value={form.displayName} onChange={e => f('displayName', e.target.value)} autoComplete="name" autoCapitalize="words" enterKeyHint="next" />
                             </div>
                             <div className="form-group">
                                 <label>Username *</label>
-                                <input className="form-input" placeholder="Unique username" required value={form.username} onChange={e => f('username', e.target.value)} />
+                                <input className="form-input" placeholder="Unique username" required value={form.username} onChange={e => f('username', e.target.value)} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" />
                             </div>
                         </div>
 
                         <div className="form-group">
                             <label>Email *</label>
-                            <input className="form-input" type="email" placeholder="gym@example.com" required value={form.email} onChange={e => f('email', e.target.value)} />
+                            <input className="form-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="gym@example.com" required value={form.email} onChange={e => f('email', e.target.value)} />
                         </div>
 
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Password *</label>
-                                <input className="form-input" type="password" placeholder="Min. 6 characters" required value={form.password} onChange={e => f('password', e.target.value)} />
+                                <input className="form-input" type="password" autoComplete="new-password" enterKeyHint="next" placeholder="Min. 6 characters" required value={form.password} onChange={e => f('password', e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label>Confirm Password *</label>
-                                <input className="form-input" type="password" placeholder="Repeat password" required value={form.confirmPassword} onChange={e => f('confirmPassword', e.target.value)} />
+                                <input className="form-input" type="password" autoComplete="new-password" enterKeyHint="go" placeholder="Repeat password" required value={form.confirmPassword} onChange={e => f('confirmPassword', e.target.value)} />
                             </div>
                         </div>
 

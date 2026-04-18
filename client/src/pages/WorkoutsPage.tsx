@@ -349,11 +349,11 @@ const WorkoutsPage = () => {
                                                     <div className="form-row">
                                                         <div className="set-row" style={{ margin: 0 }}>
                                                             <span className="set-label">Dur(m)</span>
-                                                            <input type="number" defaultValue={entry.duration || ''} onBlur={e => updateCardioField(w._id, eIdx, 'duration', +e.target.value)} />
+                                                            <input type="number" inputMode="numeric" min="0" step="1" enterKeyHint="next" defaultValue={entry.duration || ''} onBlur={e => updateCardioField(w._id, eIdx, 'duration', +e.target.value)} />
                                                         </div>
                                                         <div className="set-row" style={{ margin: 0 }}>
                                                             <span className="set-label">Dist(km)</span>
-                                                            <input type="number" defaultValue={entry.distance || ''} onBlur={e => updateCardioField(w._id, eIdx, 'distance', +e.target.value)} />
+                                                            <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="done" defaultValue={entry.distance || ''} onBlur={e => updateCardioField(w._id, eIdx, 'distance', +e.target.value)} />
                                                         </div>
                                                     </div>
                                                 ) : (
@@ -366,9 +366,9 @@ const WorkoutsPage = () => {
                                                         {entry.sets?.map((set: any, sIdx: number) => (
                                                             <div key={sIdx} className="set-row">
                                                                 <span className="set-label">Set {sIdx + 1}</span>
-                                                                <input type="number" defaultValue={set.reps || ''} placeholder="Reps"
+                                                                <input type="number" inputMode="numeric" min="0" step="1" enterKeyHint="next" defaultValue={set.reps || ''} placeholder="Reps"
                                                                     onBlur={e => updateSet(w._id, eIdx, sIdx, 'reps', +e.target.value)} />
-                                                                <input type="number" defaultValue={set.weight || ''} placeholder="kg"
+                                                                <input type="number" inputMode="decimal" min="0" step="0.5" enterKeyHint="done" defaultValue={set.weight || ''} placeholder="kg"
                                                                     onBlur={e => updateSet(w._id, eIdx, sIdx, 'weight', +e.target.value)} />
                                                                 <button className="btn-icon btn-sm" style={{ padding: 4, width: 28, height: 28, flexShrink: 0 }}
                                                                     onClick={() => deleteSet(w._id, eIdx, sIdx)}>

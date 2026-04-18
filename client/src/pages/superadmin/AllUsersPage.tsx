@@ -154,7 +154,7 @@ const AllUsersPage = () => {
                 </div>
                 <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 320 }}>
                     <Search size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input className="form-input" style={{ paddingLeft: 38 }} placeholder="Search by name, email…" value={search} onChange={e => setSearch(e.target.value)} />
+                    <input className="form-input" style={{ paddingLeft: 38 }} type="search" inputMode="search" enterKeyHint="search" autoCapitalize="none" autoCorrect="off" placeholder="Search by name, email…" value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
             </div>
 

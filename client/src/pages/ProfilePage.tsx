@@ -59,28 +59,28 @@ const ProfilePage = () => {
 
                     <div className="form-group">
                         <label>Display Name</label>
-                        <input className="form-input" value={displayName} onChange={e => setDisplayName(e.target.value)} />
+                        <input className="form-input" value={displayName} onChange={e => setDisplayName(e.target.value)} autoComplete="name" enterKeyHint="next" />
                     </div>
 
                     <div className="form-row">
                         <div className="form-group">
                             <label>Weight (kg)</label>
-                            <input className="form-input" type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+                            <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={weight} onChange={e => setWeight(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>Height (cm)</label>
-                            <input className="form-input" type="number" value={height} onChange={e => setHeight(e.target.value)} />
+                            <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={height} onChange={e => setHeight(e.target.value)} />
                         </div>
                     </div>
 
                     <div className="form-row">
                         <div className="form-group">
                             <label>Age</label>
-                            <input className="form-input" type="number" value={age} onChange={e => setAge(e.target.value)} />
+                            <input className="form-input" type="number" inputMode="numeric" min="0" max="120" step="1" enterKeyHint="next" value={age} onChange={e => setAge(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label>Daily Calorie Goal (kcal)</label>
-                            <input className="form-input" type="number" value={dailyCalorieGoal} onChange={e => setDailyCalorieGoal(e.target.value)} />
+                            <input className="form-input" type="number" inputMode="numeric" min="0" step="50" enterKeyHint="done" value={dailyCalorieGoal} onChange={e => setDailyCalorieGoal(e.target.value)} />
                         </div>
                     </div>
 
