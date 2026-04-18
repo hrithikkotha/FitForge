@@ -24,7 +24,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import MembersPage from './pages/admin/MembersPage';
 import SettingsPage from './pages/SettingsPage';
 import ThemeToggle from './components/ThemeToggle';
-import { LayoutDashboard, Dumbbell, Utensils, Bot, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Utensils, Bot, Activity } from 'lucide-react';
 import './index.css';
 
 import { useState, useEffect } from 'react';
@@ -71,9 +71,9 @@ const ProtectedLayout = () => {
             <BottomNav items={[
                 { to: '/dashboard', label: 'Home', Icon: LayoutDashboard },
                 { to: '/workouts', label: 'Workouts', Icon: Dumbbell },
+                { to: '/body-map', label: 'Body Map', Icon: Activity },
                 { to: '/nutrition', label: 'Nutrition', Icon: Utensils },
                 { to: '/ai-assistant', label: 'AI', Icon: Bot },
-                { to: '/profile', label: 'Profile', Icon: UserIcon },
             ]} />
         </div>
     );

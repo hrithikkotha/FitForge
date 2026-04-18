@@ -20,6 +20,7 @@ const SuperAdminLayout = () => {
         navigate('/');
     };
 
+    const bottomNavPaths = new Set(['/super-admin/dashboard', '/super-admin/admins', '/super-admin/users', '/super-admin/foods', '/super-admin/settings']);
     const navItems = [
         { path: '/super-admin/dashboard', label: 'Overview', icon: <LayoutDashboard size={20} /> },
         { path: '/super-admin/admins', label: 'Gym Admins', icon: <Shield size={20} /> },
@@ -103,7 +104,7 @@ const SuperAdminLayout = () => {
                         {navItems.map(item => (
                             <NavLink key={item.path} to={item.path}
                                 onClick={() => setSidebarOpen(false)}
-                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${bottomNavPaths.has(item.path) ? 'nav-link--bottom-dup' : ''}`.trim()}>
                                 {item.icon}{item.label}
                             </NavLink>
                         ))}

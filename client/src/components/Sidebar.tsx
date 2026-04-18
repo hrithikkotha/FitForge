@@ -23,6 +23,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         navigate('/');
     };
 
+    // Items also present in BottomNav are hidden from the sidebar on mobile
+    // (CSS: .nav-link--bottom-dup { display:none } @ <=768px) so each
+    // destination has exactly one entry point per viewport.
+    const bottomNavPaths = new Set(['/dashboard', '/workouts', '/body-map', '/nutrition', '/ai-assistant']);
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
         { path: '/workouts', label: 'Workouts', icon: <Dumbbell size={20} /> },
@@ -77,7 +81,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                             key={item.path}
                             to={item.path}
                             onClick={onClose}
-                            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${bottomNavPaths.has(item.path) ? 'nav-link--bottom-dup' : ''}`.trim()}
                         >
                             {item.icon}
                             {item.label}

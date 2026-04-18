@@ -360,3 +360,30 @@
   font-size: 1.3rem !important;
   font-weight: 600;
 }
+
+/* Hide sidebar items that are duplicated in BottomNav on mobile.
+   On desktop the bottom-nav is hidden, so the sidebar shows everything. */
+@media (max-width: 768px) {
+  .nav-link--bottom-dup { display: none !important; }
+}
+
+/* Hero (centered, raised) item in BottomNav — used for the headline feature.
+   The icon-wrap is enlarged into a circular accent pill that lifts above the bar. */
+.bottom-nav__item--hero .bottom-nav__icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-primary), #ff8c42);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -22px;
+  box-shadow: 0 8px 18px rgba(252, 163, 17, 0.4), 0 0 0 4px var(--bg-primary);
+  transition: transform 0.18s ease;
+}
+.bottom-nav__item--hero:active .bottom-nav__icon-wrap { transform: scale(0.92); }
+.bottom-nav__item--hero.active .bottom-nav__icon-wrap {
+  box-shadow: 0 10px 22px rgba(252, 163, 17, 0.55), 0 0 0 4px var(--bg-primary);
+}
+.bottom-nav__item--hero .bottom-nav__label { font-weight: 700; }

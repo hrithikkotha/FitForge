@@ -17,22 +17,30 @@ interface BottomNavProps {
  */
 const BottomNav = ({ items }: BottomNavProps) => {
     if (!items?.length) return null;
+    // The middle item gets the "hero" treatment — raised pill, accent color.
+    // Useful when a single feature should be the primary CTA on mobile.
+    const heroIndex = items.length % 2 === 1 ? Math.floor(items.length / 2) : -1;
     return (
         <nav className="bottom-nav" aria-label="Primary">
-            {items.map(({ to, label, Icon }) => (
-                <NavLink
-                    key={to}
-                    to={to}
-                    className={({ isActive }) => `bottom-nav__item ${isActive ? 'active' : ''}`}
-                    aria-label={label}
-                    end
-                >
-                    <span className="bottom-nav__icon-wrap">
-                        <Icon size={22} aria-hidden="true" />
-                    </span>
-                    <span className="bottom-nav__label">{label}</span>
-                </NavLink>
-            ))}
+            {items.map(({ to, label, Icon }, i) => {
+                const isHero = i === heroIndex;
+                return (
+                    <NavLink
+                        key={to}
+                        to={to}
+                        className={({ isActive }) =>
+                            `bottom-nav__item ${isActive ? 'active' : ''} ${isHero ? 'bottom-nav__item--hero' : ''}`.trim()
+                        }
+                        aria-label={label}
+                        end
+                    >
+                        <span className="bottom-nav__icon-wrap">
+                            <Icon size={isHero ? 26 : 22} aria-hidden="true" />
+                        </span>
+                        <span className="bottom-nav__label">{label}</span>
+                    </NavLink>
+                );
+            })}
         </nav>
     );
 };

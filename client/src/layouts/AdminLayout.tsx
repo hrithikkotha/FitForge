@@ -20,6 +20,7 @@ const AdminLayout = () => {
         navigate('/');
     };
 
+    const bottomNavPaths = new Set(['/admin/dashboard', '/admin/members', '/admin/settings']);
     const navItems = [
         { path: '/admin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
         { path: '/admin/members', label: 'Members', icon: <Users size={20} /> },
@@ -84,7 +85,7 @@ const AdminLayout = () => {
                         {navItems.map(item => (
                             <NavLink key={item.path} to={item.path}
                                 onClick={() => setSidebarOpen(false)}
-                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${bottomNavPaths.has(item.path) ? 'nav-link--bottom-dup' : ''}`.trim()}>
                                 {item.icon}{item.label}
                             </NavLink>
                         ))}
