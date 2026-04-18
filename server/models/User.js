@@ -60,6 +60,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    // True for users created before email verification existed (grandfather);
+    // new sign-ups must set this via OTP verification before the user doc is created.
+    emailVerified: {
+        type: Boolean,
+        default: true,
+    },
 }, {
     timestamps: true,
 });

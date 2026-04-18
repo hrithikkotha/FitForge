@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, Shield, LogOut, UtensilsCrossed, Dumbbell, Globe, Palette, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Shield, LogOut, UtensilsCrossed, Dumbbell, Globe, Settings, Menu, X } from 'lucide-react';
+import BottomNav from '../components/BottomNav';
+import ThemeToggle from '../components/ThemeToggle';
 
 const SuperAdminLayout = () => {
     const { user, logout } = useAuth();
@@ -18,25 +20,13 @@ const SuperAdminLayout = () => {
         navigate('/');
     };
 
-    const [isAlternate, setIsAlternate] = useState(
-        localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate'
-    );
-    useEffect(() => {
-        const handleStorage = () => setIsAlternate(localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate');
-        window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
-    }, []);
-    const toggleTheme = () => {
-        if (isAlternate) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'default'); setIsAlternate(false); }
-        else { document.documentElement.setAttribute('data-theme', 'alternate'); localStorage.setItem('theme', 'alternate'); setIsAlternate(true); }
-    };
-
     const navItems = [
         { path: '/super-admin/dashboard', label: 'Overview', icon: <LayoutDashboard size={20} /> },
         { path: '/super-admin/admins', label: 'Gym Admins', icon: <Shield size={20} /> },
         { path: '/super-admin/users', label: 'All Users', icon: <Users size={20} /> },
         { path: '/super-admin/foods', label: 'Food Database', icon: <UtensilsCrossed size={20} /> },
         { path: '/super-admin/exercises', label: 'Exercise Library', icon: <Dumbbell size={20} /> },
+        { path: '/super-admin/settings', label: 'Settings', icon: <Settings size={20} /> },
     ];
 
     return (
@@ -85,6 +75,9 @@ const SuperAdminLayout = () => {
                             Super Admin
                         </span>
                     </div>
+                    <div className="mobile-header-actions">
+                        <ThemeToggle />
+                    </div>
                 </div>
 
                 {/* Overlay (mobile) */}
@@ -115,12 +108,6 @@ const SuperAdminLayout = () => {
                             </NavLink>
                         ))}
                         <div style={{ flex: 1 }} />
-                        <div className="theme-toggle-container">
-                            <button onClick={toggleTheme} className="theme-toggle-btn">
-                                <Palette size={18} className="theme-icon" />
-                                <span>Change Theme</span>
-                            </button>
-                        </div>
                     </nav>
 
                     <div className="sidebar-footer">
@@ -141,6 +128,13 @@ const SuperAdminLayout = () => {
                 </aside>
 
                 <main className="app-main"><Outlet /></main>
+                <BottomNav items={[
+                    { to: '/super-admin/dashboard', label: 'Home', Icon: LayoutDashboard },
+                    { to: '/super-admin/admins', label: 'Admins', Icon: Shield },
+                    { to: '/super-admin/users', label: 'Users', Icon: Users },
+                    { to: '/super-admin/foods', label: 'Foods', Icon: UtensilsCrossed },
+                    { to: '/super-admin/settings', label: 'Settings', Icon: Settings },
+                ]} />
             </div>
         </>
     );

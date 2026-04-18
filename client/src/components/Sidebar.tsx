@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     LayoutDashboard, Dumbbell, Utensils, Activity,
-    BarChart3, User, LogOut, Palette, Bot
+    BarChart3, User, LogOut, Settings, Bot
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,30 +23,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         navigate('/');
     };
 
-    const [isAlternate, setIsAlternate] = useState(
-        localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate'
-    );
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            setIsAlternate(localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate');
-        };
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
-
-    const toggleTheme = () => {
-        if (isAlternate) {
-            document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'default');
-            setIsAlternate(false);
-        } else {
-            document.documentElement.setAttribute('data-theme', 'alternate');
-            localStorage.setItem('theme', 'alternate');
-            setIsAlternate(true);
-        }
-    };
-
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
         { path: '/workouts', label: 'Workouts', icon: <Dumbbell size={20} /> },
@@ -55,6 +31,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         { path: '/stats', label: 'Statistics', icon: <BarChart3 size={20} /> },
         { path: '/ai-assistant', label: 'AI Assistant', icon: <Bot size={20} /> },
         { path: '/profile', label: 'Profile', icon: <User size={20} /> },
+        { path: '/settings', label: 'Settings', icon: <Settings size={20} /> },
     ];
 
     return (
@@ -108,13 +85,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     ))}
 
                     <div style={{ flex: 1 }}></div>
-
-                    <div className="theme-toggle-container">
-                        <button onClick={toggleTheme} className="theme-toggle-btn">
-                            <Palette size={18} className="theme-icon" />
-                            <span>Change Theme</span>
-                        </button>
-                    </div>
                 </nav>
 
                 <div className="sidebar-footer">

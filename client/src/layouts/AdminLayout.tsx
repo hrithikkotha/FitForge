@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, LogOut, Building2, Palette, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Building2, Settings, Menu, X } from 'lucide-react';
+import BottomNav from '../components/BottomNav';
+import ThemeToggle from '../components/ThemeToggle';
 
 const AdminLayout = () => {
     const { user, logout } = useAuth();
@@ -18,22 +20,10 @@ const AdminLayout = () => {
         navigate('/');
     };
 
-    const [isAlternate, setIsAlternate] = useState(
-        localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate'
-    );
-    useEffect(() => {
-        const handleStorage = () => setIsAlternate(localStorage.getItem('theme') === 'alternate' || document.documentElement.getAttribute('data-theme') === 'alternate');
-        window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
-    }, []);
-    const toggleTheme = () => {
-        if (isAlternate) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'default'); setIsAlternate(false); }
-        else { document.documentElement.setAttribute('data-theme', 'alternate'); localStorage.setItem('theme', 'alternate'); setIsAlternate(true); }
-    };
-
     const navItems = [
         { path: '/admin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
         { path: '/admin/members', label: 'Members', icon: <Users size={20} /> },
+        { path: '/admin/settings', label: 'Settings', icon: <Settings size={20} /> },
     ];
 
     return (
@@ -73,6 +63,9 @@ const AdminLayout = () => {
                         <Building2 size={22} style={{ color: 'var(--admin-accent)', flexShrink: 0 }} />
                         <h1 style={{ color: 'var(--admin-accent)' }}>{user?.gymName || 'Gym Portal'}</h1>
                     </div>
+                    <div className="mobile-header-actions">
+                        <ThemeToggle />
+                    </div>
                 </div>
 
                 {/* Overlay (mobile) */}
@@ -96,12 +89,6 @@ const AdminLayout = () => {
                             </NavLink>
                         ))}
                         <div style={{ flex: 1 }} />
-                        <div className="theme-toggle-container">
-                            <button onClick={toggleTheme} className="theme-toggle-btn">
-                                <Palette size={18} className="theme-icon" />
-                                <span>Change Theme</span>
-                            </button>
-                        </div>
                     </nav>
 
                     <div className="sidebar-footer">
@@ -119,6 +106,11 @@ const AdminLayout = () => {
                 </aside>
 
                 <main className="app-main"><Outlet /></main>
+                <BottomNav items={[
+                    { to: '/admin/dashboard', label: 'Home', Icon: LayoutDashboard },
+                    { to: '/admin/members', label: 'Members', Icon: Users },
+                    { to: '/admin/settings', label: 'Settings', Icon: Settings },
+                ]} />
             </div>
         </>
     );

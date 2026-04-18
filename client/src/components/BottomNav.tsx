@@ -1,30 +1,31 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Dumbbell, Utensils, Bot, User } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+export interface BottomNavItem {
+    to: string;
+    label: string;
+    Icon: LucideIcon;
+}
+
+interface BottomNavProps {
+    items: BottomNavItem[];
+}
 
 /**
  * Mobile-only bottom tab bar (visible at <= 768px via CSS).
- * 5 primary destinations chosen for thumb-zone reachability and frequency of use.
- * Secondary screens (Body Map, Statistics) remain accessible from the side drawer.
+ * Items are passed in by the layout so each role gets its own destinations.
  */
-const BottomNav = () => {
-    const items = [
-        { to: '/dashboard', label: 'Home', Icon: LayoutDashboard },
-        { to: '/workouts', label: 'Workouts', Icon: Dumbbell },
-        { to: '/nutrition', label: 'Nutrition', Icon: Utensils },
-        { to: '/ai-assistant', label: 'AI', Icon: Bot },
-        { to: '/profile', label: 'Profile', Icon: User },
-    ];
-
+const BottomNav = ({ items }: BottomNavProps) => {
+    if (!items?.length) return null;
     return (
         <nav className="bottom-nav" aria-label="Primary">
             {items.map(({ to, label, Icon }) => (
                 <NavLink
                     key={to}
                     to={to}
-                    className={({ isActive }) =>
-                        `bottom-nav__item ${isActive ? 'active' : ''}`
-                    }
+                    className={({ isActive }) => `bottom-nav__item ${isActive ? 'active' : ''}`}
                     aria-label={label}
+                    end
                 >
                     <span className="bottom-nav__icon-wrap">
                         <Icon size={22} aria-hidden="true" />

@@ -120,3 +120,73 @@ Statistics) remain reachable through the existing side drawer.
 To roll back: `git checkout main && git branch -D mobile-first`. All changes
 are confined to this branch and the overlay strategy means nothing in
 `index.css` was structurally rewritten.
+
+
+---
+
+# Phase 2 — OTP, Settings, Theme Toggle & Admin Mobile Parity
+
+## 1. Email-OTP signup verification (Gmail SMTP)
+- **NEW** `server/models/Otp.js` — TTL-indexed OTP store (purpose: signup / change_password / change_username / reset_data). Codes are SHA-256 hashed at rest; 5 wrong attempts → record auto-deleted.
+- **NEW** `server/utils/mailer.js` — lazy nodemailer Gmail SMTP transport, branded HTML email.
+- **NEW** `server/utils/otp.js` — `issueOtp` / `consumeOtp` API (single source of truth).
+- `server/models/User.js` — added `emailVerified` (default `true` to grandfather existing users).
+- `server/routes/auth.js` — full rewrite:
+  - `POST /auth/register/initiate` — validates input, pre-hashes password, stores it inside the OTP doc, emails the code. **No User row is created yet.**
+  - `POST /auth/register/verify` — consumes OTP, re-checks uniqueness, creates the User (skips the bcrypt pre-save hook because the password is already hashed via `unmarkModified('password')`).
+  - `POST /auth/register/resend` — resend a sign-up code.
+  - `POST /auth/me/otp` — issue an OTP for any sensitive Settings action.
+  - `POST /auth/me/change-password` — current-password + OTP guarded.
+  - `POST /auth/me/change-username` — uniqueness + OTP guarded.
+  - `POST /auth/me/reset-data` — OTP guarded; deletes only the caller's `WorkoutSession` and `MealEntry` rows. Restricted to `role === 'user'`.
+  - Old single-step `/auth/register` removed (clients must go via initiate + verify).
+  - Password update removed from `PUT /auth/me` (must go through `/me/change-password`).
+- **Required `.env`**: `SMTP_USER`, `SMTP_PASS` (Gmail App Password — needs 2FA + https://myaccount.google.com/apppasswords). Optional: `SMTP_FROM`, `APP_NAME`, `OTP_TTL_MIN` (default `10`), `OTP_DEV_LOG=true` (prints code to console for dev).
+
+## 2. Account Settings page (OTP-gated)
+- **NEW** `client/src/pages/SettingsPage.tsx` — three cards:
+  - **Change username** — uniqueness check + OTP.
+  - **Change password** — current-password + new password + OTP. Forces re-login on success.
+  - **Reset all data** — typed `DELETE` confirmation + OTP. Visible only for `role === 'user'`.
+- Routed at `/settings`, `/admin/settings`, `/super-admin/settings` so all roles can change password / username; the destructive reset-data card is hidden for non-users (server enforces too).
+- `client/src/context/AuthContext.tsx` — `register()` split into `initiateRegister()` + `verifyRegisterOtp()` + `resendRegisterOtp()`. Added `setLocalUser()` helper for in-place username updates.
+- `client/src/pages/AuthPage.tsx` — added the OTP verification step between the sign-up form and the existing pending / auto-approved screens (resend with 30 s cooldown, numeric inputmode, `autocomplete="one-time-code"`).
+
+## 3. Theme toggle (sun/moon emoji in header)
+- **NEW** `client/src/hooks/useTheme.ts` — single source of truth; reads / writes `data-theme="alternate"` and `localStorage("theme")`, syncs via the `storage` event, falls back to system `prefers-color-scheme`.
+- **NEW** `client/src/components/ThemeToggle.tsx` — 44×44 round button showing ☀️ in dark mode (tap to switch to light) / 🌙 in light mode.
+- Mounted in the top-right of the mobile-header in **all three layouts** (`App.tsx` → ProtectedLayout, `AdminLayout.tsx`, `SuperAdminLayout.tsx`). On desktop (≥769 px) it floats fixed in the top-right of the viewport so the entry point is identical everywhere.
+- Removed the duplicated "Change Theme" sidebar buttons + duplicated theme state in `Sidebar.tsx`, `AdminLayout.tsx`, `SuperAdminLayout.tsx`. Removed the now-dead theme-init `useEffect` from `App.tsx`.
+
+## 4. Admin & Super-Admin mobile parity
+- `client/src/components/BottomNav.tsx` refactored to take an `items: BottomNavItem[]` prop.
+- `AdminLayout.tsx` mounts a 3-tab bottom nav (Home / Members / Settings).
+- `SuperAdminLayout.tsx` mounts a 5-tab bottom nav (Home / Admins / Users / Foods / Settings).
+- Both now expose Settings in their sidebar nav (Sidebar already does).
+- The existing mobile-first.css overlay already styled `.mobile-header`, `.sidebar`, `.app-main` for these layouts because they share class names — Phase 1 styles now apply identically to admin / super-admin pages.
+
+## 5. CSS additions (`client/src/styles/mobile-first.css`)
+- `.mobile-header-actions` (right-aligned action slot in the mobile header; floats top-right on desktop).
+- `.theme-toggle-pill` / `.theme-toggle-emoji` (44×44 touch target, scale-on-press feedback).
+- `.settings-page`, `.settings-card`, `.settings-card--danger`, `.settings-card-header`, `.settings-form`, `.settings-btn`, `.settings-action-row`, `.otp-input` (centered, letter-spaced 6-digit input).
+
+## Files added
+- `server/models/Otp.js`
+- `server/utils/mailer.js`
+- `server/utils/otp.js`
+- `client/src/hooks/useTheme.ts`
+- `client/src/components/ThemeToggle.tsx`
+- `client/src/pages/SettingsPage.tsx`
+
+## Files modified
+- `server/models/User.js`
+- `server/routes/auth.js`
+- `server/package.json` (+ `nodemailer`)
+- `client/src/App.tsx`
+- `client/src/context/AuthContext.tsx`
+- `client/src/pages/AuthPage.tsx`
+- `client/src/components/BottomNav.tsx`
+- `client/src/components/Sidebar.tsx`
+- `client/src/layouts/AdminLayout.tsx`
+- `client/src/layouts/SuperAdminLayout.tsx`
+- `client/src/styles/mobile-first.css`

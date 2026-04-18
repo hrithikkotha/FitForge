@@ -22,6 +22,9 @@ import ExercisesPage from './pages/superadmin/ExercisesPage';
 import AllUsersPage from './pages/superadmin/AllUsersPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import MembersPage from './pages/admin/MembersPage';
+import SettingsPage from './pages/SettingsPage';
+import ThemeToggle from './components/ThemeToggle';
+import { LayoutDashboard, Dumbbell, Utensils, Bot, User as UserIcon } from 'lucide-react';
 import './index.css';
 
 import { useState, useEffect } from 'react';
@@ -58,11 +61,20 @@ const ProtectedLayout = () => {
                     <img src="/logo.jpg" alt="FitForge" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover' }} />
                     <h1>FitForge</h1>
                 </div>
+                <div className="mobile-header-actions">
+                    <ThemeToggle />
+                </div>
             </div>
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <main className="app-main"><Outlet /></main>
-            <BottomNav />
+            <BottomNav items={[
+                { to: '/dashboard', label: 'Home', Icon: LayoutDashboard },
+                { to: '/workouts', label: 'Workouts', Icon: Dumbbell },
+                { to: '/nutrition', label: 'Nutrition', Icon: Utensils },
+                { to: '/ai-assistant', label: 'AI', Icon: Bot },
+                { to: '/profile', label: 'Profile', Icon: UserIcon },
+            ]} />
         </div>
     );
 };
@@ -95,13 +107,6 @@ const AdminGuard = () => {
 
 // ── App ────────────────────────────────────────────────────────────────────
 function App() {
-    useEffect(() => {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'alternate') {
-            document.documentElement.setAttribute('data-theme', 'alternate');
-        }
-    }, []);
-
     return (
         <BrowserRouter>
             <AuthProvider>
@@ -122,6 +127,7 @@ function App() {
                         <Route path="/stats" element={<StatisticsPage />} />
                         <Route path="/ai-assistant" element={<AIAssistantPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
                     </Route>
 
                     {/* Super Admin */}
@@ -132,12 +138,14 @@ function App() {
                         <Route path="/super-admin/foods" element={<FoodsPage />} />
                         <Route path="/super-admin/exercises" element={<ExercisesPage />} />
                         <Route path="/super-admin/users" element={<AllUsersPage />} />
+                        <Route path="/super-admin/settings" element={<SettingsPage />} />
                     </Route>
 
                     {/* Admin */}
                     <Route element={<AdminGuard />}>
                         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                         <Route path="/admin/members" element={<MembersPage />} />
+                        <Route path="/admin/settings" element={<SettingsPage />} />
                     </Route>
 
                     {/* Catch-all */}

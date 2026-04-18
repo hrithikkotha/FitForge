@@ -16,7 +16,13 @@ const AuthPage = () => {
     const [autoApprovedCreds, setAutoApprovedCreds] = useState<{ email: string; username: string } | null>(null);
     const [copiedField, setCopiedField] = useState('');
     const [suspendedMsg, setSuspendedMsg] = useState('');
-    const { login, register } = useAuth();
+    // OTP step (sign-up email verification)
+    const [otpStage, setOtpStage] = useState(false);
+    const [otpEmail, setOtpEmail] = useState('');
+    const [otpCode, setOtpCode] = useState('');
+    const [otpTtl, setOtpTtl] = useState(0);
+    const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp } = useAuth();
     const navigate = useNavigate();
     const { toasts, show: showToast, dismiss } = useToast();
 
@@ -54,23 +60,131 @@ const AuthPage = () => {
                     setLoading(false);
                     return;
                 }
-                const result = await register(username, email, password);
-                if (result.pending) {
-                    setRegistrationPending(true);
-                    setLoading(false);
-                    return;
-                }
-                if (result.autoApproved && result.credentials) {
-                    setAutoApprovedCreds(result.credentials);
-                    setLoading(false);
-                    return;
-                }
+                const result = await initiateRegister(username, email, password);
+                setOtpEmail(result.email);
+                setOtpTtl(result.ttlMinutes);
+                setOtpStage(true);
+                setOtpCode('');
+                showToast(`Verification code sent to ${result.email}`, 'success');
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Something went wrong');
         }
         setLoading(false);
     };
+
+    // Resend cooldown timer
+    useEffect(() => {
+        if (otpResendCooldown <= 0) return;
+        const id = setInterval(() => setOtpResendCooldown(c => Math.max(0, c - 1)), 1000);
+        return () => clearInterval(id);
+    }, [otpResendCooldown]);
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        if (!/^\d{4,8}$/.test(otpCode.trim())) {
+            setError('Enter the 6-digit code from your email');
+            return;
+        }
+        setLoading(true);
+        try {
+            const result = await verifyRegisterOtp(otpEmail, otpCode.trim());
+            setOtpStage(false);
+            setOtpCode('');
+            if (result.pending) {
+                setRegistrationPending(true);
+            } else if (result.autoApproved && result.credentials) {
+                setAutoApprovedCreds(result.credentials);
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Invalid or expired code');
+        }
+        setLoading(false);
+    };
+
+    const handleResendOtp = async () => {
+        if (otpResendCooldown > 0) return;
+        setError('');
+        try {
+            const r = await resendRegisterOtp(otpEmail);
+            setOtpTtl(r.ttlMinutes);
+            setOtpResendCooldown(30);
+            showToast('New code sent', 'success');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Could not resend code');
+        }
+    };
+
+    // OTP verification screen — between sign-up form and pending/autoApproved screens
+    if (otpStage) {
+        return (
+            <div className="auth-page">
+                <ToastContainer toasts={toasts} dismiss={dismiss} />
+                <div className="auth-container fade-in">
+                    <div className="auth-brand">
+                        <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon-lg" />
+                        <h1>FitForge</h1>
+                    </div>
+                    <div className="auth-card">
+                        <h2 style={{ marginBottom: 8, textAlign: 'center' }}>Verify your email</h2>
+                        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: 18, fontSize: '0.9rem' }}>
+                            We sent a 6-digit code to <strong style={{ color: 'var(--accent-primary)' }}>{otpEmail}</strong>.
+                            Enter it within {otpTtl} minutes.
+                        </p>
+                        {error && <div className="auth-error">{error}</div>}
+                        <form onSubmit={handleVerifyOtp}>
+                            <div className="form-group">
+                                <label htmlFor="otp-code">Verification code</label>
+                                <input
+                                    id="otp-code"
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="123456"
+                                    value={otpCode}
+                                    onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    maxLength={6}
+                                    required
+                                    style={{ letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.3rem', fontWeight: 600 }}
+                                    enterKeyHint="go"
+                                    autoFocus
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                                disabled={loading}
+                            >
+                                {loading ? 'Verifying...' : 'Verify & Create Account'}
+                            </button>
+                        </form>
+                        <div style={{ textAlign: 'center', marginTop: 14, fontSize: '0.85rem' }}>
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                disabled={otpResendCooldown > 0}
+                                style={{ background: 'none', border: 'none', cursor: otpResendCooldown > 0 ? 'not-allowed' : 'pointer', color: otpResendCooldown > 0 ? 'var(--text-muted)' : 'var(--accent-primary)', fontWeight: 600 }}
+                            >
+                                {otpResendCooldown > 0 ? `Resend in ${otpResendCooldown}s` : 'Resend code'}
+                            </button>
+                        </div>
+                        <div style={{ textAlign: 'center', marginTop: 10 }}>
+                            <button
+                                type="button"
+                                onClick={() => { setOtpStage(false); setOtpCode(''); setError(''); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.82rem' }}
+                            >
+                                ← Back to sign-up
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Show pending approval screen after sign-up
     if (registrationPending) {

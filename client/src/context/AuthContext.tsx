@@ -24,9 +24,16 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<{ displayName: string }>;
-    register: (username: string, email: string, password: string) => Promise<{ pending: boolean; autoApproved?: boolean; credentials?: { email: string; username: string } }>;
+    /** Step 1 of sign-up: validates input, sends OTP to email. Does NOT create the user. */
+    initiateRegister: (username: string, email: string, password: string) => Promise<{ email: string; ttlMinutes: number }>;
+    /** Step 2 of sign-up: confirms OTP and finalises account creation. */
+    verifyRegisterOtp: (email: string, code: string) => Promise<{ pending: boolean; autoApproved?: boolean; credentials?: { email: string; username: string } }>;
+    /** Resend the sign-up OTP for an in-flight registration. */
+    resendRegisterOtp: (email: string) => Promise<{ ttlMinutes: number }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
+    /** Refresh the locally-cached user (e.g. after a username change). */
+    setLocalUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,17 +84,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { displayName: data.displayName || data.username };
     };
 
-    const register = async (username: string, email: string, password: string): Promise<{ pending: boolean; autoApproved?: boolean; credentials?: { email: string; username: string } }> => {
-        const { data } = await API.post('/auth/register', { username, email, password });
-        if (data.pending) {
-            return { pending: true };
-        }
+    const initiateRegister = async (username: string, email: string, password: string) => {
+        const { data } = await API.post('/auth/register/initiate', { username, email, password });
+        return { email: data.email as string, ttlMinutes: data.ttlMinutes as number };
+    };
+
+    const verifyRegisterOtp = async (email: string, code: string) => {
+        const { data } = await API.post('/auth/register/verify', { email, code });
+        if (data.pending) return { pending: true };
         if (data.autoApproved) {
             return { pending: false, autoApproved: true, credentials: data.credentials };
         }
-        setUser(data);
-        localStorage.setItem('fitforge_user', JSON.stringify(data));
         return { pending: false };
+    };
+
+    const resendRegisterOtp = async (email: string) => {
+        const { data } = await API.post('/auth/register/resend', { email });
+        return { ttlMinutes: data.ttlMinutes as number };
     };
 
     const updateProfile = async (updates: Partial<User>) => {
@@ -97,8 +110,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('fitforge_user', JSON.stringify(updated));
     };
 
+    const setLocalUser = (updates: Partial<User>) => {
+        if (!user) return;
+        const updated = { ...user, ...updates } as User;
+        setUser(updated);
+        localStorage.setItem('fitforge_user', JSON.stringify(updated));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+        <AuthContext.Provider value={{ user, loading, login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, logout, updateProfile, setLocalUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,40 +1,40 @@
 # Graph Report - .  (2026-04-18)
 
 ## Corpus Check
-- 69 files · ~56,985 words
+- 13 files · ~99,999 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 370 nodes · 382 edges · 79 communities detected
-- Extraction: 69% EXTRACTED · 31% INFERRED · 0% AMBIGUOUS · INFERRED: 119 edges (avg confidence: 0.82)
+- 388 nodes · 397 edges · 83 communities detected
+- Extraction: 70% EXTRACTED · 30% INFERRED · 0% AMBIGUOUS · INFERRED: 121 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Community 0|Community 0]]
-- [[_COMMUNITY_Community 1|Community 1]]
-- [[_COMMUNITY_Community 2|Community 2]]
-- [[_COMMUNITY_Community 3|Community 3]]
-- [[_COMMUNITY_Community 4|Community 4]]
-- [[_COMMUNITY_Community 5|Community 5]]
-- [[_COMMUNITY_Community 6|Community 6]]
-- [[_COMMUNITY_Community 7|Community 7]]
-- [[_COMMUNITY_Community 8|Community 8]]
-- [[_COMMUNITY_Community 9|Community 9]]
-- [[_COMMUNITY_Community 10|Community 10]]
-- [[_COMMUNITY_Community 11|Community 11]]
-- [[_COMMUNITY_Community 12|Community 12]]
-- [[_COMMUNITY_Community 13|Community 13]]
-- [[_COMMUNITY_Community 14|Community 14]]
-- [[_COMMUNITY_Community 15|Community 15]]
-- [[_COMMUNITY_Community 16|Community 16]]
-- [[_COMMUNITY_Community 17|Community 17]]
-- [[_COMMUNITY_Community 18|Community 18]]
-- [[_COMMUNITY_Community 19|Community 19]]
-- [[_COMMUNITY_Community 20|Community 20]]
-- [[_COMMUNITY_Community 21|Community 21]]
-- [[_COMMUNITY_Community 22|Community 22]]
-- [[_COMMUNITY_Community 23|Community 23]]
-- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_React + Vite Tooling|React + Vite Tooling]]
+- [[_COMMUNITY_Admin CRUD Pages|Admin CRUD Pages]]
+- [[_COMMUNITY_Body Map Anatomy|Body Map Anatomy]]
+- [[_COMMUNITY_Page Components|Page Components]]
+- [[_COMMUNITY_Workouts Page Logic|Workouts Page Logic]]
+- [[_COMMUNITY_Muscle Group Catalog|Muscle Group Catalog]]
+- [[_COMMUNITY_Build Configuration|Build Configuration]]
+- [[_COMMUNITY_Voice Assistant Backend|Voice Assistant Backend]]
+- [[_COMMUNITY_Admin Workflow|Admin Workflow]]
+- [[_COMMUNITY_Auth Guards & App Shell|Auth Guards & App Shell]]
+- [[_COMMUNITY_Brand Iron Forge Concept|Brand: Iron Forge Concept]]
+- [[_COMMUNITY_Voice UI Handlers|Voice UI Handlers]]
+- [[_COMMUNITY_Exercises Admin Page|Exercises Admin Page]]
+- [[_COMMUNITY_Voice Command Parsing|Voice Command Parsing]]
+- [[_COMMUNITY_Brand Fit Forge Identity|Brand: Fit Forge Identity]]
+- [[_COMMUNITY_Database Seeding|Database Seeding]]
+- [[_COMMUNITY_Brand Strength Theme|Brand: Strength Theme]]
+- [[_COMMUNITY_Auth & HTTP Layer|Auth & HTTP Layer]]
+- [[_COMMUNITY_Voice Assistant UI|Voice Assistant UI]]
+- [[_COMMUNITY_Mobile-First Audit & Overlay|Mobile-First Audit & Overlay]]
+- [[_COMMUNITY_Bottom Nav & Routing|Bottom Nav & Routing]]
+- [[_COMMUNITY_Date Picker Component|Date Picker Component]]
+- [[_COMMUNITY_Member Management|Member Management]]
+- [[_COMMUNITY_Branding Visuals|Branding Visuals]]
+- [[_COMMUNITY_Body SVG Rendering|Body SVG Rendering]]
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 26|Community 26]]
 - [[_COMMUNITY_Community 27|Community 27]]
@@ -89,6 +89,10 @@
 - [[_COMMUNITY_Community 76|Community 76]]
 - [[_COMMUNITY_Community 77|Community 77]]
 - [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `Body Map SVG` - 18 edges
@@ -103,15 +107,15 @@
 10. `Iron Forge Fitness Logo` - 6 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `mobile-first.css overlay stylesheet` --references--> `main.tsx CSS import order (index.css then mobile-first.css)`  [EXTRACTED]
+  MOBILE_FIRST_CHANGES.md → client/src/main.tsx
+- `Mobile Bottom Tab Bar (BottomNav)` --references--> `BottomNav component`  [EXTRACTED]
+  MOBILE_FIRST_CHANGES.md → client/src/components/BottomNav.tsx
+- `Audit H2: Hamburger drawer instead of bottom tab` --rationale_for--> `BottomNav component`  [EXTRACTED]
+  MOBILE_FIRST_CHANGES.md → client/src/components/BottomNav.tsx
+- `Thumb-zone reachability rationale for tab choices` --rationale_for--> `BottomNav component`  [EXTRACTED]
+  MOBILE_FIRST_CHANGES.md → client/src/components/BottomNav.tsx
 - `suspend()` --calls--> `load()`  [INFERRED]
-  client\src\pages\admin\MembersPage.tsx → client\src\pages\superadmin\FoodsPage.tsx
-- `activate()` --calls--> `load()`  [INFERRED]
-  client\src\pages\admin\MembersPage.tsx → client\src\pages\superadmin\FoodsPage.tsx
-- `bulkSuspend()` --calls--> `load()`  [INFERRED]
-  client\src\pages\admin\MembersPage.tsx → client\src\pages\superadmin\FoodsPage.tsx
-- `bulkActivate()` --calls--> `load()`  [INFERRED]
-  client\src\pages\admin\MembersPage.tsx → client\src\pages\superadmin\FoodsPage.tsx
-- `handleAdd()` --calls--> `load()`  [INFERRED]
   client\src\pages\admin\MembersPage.tsx → client\src\pages\superadmin\FoodsPage.tsx
 
 ## Hyperedges (group relationships)
@@ -124,121 +128,121 @@
 
 ## Communities
 
-### Community 0 - "Community 0"
+### Community 0 - "React + Vite Tooling"
 Cohesion: 0.13
 Nodes (20): Babel, Client Project Template (React + TS + Vite), ESLint, eslint-plugin-react-dom, eslint-plugin-react-x, Fast Refresh, Hot Module Replacement (HMR), oxc (+12 more)
 
-### Community 1 - "Community 1"
+### Community 1 - "Admin CRUD Pages"
 Cohesion: 0.16
 Nodes (12): closeModal(), handleDelete(), handleSave(), load(), activate(), bulkActivate(), bulkSuspend(), handleAdd() (+4 more)
 
-### Community 2 - "Community 2"
+### Community 2 - "Body Map Anatomy"
 Cohesion: 0.19
 Nodes (19): Abdominals Muscle Region, Ankle Joint Marker, Biceps Muscle Region, Body Silhouette, Calves Muscle Region, Chest Muscle Region, Elbow Joint Marker, Forearms Muscle Region (+11 more)
 
-### Community 3 - "Community 3"
+### Community 3 - "Page Components"
 Cohesion: 0.13
 Nodes (19): Admin Detail Page, All Users Page, Auth Page (Login), Back Body SVG Component, Body Map Anatomy (Back), Body Map Anatomy (Front), Body Map Interactions, Body Map Page (+11 more)
 
-### Community 4 - "Community 4"
+### Community 4 - "Workouts Page Logic"
 Cohesion: 0.14
 Nodes (0): 
 
-### Community 5 - "Community 5"
+### Community 5 - "Muscle Group Catalog"
 Cohesion: 0.41
 Nodes (12): Full Body Outline (Back View), Calves (Gastrocnemius), Forearms, Glutes (Gluteus Maximus), Hamstrings, Latissimus Dorsi (Lats), Lower Back, Rear Shoulders (Posterior Deltoids) (+4 more)
 
-### Community 6 - "Community 6"
+### Community 6 - "Build Configuration"
 Cohesion: 0.2
 Nodes (12): Build Tooling (Vite/ESLint), ESLint Config, Vite Config, Vite Env Types, Workout Session UI, Isolated Tool Nodes, Low Cohesion Communities, Client Project Template (React + TS + Vite) (+4 more)
 
-### Community 7 - "Community 7"
+### Community 7 - "Voice Assistant Backend"
 Cohesion: 0.22
 Nodes (3): gatherUserData(), getCachedUserData(), setCachedUserData()
 
-### Community 8 - "Community 8"
+### Community 8 - "Admin Workflow"
 Cohesion: 0.27
 Nodes (11): Admin Approval Workflow, Admin Member & Food Mgmt, Admin Panel Routes, Admin Registration, Exercises Admin CRUD, activate(), bulkActivate(), bulkSuspend() (+3 more)
 
-### Community 9 - "Community 9"
+### Community 9 - "Auth Guards & App Shell"
 Cohesion: 0.22
 Nodes (4): AdminGuard(), SuperAdminGuard(), useAuth(), ForceLogoutOverlay()
 
-### Community 10 - "Community 10"
+### Community 10 - "Brand: Iron Forge Concept"
 Cohesion: 0.33
 Nodes (10): Anvil Symbol, Barbell / Dumbbell Symbol, Iron Forge Fitness (Brand), Gold / Bronze Color Palette, Forging Strength Concept, Blacksmithing / Metalworking Domain, Fitness / Gym Domain, Iron Forge Fitness Logo (+2 more)
 
-### Community 11 - "Community 11"
+### Community 11 - "Voice UI Handlers"
 Cohesion: 0.22
 Nodes (0): 
 
-### Community 12 - "Community 12"
+### Community 12 - "Exercises Admin Page"
 Cohesion: 0.31
 Nodes (4): closeModal(), handleDelete(), handleSave(), load()
 
-### Community 13 - "Community 13"
+### Community 13 - "Voice Command Parsing"
 Cohesion: 0.33
 Nodes (6): fuzzyMatchExercise(), fuzzyMatchFood(), generateSuggestions(), parseVoiceCommand(), topExerciseMatches(), topFoodMatches()
 
-### Community 14 - "Community 14"
+### Community 14 - "Brand: Fit Forge Identity"
 Cohesion: 0.31
 Nodes (9): Black Background, Purple / Violet Metallic Color Palette, FF Monogram Icon, Fit Forge Brand, Fitness / Workout Application Domain, Purple Glow / Neon Effect, Shield / Chevron Shape, Four-Pointed Star Accent (+1 more)
 
-### Community 15 - "Community 15"
+### Community 15 - "Database Seeding"
 Cohesion: 0.25
 Nodes (4): connectDB(), seedDatabase(), seedSuperAdmin(), startServer()
 
-### Community 16 - "Community 16"
+### Community 16 - "Brand: Strength Theme"
 Cohesion: 0.43
 Nodes (8): Brand Identity, Dumbbell / Barbell Motif, Energy and Strength Theme, Fitness / Gym Domain, Flame Motif, Gold Color Scheme, Monogram Letters HAH, ProjectX Logo
 
-### Community 17 - "Community 17"
+### Community 17 - "Auth & HTTP Layer"
 Cohesion: 0.32
 Nodes (8): Auth Guards & Routing, Auth Middleware, Auth Token Logic, Axios HTTP Client, DB Connection & Seeding, User Model, Graph Audit Report, ProjectX Fitness Web Application
 
-### Community 18 - "Community 18"
+### Community 18 - "Voice Assistant UI"
 Cohesion: 0.25
 Nodes (0): 
 
-### Community 19 - "Community 19"
+### Community 19 - "Mobile-First Audit & Overlay"
+Cohesion: 0.25
+Nodes (8): main.tsx CSS import order (index.css then mobile-first.css), Audit C1: iOS input force-zoom, Audit C2: Touch targets <44px, Audit C3: Missing safe-area insets, Audit C5: AI chat input not keyboard-aware, mobile-first.css overlay stylesheet, Overlay loaded after index.css so it wins, Non-Destructive Overlay Strategy
+
+### Community 20 - "Bottom Nav & Routing"
+Cohesion: 0.29
+Nodes (8): ProtectedLayout (regular user layout), User route definitions, BottomNav component, BottomNav routes array (/dashboard,/workouts,/nutrition,/ai-assistant,/profile), Admin layouts intentionally untouched (desktop-primary), Audit H2: Hamburger drawer instead of bottom tab, Mobile Bottom Tab Bar (BottomNav), Thumb-zone reachability rationale for tab choices
+
+### Community 21 - "Date Picker Component"
 Cohesion: 0.29
 Nodes (0): 
 
-### Community 20 - "Community 20"
+### Community 22 - "Member Management"
 Cohesion: 0.48
 Nodes (5): approve(), handleDelete(), load(), suspend(), unsuspend()
 
-### Community 21 - "Community 21"
+### Community 23 - "Branding Visuals"
 Cohesion: 0.38
 Nodes (7): Blue-Purple Linear Gradient, Yellow-Orange Linear Gradient, Iconify Icon Library, Inner Lightning Bolt Shape, Outer Shield/Lightning Shape, Vite Build Tool Brand, Vite Logo
 
-### Community 22 - "Community 22"
+### Community 24 - "Body SVG Rendering"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 23 - "Community 23"
+### Community 25 - "Community 25"
 Cohesion: 0.33
 Nodes (2): useVoiceActions(), useVoiceCommand()
 
-### Community 24 - "Community 24"
+### Community 26 - "Community 26"
 Cohesion: 0.5
 Nodes (5): Atom Symbol (Visual Element), Cyan Color (#00D8FF), Iconify Icon Library, React.js Framework, React Logo (SVG)
 
-### Community 25 - "Community 25"
+### Community 27 - "Community 27"
 Cohesion: 0.4
 Nodes (5): Food Item Model, Foods Routes, Meal Entry Model, Meals Routes, Nutrition Page
 
-### Community 26 - "Community 26"
+### Community 28 - "Community 28"
 Cohesion: 0.4
 Nodes (5): Brand Identity Assets, FitForge Brand Assets, ProjectX Logo Assets, Iron Forge Fitness Logo, ProjectX Logo
-
-### Community 27 - "Community 27"
-Cohesion: 0.5
-Nodes (0): 
-
-### Community 28 - "Community 28"
-Cohesion: 0.5
-Nodes (0): 
 
 ### Community 29 - "Community 29"
 Cohesion: 0.5
@@ -253,16 +257,16 @@ Cohesion: 0.5
 Nodes (0): 
 
 ### Community 32 - "Community 32"
-Cohesion: 0.67
-Nodes (4): Voice AI Route (Server), Voice Assistant Component, Voice Command Parsing, Voice Hooks (Client)
+Cohesion: 0.5
+Nodes (0): 
 
 ### Community 33 - "Community 33"
-Cohesion: 0.67
+Cohesion: 0.5
 Nodes (0): 
 
 ### Community 34 - "Community 34"
 Cohesion: 0.67
-Nodes (0): 
+Nodes (4): Voice AI Route (Server), Voice Assistant Component, Voice Command Parsing, Voice Hooks (Client)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.67
@@ -274,7 +278,7 @@ Nodes (0):
 
 ### Community 37 - "Community 37"
 Cohesion: 0.67
-Nodes (3): Analytics Routes, Dashboard Page, Statistics Page
+Nodes (0): 
 
 ### Community 38 - "Community 38"
 Cohesion: 0.67
@@ -282,14 +286,14 @@ Nodes (0):
 
 ### Community 39 - "Community 39"
 Cohesion: 0.67
-Nodes (0): 
+Nodes (3): Analytics Routes, Dashboard Page, Statistics Page
 
 ### Community 40 - "Community 40"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 41 - "Community 41"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 42 - "Community 42"
@@ -322,11 +326,11 @@ Nodes (0):
 
 ### Community 49 - "Community 49"
 Cohesion: 1.0
-Nodes (2): Admin Dashboard Page, Admin Layout
+Nodes (0): 
 
 ### Community 50 - "Community 50"
 Cohesion: 1.0
-Nodes (2): Exercise Model, Exercises Routes
+Nodes (0): 
 
 ### Community 51 - "Community 51"
 Cohesion: 1.0
@@ -334,15 +338,15 @@ Nodes (2): SuperAdmin Layout, SuperAdmin Routes
 
 ### Community 52 - "Community 52"
 Cohesion: 1.0
-Nodes (2): Workout Session Model, Workouts Routes
+Nodes (2): Admin Dashboard Page, Admin Layout
 
 ### Community 53 - "Community 53"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): Exercise Model, Exercises Routes
 
 ### Community 54 - "Community 54"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): Workout Session Model, Workouts Routes
 
 ### Community 55 - "Community 55"
 Cohesion: 1.0
@@ -414,110 +418,146 @@ Nodes (0):
 
 ### Community 72 - "Community 72"
 Cohesion: 1.0
-Nodes (1): AI Chat Interface
+Nodes (0): 
 
 ### Community 73 - "Community 73"
 Cohesion: 1.0
-Nodes (1): Date Picker Component
+Nodes (0): 
 
 ### Community 74 - "Community 74"
 Cohesion: 1.0
-Nodes (1): Vite Brand SVG Assets
+Nodes (1): AI Chat Interface
 
 ### Community 75 - "Community 75"
 Cohesion: 1.0
-Nodes (1): React Brand Assets
+Nodes (1): Date Picker Component
 
 ### Community 76 - "Community 76"
 Cohesion: 1.0
-Nodes (1): Sidebar Component
+Nodes (1): Vite Brand SVG Assets
 
 ### Community 77 - "Community 77"
 Cohesion: 1.0
-Nodes (1): Test File
+Nodes (1): React Brand Assets
 
 ### Community 78 - "Community 78"
 Cohesion: 1.0
+Nodes (1): Sidebar Component
+
+### Community 79 - "Community 79"
+Cohesion: 1.0
+Nodes (1): Test File
+
+### Community 80 - "Community 80"
+Cohesion: 1.0
 Nodes (1): Platform Settings Model
 
+### Community 81 - "Community 81"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 82 - "Community 82"
+Cohesion: 1.0
+Nodes (1): Audit H1: Missing inputMode/autoComplete/enterKeyHint
+
 ## Knowledge Gaps
-- **56 isolated node(s):** `ESLint`, `Babel`, `oxc`, `rolldown-vite`, `SWC` (+51 more)
+- **68 isolated node(s):** `ESLint`, `Babel`, `oxc`, `rolldown-vite`, `SWC` (+63 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 40`** (2 nodes): `BackBodySvg()`, `BackBodySvg.tsx`
+- **Thin community `Community 42`** (2 nodes): `BackBodySvg()`, `BackBodySvg.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (2 nodes): `FrontBodySvg.tsx`, `FrontBodySvg()`
+- **Thin community `Community 43`** (2 nodes): `FrontBodySvg.tsx`, `FrontBodySvg()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 42`** (2 nodes): `PageLoader.tsx`, `PageLoader()`
+- **Thin community `Community 44`** (2 nodes): `PageLoader.tsx`, `PageLoader()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (2 nodes): `Toast.tsx`, `useToast()`
+- **Thin community `Community 45`** (2 nodes): `Toast.tsx`, `useToast()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 44`** (2 nodes): `handleSubmit()`, `AuthPage.tsx`
+- **Thin community `Community 46`** (2 nodes): `handleSubmit()`, `AuthPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (2 nodes): `ProfilePage.tsx`, `handleSave()`
+- **Thin community `Community 47`** (2 nodes): `ProfilePage.tsx`, `handleSave()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (2 nodes): `StatusBadge()`, `AdminDetailPage.tsx`
+- **Thin community `Community 48`** (2 nodes): `StatusBadge()`, `AdminDetailPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (2 nodes): `StatusBadge()`, `AllUsersPage.tsx`
+- **Thin community `Community 49`** (2 nodes): `StatusBadge()`, `AllUsersPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (2 nodes): `OverviewPage.tsx`, `toggleAutoApprove()`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (2 nodes): `Admin Dashboard Page`, `Admin Layout`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (2 nodes): `Exercise Model`, `Exercises Routes`
+- **Thin community `Community 50`** (2 nodes): `OverviewPage.tsx`, `toggleAutoApprove()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 51`** (2 nodes): `SuperAdmin Layout`, `SuperAdmin Routes`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (2 nodes): `Workout Session Model`, `Workouts Routes`
+- **Thin community `Community 52`** (2 nodes): `Admin Dashboard Page`, `Admin Layout`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (1 nodes): `eslint.config.js`
+- **Thin community `Community 53`** (2 nodes): `Exercise Model`, `Exercises Routes`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (1 nodes): `vite.config.ts`
+- **Thin community `Community 54`** (2 nodes): `Workout Session Model`, `Workouts Routes`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (1 nodes): `vite-env.d.ts`
+- **Thin community `Community 55`** (1 nodes): `eslint.config.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (1 nodes): `axios.ts`
+- **Thin community `Community 56`** (1 nodes): `vite.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (1 nodes): `test.js`
+- **Thin community `Community 57`** (1 nodes): `vite-env.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (1 nodes): `AdminDashboardPage.tsx`
+- **Thin community `Community 58`** (1 nodes): `axios.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (1 nodes): `convert_front.js`
+- **Thin community `Community 59`** (1 nodes): `test.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (1 nodes): `Exercise.js`
+- **Thin community `Community 60`** (1 nodes): `AdminDashboardPage.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (1 nodes): `FoodItem.js`
+- **Thin community `Community 61`** (1 nodes): `convert_front.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (1 nodes): `MealEntry.js`
+- **Thin community `Community 62`** (1 nodes): `Exercise.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (1 nodes): `PlatformSettings.js`
+- **Thin community `Community 63`** (1 nodes): `FoodItem.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (1 nodes): `User.js`
+- **Thin community `Community 64`** (1 nodes): `MealEntry.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (1 nodes): `WorkoutSession.js`
+- **Thin community `Community 65`** (1 nodes): `PlatformSettings.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (1 nodes): `adminPanel.js`
+- **Thin community `Community 66`** (1 nodes): `User.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (1 nodes): `exercises.js`
+- **Thin community `Community 67`** (1 nodes): `WorkoutSession.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (1 nodes): `foods.js`
+- **Thin community `Community 68`** (1 nodes): `adminPanel.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (1 nodes): `meals.js`
+- **Thin community `Community 69`** (1 nodes): `exercises.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (1 nodes): `superAdmin.js`
+- **Thin community `Community 70`** (1 nodes): `foods.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (1 nodes): `workouts.js`
+- **Thin community `Community 71`** (1 nodes): `meals.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (1 nodes): `AI Chat Interface`
+- **Thin community `Community 72`** (1 nodes): `superAdmin.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (1 nodes): `Date Picker Component`
+- **Thin community `Community 73`** (1 nodes): `workouts.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (1 nodes): `Vite Brand SVG Assets`
+- **Thin community `Community 74`** (1 nodes): `AI Chat Interface`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (1 nodes): `React Brand Assets`
+- **Thin community `Community 75`** (1 nodes): `Date Picker Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (1 nodes): `Sidebar Component`
+- **Thin community `Community 76`** (1 nodes): `Vite Brand SVG Assets`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (1 nodes): `Test File`
+- **Thin community `Community 77`** (1 nodes): `React Brand Assets`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (1 nodes): `Platform Settings Model`
+- **Thin community `Community 78`** (1 nodes): `Sidebar Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 79`** (1 nodes): `Test File`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 80`** (1 nodes): `Platform Settings Model`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 81`** (1 nodes): `BottomNav.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 82`** (1 nodes): `Audit H1: Missing inputMode/autoComplete/enterKeyHint`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+
+## Suggested Questions
+_Questions this graph is uniquely positioned to answer:_
+
+- **Are the 9 inferred relationships involving `Full Body Outline (Back View)` (e.g. with `Trapezius (Upper Traps)` and `Rear Shoulders (Posterior Deltoids)`) actually correct?**
+  _`Full Body Outline (Back View)` has 9 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 6 inferred relationships involving `load()` (e.g. with `suspend()` and `activate()`) actually correct?**
+  _`load()` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `ESLint`, `Babel`, `oxc` to the rest of the system?**
+  _68 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `React + Vite Tooling` be split into smaller, more focused modules?**
+  _Cohesion score 0.13 - nodes in this community are weakly interconnected._
+- **Should `Page Components` be split into smaller, more focused modules?**
+  _Cohesion score 0.13 - nodes in this community are weakly interconnected._
+- **Should `Workouts Page Logic` be split into smaller, more focused modules?**
+  _Cohesion score 0.14 - nodes in this community are weakly interconnected._
