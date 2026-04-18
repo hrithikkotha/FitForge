@@ -4,7 +4,20 @@ const User = require('../models/User');
 const PlatformSettings = require('../models/PlatformSettings');
 const { protect } = require('../middleware/auth');
 
+const rateLimit = require('express-rate-limit');
+
 const router = express.Router();
+
+// Rate limiter: max 20 auth requests per IP per 15 minutes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many requests, please try again later.' },
+});
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -29,9 +42,19 @@ const buildUserResponse = (user, token) => ({
 // POST /api/auth/register — regular user
 // If auto-approve is ON: user is created as 'active' and can log in immediately
 // If auto-approve is OFF: user is created as 'pending' and must wait for Super Admin approval
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password, displayName } = req.body;
+
+        if (!username?.trim() || !email?.trim() || !password) {
+            return res.status(400).json({ message: 'Username, email, and password are required' });
+        }
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ message: 'Please provide a valid email address' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
 
         const userExists = await User.findOne({ $or: [{ email }, { username }] });
         if (userExists) {
@@ -75,10 +98,19 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/admin-register — gym owner requests access (status: pending)
-router.post('/admin-register', async (req, res) => {
+router.post('/admin-register', authLimiter, async (req, res) => {
     try {
         const { username, email, password, displayName, gymName } = req.body;
 
+        if (!username?.trim() || !email?.trim() || !password) {
+            return res.status(400).json({ message: 'Username, email, and password are required' });
+        }
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ message: 'Please provide a valid email address' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
         if (!gymName || !gymName.trim()) {
             return res.status(400).json({ message: 'Gym name is required' });
         }
@@ -105,7 +137,7 @@ router.post('/admin-register', async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -161,11 +193,16 @@ router.put('/me', protect, async (req, res) => {
         user.dailyCalorieGoal = req.body.dailyCalorieGoal ?? user.dailyCalorieGoal;
 
         if (req.body.password) {
+            if (req.body.password.length < 6) {
+                return res.status(400).json({ message: 'Password must be at least 6 characters' });
+            }
             user.password = req.body.password;
         }
 
         const updatedUser = await user.save();
-        res.json(buildUserResponse(updatedUser, generateToken(updatedUser._id)));
+        // Re-use the existing token rather than issuing a fresh 30-day one on every profile save
+        const existingToken = req.headers.authorization.split(' ')[1];
+        res.json(buildUserResponse(updatedUser, existingToken));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

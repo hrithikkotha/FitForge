@@ -71,6 +71,36 @@ router.post('/users', guard, async (req, res) => {
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
+// PUT /api/admin/users/bulk-suspend — bulk suspend selected members
+router.put('/users/bulk-suspend', guard, async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0)
+            return res.status(400).json({ message: 'No user IDs provided' });
+
+        const result = await User.updateMany(
+            { _id: { $in: ids }, adminId: req.user._id, role: 'user' },
+            { $set: { status: 'suspended' } }
+        );
+        res.json({ message: `${result.modifiedCount} member(s) suspended` });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// PUT /api/admin/users/bulk-activate — bulk activate selected members
+router.put('/users/bulk-activate', guard, async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0)
+            return res.status(400).json({ message: 'No user IDs provided' });
+
+        const result = await User.updateMany(
+            { _id: { $in: ids }, adminId: req.user._id, role: 'user' },
+            { $set: { status: 'active' } }
+        );
+        res.json({ message: `${result.modifiedCount} member(s) activated` });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
 // PUT /api/admin/users/:id/suspend
 router.put('/users/:id/suspend', guard, async (req, res) => {
     try {
@@ -120,36 +150,6 @@ router.delete('/users/:id', guard, async (req, res) => {
             user.deleteOne(),
         ]);
         res.json({ message: 'Member and their data deleted' });
-    } catch (error) { res.status(500).json({ message: error.message }); }
-});
-
-// PUT /api/admin/users/bulk-suspend — bulk suspend selected members
-router.put('/users/bulk-suspend', guard, async (req, res) => {
-    try {
-        const { ids } = req.body;
-        if (!Array.isArray(ids) || ids.length === 0)
-            return res.status(400).json({ message: 'No user IDs provided' });
-
-        const result = await User.updateMany(
-            { _id: { $in: ids }, adminId: req.user._id, role: 'user' },
-            { $set: { status: 'suspended' } }
-        );
-        res.json({ message: `${result.modifiedCount} member(s) suspended` });
-    } catch (error) { res.status(500).json({ message: error.message }); }
-});
-
-// PUT /api/admin/users/bulk-activate — bulk activate selected members
-router.put('/users/bulk-activate', guard, async (req, res) => {
-    try {
-        const { ids } = req.body;
-        if (!Array.isArray(ids) || ids.length === 0)
-            return res.status(400).json({ message: 'No user IDs provided' });
-
-        const result = await User.updateMany(
-            { _id: { $in: ids }, adminId: req.user._id, role: 'user' },
-            { $set: { status: 'active' } }
-        );
-        res.json({ message: `${result.modifiedCount} member(s) activated` });
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 

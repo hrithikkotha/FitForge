@@ -4,21 +4,37 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/workouts — list user's sessions (with optional date filters)
+// GET /api/workouts — list user's sessions (with optional date filters + pagination)
+// Query params: from, to (ISO date), page (default 1), limit (default 20, max 100)
 router.get('/', protect, async (req, res) => {
     try {
         const query = { userId: req.user._id };
 
         if (req.query.from || req.query.to) {
+            const from = req.query.from ? new Date(req.query.from) : null;
+            const to = req.query.to ? new Date(req.query.to) : null;
+            if ((from && isNaN(from.getTime())) || (to && isNaN(to.getTime()))) {
+                return res.status(400).json({ message: 'Invalid date format for from/to (use ISO 8601)' });
+            }
             query.date = {};
-            if (req.query.from) query.date.$gte = new Date(req.query.from);
-            if (req.query.to) query.date.$lte = new Date(req.query.to);
+            if (from) query.date.$gte = from;
+            if (to) query.date.$lte = to;
         }
 
-        const sessions = await WorkoutSession.find(query)
-            .populate('entries.exerciseId')
-            .sort({ date: -1 });
-        res.json(sessions);
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+        const skip = (page - 1) * limit;
+
+        const [sessions, total] = await Promise.all([
+            WorkoutSession.find(query)
+                .populate('entries.exerciseId', 'name category muscleGroups')
+                .sort({ date: -1 })
+                .skip(skip)
+                .limit(limit),
+            WorkoutSession.countDocuments(query),
+        ]);
+
+        res.json({ sessions, page, limit, total, totalPages: Math.ceil(total / limit) });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

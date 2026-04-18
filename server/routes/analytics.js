@@ -6,6 +6,25 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Simple TTL cache for analytics (keyed by userId+endpoint+params, 5-min TTL)
+const analyticsCache = new Map();
+const ANALYTICS_TTL_MS = 5 * 60 * 1000;
+
+function getCached(key) {
+    const entry = analyticsCache.get(key);
+    if (entry && Date.now() < entry.expiresAt) return entry.data;
+    analyticsCache.delete(key);
+    return null;
+}
+
+function setCache(key, data) {
+    analyticsCache.set(key, { data, expiresAt: Date.now() + ANALYTICS_TTL_MS });
+    // Limit cache size to 1000 entries
+    if (analyticsCache.size > 1000) {
+        analyticsCache.delete(analyticsCache.keys().next().value);
+    }
+}
+
 // GET /api/analytics/muscle/:muscleGroup
 router.get('/muscle/:muscleGroup', protect, async (req, res) => {
     try {
@@ -13,7 +32,10 @@ router.get('/muscle/:muscleGroup', protect, async (req, res) => {
         const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const to = req.query.to ? new Date(req.query.to) : new Date();
 
-        // Find exercises targeting this muscle group
+        const cacheKey = `muscle:${req.user._id}:${muscleGroup}:${from.getTime()}:${to.getTime()}`;
+        const cached = getCached(cacheKey);
+        if (cached) return res.json(cached);
+
         const exercises = await Exercise.find({
             muscleGroups: muscleGroup,
             $or: [{ isDefault: true }, { userId: req.user._id }],
@@ -74,7 +96,7 @@ router.get('/muscle/:muscleGroup', protect, async (req, res) => {
             .sort((a, b) => b.volume - a.volume)
             .slice(0, 10);
 
-        res.json({
+        const result = {
             muscleGroup,
             period: { from, to },
             totalSessions: sessionDates.length,
@@ -85,7 +107,9 @@ router.get('/muscle/:muscleGroup', protect, async (req, res) => {
             lastTrained: sessionDates.length > 0 ? sessionDates[0] : null,
             topExercises,
             sessionDates,
-        });
+        };
+        setCache(cacheKey, result);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -96,6 +120,10 @@ router.get('/body-heatmap', protect, async (req, res) => {
     try {
         const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const to = req.query.to ? new Date(req.query.to) : new Date();
+
+        const cacheKey = `heatmap:${req.user._id}:${from.getTime()}:${to.getTime()}`;
+        const cached = getCached(cacheKey);
+        if (cached) return res.json(cached);
 
         const sessions = await WorkoutSession.find({
             userId: req.user._id,
@@ -125,10 +153,12 @@ router.get('/body-heatmap', protect, async (req, res) => {
             });
         });
 
-        res.json({
+        const result = {
             period: { from, to },
             muscleFrequency: muscleCount,
-        });
+        };
+        setCache(cacheKey, result);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -139,6 +169,10 @@ router.get('/workout-stats', protect, async (req, res) => {
     try {
         const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const to = req.query.to ? new Date(req.query.to) : new Date();
+
+        const cacheKey = `workout-stats:${req.user._id}:${from.getTime()}:${to.getTime()}`;
+        const cached = getCached(cacheKey);
+        if (cached) return res.json(cached);
 
         const sessions = await WorkoutSession.find({
             userId: req.user._id,
@@ -189,7 +223,7 @@ router.get('/workout-stats', protect, async (req, res) => {
             .map(([exercise, data]) => ({ exercise, ...data }))
             .sort((a, b) => b.weight - a.weight);
 
-        res.json({
+        const result = {
             period: { from, to },
             totalSessions,
             totalDuration,
@@ -198,7 +232,9 @@ router.get('/workout-stats', protect, async (req, res) => {
             avgSessionDuration: totalSessions > 0 ? Math.round(totalDuration / totalSessions) : 0,
             personalRecords: prs,
             volumeOverTime,
-        });
+        };
+        setCache(cacheKey, result);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -209,6 +245,10 @@ router.get('/nutrition-stats', protect, async (req, res) => {
     try {
         const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const to = req.query.to ? new Date(req.query.to) : new Date();
+
+        const cacheKey = `nutrition-stats:${req.user._id}:${from.getTime()}:${to.getTime()}`;
+        const cached = getCached(cacheKey);
+        if (cached) return res.json(cached);
 
         const meals = await MealEntry.find({
             userId: req.user._id,
@@ -243,7 +283,7 @@ router.get('/nutrition-stats', protect, async (req, res) => {
             mealTypeBreakdown[meal.mealType] = (mealTypeBreakdown[meal.mealType] || 0) + meal.calories;
         });
 
-        res.json({
+        const result = {
             period: { from, to },
             totalCalories,
             totalProtein: Math.round(totalProtein * 10) / 10,
@@ -254,7 +294,9 @@ router.get('/nutrition-stats', protect, async (req, res) => {
             avgDailyProtein: daysTracked > 0 ? Math.round(totalProtein / daysTracked * 10) / 10 : 0,
             dailyTrend,
             mealTypeBreakdown,
-        });
+        };
+        setCache(cacheKey, result);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

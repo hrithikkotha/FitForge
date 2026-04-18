@@ -5,28 +5,53 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/meals — list user's meals (with optional date filters)
+// GET /api/meals — list user's meals (with optional date filters + pagination)
+// Query params: date (single day) OR from+to (range) — mutually exclusive
+// page (default 1), limit (default 50, max 100)
 router.get('/', protect, async (req, res) => {
     try {
+        // Reject ambiguous filter combinations
+        if (req.query.date && (req.query.from || req.query.to)) {
+            return res.status(400).json({ message: 'Use either "date" or "from"/"to" filters, not both' });
+        }
+
         const query = { userId: req.user._id };
 
         if (req.query.from || req.query.to) {
+            const from = req.query.from ? new Date(req.query.from) : null;
+            const to = req.query.to ? new Date(req.query.to) : null;
+            if ((from && isNaN(from.getTime())) || (to && isNaN(to.getTime()))) {
+                return res.status(400).json({ message: 'Invalid date format for from/to (use ISO 8601)' });
+            }
             query.date = {};
-            if (req.query.from) query.date.$gte = new Date(req.query.from);
-            if (req.query.to) query.date.$lte = new Date(req.query.to);
+            if (from) query.date.$gte = from;
+            if (to) query.date.$lte = to;
         }
 
         if (req.query.date) {
             const d = new Date(req.query.date);
+            if (isNaN(d.getTime())) {
+                return res.status(400).json({ message: 'Invalid date format (use ISO 8601)' });
+            }
             const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
             query.date = { $gte: start, $lt: end };
         }
 
-        const meals = await MealEntry.find(query)
-            .populate('foodItemId')
-            .sort({ date: -1 });
-        res.json(meals);
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+        const skip = (page - 1) * limit;
+
+        const [meals, total] = await Promise.all([
+            MealEntry.find(query)
+                .populate('foodItemId')
+                .sort({ date: -1 })
+                .skip(skip)
+                .limit(limit),
+            MealEntry.countDocuments(query),
+        ]);
+
+        res.json({ meals, page, limit, total, totalPages: Math.ceil(total / limit) });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

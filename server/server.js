@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const seedDatabase = require('./seed/seedData');
@@ -9,8 +10,17 @@ dotenv.config({ path: '../.env' });
 
 const app = express();
 
+// Allowed origins: set ALLOWED_ORIGINS in .env (comma-separated) for production
+// e.g. ALLOWED_ORIGINS=https://yourapp.com,https://www.yourapp.com
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+}));
 app.use(express.json());
 
 // Routes
@@ -30,7 +40,6 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve frontend in production
-const path = require('path');
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/dist')));
 
@@ -43,8 +52,11 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
     await connectDB();
-    await seedDatabase();
-    await seedSuperAdmin();
+    // Only seed in development, or when explicitly enabled via SEED_DB=true
+    if (process.env.NODE_ENV !== 'production' || process.env.SEED_DB === 'true') {
+        await seedDatabase();
+        await seedSuperAdmin();
+    }
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });

@@ -1,0 +1,13 @@
+{
+    "nodes": [
+        {
+            "id": "server_models_platformsettings_js",
+            "label": "PlatformSettings.js",
+            "file_type": "code",
+            "source_file": "server\\models\\PlatformSettings.js",
+            "source_location": "L1"
+        }
+    ],
+    "edges": [],
+    "raw_calls": []
+}

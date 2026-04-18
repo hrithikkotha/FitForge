@@ -30,6 +30,7 @@ function getCachedUserData(userId) {
     const key = userId.toString();
     const entry = userDataCache.get(key);
     if (entry && Date.now() < entry.expiresAt) {
+        entry.lastAccessed = Date.now(); // update for LRU tracking
         return entry.data;
     }
     userDataCache.delete(key);
@@ -38,11 +39,18 @@ function getCachedUserData(userId) {
 
 function setCachedUserData(userId, data) {
     const key = userId.toString();
-    userDataCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
-    // Evict old entries to prevent memory leak (keep max 500 users)
+    userDataCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS, lastAccessed: Date.now() });
+    // Evict the least recently accessed entry (true LRU) — keeps max 500 users in cache
     if (userDataCache.size > 500) {
-        const firstKey = userDataCache.keys().next().value;
-        userDataCache.delete(firstKey);
+        let lruKey = null;
+        let lruTime = Infinity;
+        for (const [k, v] of userDataCache.entries()) {
+            if (v.lastAccessed < lruTime) {
+                lruTime = v.lastAccessed;
+                lruKey = k;
+            }
+        }
+        if (lruKey) userDataCache.delete(lruKey);
     }
 }
 
@@ -150,6 +158,65 @@ async function gatherUserData(userId) {
     return result;
 }
 
+// ── Static sections of the system prompt (extracted to avoid re-creating on every call) ──
+const STATIC_NUTRITION_KB = `MEAL TIMING & SEQUENCING:
+- Pre-workout (1\u20132hrs before): 30\u201360g carbs, low fiber (banana, rice + fruit, roti+honey)
+- Post-workout (within 2hrs): 30\u201340g protein + 0.5\u20131g carbs per lb (rice+chicken, oats+whey)
+- Meal sequence for blood sugar: Vegetables first \u2192 Protein \u2192 Carbs (reduces glucose spike ~30%)
+- 10-min walk after meals reduces glucose spike by 25%
+
+CARB QUALITY TIERS:
+- Tier 1 (best): sweet potato, quinoa, oats, dal, non-starchy veg
+- Tier 2 (good): brown rice, whole wheat roti, fruit
+- Tier 3 (context): white rice (fine post-workout), dosa, idli
+- Avoid: refined sugars, maida products, fried snacks
+
+ANTI-INFLAMMATORY FOODS (for recovery):
+- Daily: salmon/sardines, berries, spinach, olive oil/ghee, turmeric+black pepper, green tea
+- Regular: walnuts, avocado, tomatoes, garlic+onion, mushrooms
+- Avoid: seed oils when heated, ultra-processed snacks, excess sugar
+
+GUT HEALTH (affects 70% of immunity):
+- Daily fermented foods: curd, chaas, kefir, homemade pickle
+- 30+ different plant foods per week for microbiome diversity
+- High fiber: 35\u201340g daily (dal, vegetables, oats, fruits)
+
+SUPPLEMENTS (evidence tier 1):
+- Creatine 5g/day: muscle strength + cognitive function (no cycling needed)
+- Omega-3 2\u20133g EPA/DHA: anti-inflammatory, heart, brain
+- Vitamin D3 2000\u20135000 IU: immunity, mood (especially indoors)
+- Magnesium glycinate 400mg evening: sleep + 300+ enzymatic reactions
+
+INDIAN DIET ADAPTATION:
+- Dal + roti/rice = complete protein (combine smartly)
+- Paneer is excellent (complete protein + healthy fat) \u2014 100g paneer = 18g protein
+- Add protein to Indian meals: extra dal, soya chunks, paneer, curd on the side
+- Curd/chaas after meals = probiotic benefit
+- Cook vegetables in ghee/olive oil, not refined oil`;
+
+const STATIC_RESPONSE_FORMAT = `\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+RESPONSE FORMATTING (CRITICAL \u2014 follow exactly)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Your "response" string will be rendered as Markdown. Use proper markdown formatting:
+
+FORMAT RULES:
+- Use **bold** for key terms, food names, and numbers (e.g. **150g chicken breast**)
+- Use ### for section headers (e.g. ### Day 1 \u2014 Monday)
+- Use bullet lists (- item) for listing foods, tips, or exercises
+- Use numbered lists (1. item) for step-by-step instructions
+- Use line breaks (two newlines) between sections for visual clarity
+- For multi-day plans, use a ### header per day with bullet-point meals beneath:
+  ### Day 1 \u2014 Monday
+  - **Breakfast:** 2 eggs + oats (350cal, 25g protein)
+  - **Lunch:** Chicken 150g + brown rice + salad (550cal, 35g protein)
+  - **Dinner:** Salmon 120g + quinoa + broccoli (480cal, 30g protein)
+- Never dump everything on one line separated by pipes (|)
+- Keep responses well-structured but concise
+- Reference the user's ACTUAL numbers (their protein avg, calorie gap, workout history)
+- Be specific and actionable \u2014 tell them exactly what to eat/do, not vague advice
+- Be encouraging but honest about gaps in their data
+- ALWAYS return valid JSON: {"response":"...","actions":[...]}`;
+
 // ── Build evidence-based system prompt (powered by Health & Nutrition Expert skill) ──
 function buildChatSystemPrompt(userData, exerciseList, foodList) {
     const p = userData.profile || {};
@@ -221,63 +288,9 @@ PROTEIN (most critical):
 - Complete proteins: eggs, chicken, fish, dairy, soy, paneer, quinoa
 - Incomplete (must combine): dal + rice OR roti + dal = complete
 
-MEAL TIMING & SEQUENCING:
-- Pre-workout (1–2hrs before): 30–60g carbs, low fiber (banana, rice + fruit, roti+honey)
-- Post-workout (within 2hrs): 30–40g protein + 0.5–1g carbs per lb (rice+chicken, oats+whey)
-- Meal sequence for blood sugar: Vegetables first → Protein → Carbs (reduces glucose spike ~30%)
-- 10-min walk after meals reduces glucose spike by 25%
+${STATIC_NUTRITION_KB}
 
-CARB QUALITY TIERS:
-- Tier 1 (best): sweet potato, quinoa, oats, dal, non-starchy veg
-- Tier 2 (good): brown rice, whole wheat roti, fruit
-- Tier 3 (context): white rice (fine post-workout), dosa, idli
-- Avoid: refined sugars, maida products, fried snacks
-
-ANTI-INFLAMMATORY FOODS (for recovery):
-- Daily: salmon/sardines, berries, spinach, olive oil/ghee, turmeric+black pepper, green tea
-- Regular: walnuts, avocado, tomatoes, garlic+onion, mushrooms
-- Avoid: seed oils when heated, ultra-processed snacks, excess sugar
-
-GUT HEALTH (affects 70% of immunity):
-- Daily fermented foods: curd, chaas, kefir, homemade pickle
-- 30+ different plant foods per week for microbiome diversity
-- High fiber: 35–40g daily (dal, vegetables, oats, fruits)
-
-SUPPLEMENTS (evidence tier 1):
-- Creatine 5g/day: muscle strength + cognitive function (no cycling needed)
-- Omega-3 2–3g EPA/DHA: anti-inflammatory, heart, brain
-- Vitamin D3 2000–5000 IU: immunity, mood (especially indoors)
-- Magnesium glycinate 400mg evening: sleep + 300+ enzymatic reactions
-
-INDIAN DIET ADAPTATION:
-- Dal + roti/rice = complete protein (combine smartly)
-- Paneer is excellent (complete protein + healthy fat) — 100g paneer = 18g protein
-- Add protein to Indian meals: extra dal, soya chunks, paneer, curd on the side
-- Curd/chaas after meals = probiotic benefit
-- Cook vegetables in ghee/olive oil, not refined oil
-
-═══════════════════════════════════════════
-RESPONSE FORMATTING (CRITICAL — follow exactly)
-═══════════════════════════════════════════
-Your "response" string will be rendered as Markdown. Use proper markdown formatting:
-
-FORMAT RULES:
-- Use **bold** for key terms, food names, and numbers (e.g. **150g chicken breast**)
-- Use ### for section headers (e.g. ### Day 1 — Monday)
-- Use bullet lists (- item) for listing foods, tips, or exercises
-- Use numbered lists (1. item) for step-by-step instructions
-- Use line breaks (two newlines) between sections for visual clarity
-- For multi-day plans, use a ### header per day with bullet-point meals beneath:
-  ### Day 1 — Monday
-  - **Breakfast:** 2 eggs + oats (350cal, 25g protein)
-  - **Lunch:** Chicken 150g + brown rice + salad (550cal, 35g protein)
-  - **Dinner:** Salmon 120g + quinoa + broccoli (480cal, 30g protein)
-- Never dump everything on one line separated by pipes (|)
-- Keep responses well-structured but concise
-- Reference the user's ACTUAL numbers (their protein avg, calorie gap, workout history)
-- Be specific and actionable — tell them exactly what to eat/do, not vague advice
-- Be encouraging but honest about gaps in their data
-- ALWAYS return valid JSON: {"response":"...","actions":[...]}`;
+${STATIC_RESPONSE_FORMAT}`;
 }
 
 // ── Robust JSON extractor (handles truncated/wrapped responses) ────────────
