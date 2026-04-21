@@ -285,7 +285,19 @@
 
 /* On desktop the mobile-header is hidden, so float the toggle in the top-right
    of the viewport instead — matches "top right of header" intent everywhere. */
+.desktop-theme-toggle {
+  display: none;
+}
 @media (min-width: 769px) {
+  .desktop-theme-toggle {
+    display: flex;
+    position: fixed;
+    top: 16px;
+    right: 18px;
+    z-index: 250;
+    align-items: center;
+    gap: 8px;
+  }
   .mobile-header-actions {
     position: fixed;
     top: 16px;

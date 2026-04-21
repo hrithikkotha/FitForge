@@ -65,6 +65,9 @@ const ProtectedLayout = () => {
                     <ThemeToggle />
                 </div>
             </div>
+            <div className="desktop-theme-toggle">
+                <ThemeToggle />
+            </div>
             <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <main className="app-main"><Outlet /></main>
