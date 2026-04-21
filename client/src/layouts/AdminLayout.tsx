@@ -68,6 +68,9 @@ const AdminLayout = () => {
                         <ThemeToggle />
                     </div>
                 </div>
+                <div className="desktop-theme-toggle">
+                    <ThemeToggle />
+                </div>
 
                 {/* Overlay (mobile) */}
                 <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
