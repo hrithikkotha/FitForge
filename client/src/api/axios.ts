@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: import.meta.env.PROD ? '/api' : 'http://localhost:5000/api',
+    baseURL: import.meta.env.PROD ? '/api' : 'http://localhost:3001/api',
 });
 
 // ── Request interceptor: attach bearer token ──────────────────────────────
