@@ -6,11 +6,19 @@ const getTransport = () => {
     if (_transport) return _transport;
     const { SMTP_USER, SMTP_PASS } = process.env;
     if (!SMTP_USER || !SMTP_PASS) {
-        throw new Error('Email is not configured. Set SMTP_USER and SMTP_PASS (Gmail App Password) in your .env file.');
+        throw new Error('Email is not configured. Set SMTP_USER and SMTP_PASS (Gmail App Password) in your environment variables.');
     }
+    // Use explicit host/port instead of service:'gmail' so cloud hosts
+    // (Render, Railway, etc.) can reach it reliably on port 587 (STARTTLS).
+    // Timeouts prevent the request from hanging forever when SMTP is slow.
     _transport = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,           // STARTTLS — upgrade after handshake
         auth: { user: SMTP_USER, pass: SMTP_PASS },
+        connectionTimeout: 10_000,
+        socketTimeout: 10_000,
+        greetingTimeout: 10_000,
     });
     return _transport;
 };
@@ -52,13 +60,21 @@ const buildHtml = (code, purpose) => {
 const sendOtpEmail = async ({ to, code, purpose }) => {
     const meta = PURPOSE_COPY[purpose] || PURPOSE_COPY.signup;
     const transport = getTransport();
-    const info = await transport.sendMail({
-        from: FROM(),
-        to,
-        subject: `${meta.subject} — ${code}`,
-        text: `${meta.heading}\n\n${meta.body}\n\nYour code: ${code}\n\nThis code expires in 10 minutes. If you didn't request it, you can ignore this email.`,
-        html: buildHtml(code, purpose),
-    });
+    let info;
+    try {
+        info = await transport.sendMail({
+            from: FROM(),
+            to,
+            subject: `${meta.subject} — ${code}`,
+            text: `${meta.heading}\n\n${meta.body}\n\nYour code: ${code}\n\nThis code expires in 10 minutes. If you didn't request it, you can ignore this email.`,
+            html: buildHtml(code, purpose),
+        });
+    } catch (err) {
+        // Reset the cached transport so the next request gets a fresh connection
+        // (avoids stale/broken connections after a network hiccup on Render/cloud).
+        _transport = null;
+        throw err;
+    }
     if (process.env.OTP_DEV_LOG === 'true') {
         console.log(`[OTP] purpose=${purpose} to=${to} code=${code}`);
     }

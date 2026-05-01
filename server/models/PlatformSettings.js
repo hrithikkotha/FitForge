@@ -7,17 +7,19 @@ const platformSettingsSchema = new mongoose.Schema({
     },
     autoApproveUsers: {
         type: Boolean,
-        default: false,
+        default: true,
     },
 }, {
     timestamps: true,
 });
 
-// Always return a settings doc (create if missing)
+// Always return a settings doc (create if missing).
+// $setOnInsert ensures we only write defaults when the doc is first created —
+// a super-admin who manually set autoApproveUsers=false won't get it flipped.
 platformSettingsSchema.statics.getSettings = async function () {
     const settings = await this.findByIdAndUpdate(
         'platform',
-        { $setOnInsert: { _id: 'platform' } },
+        { $setOnInsert: { _id: 'platform', autoApproveUsers: true } },
         { new: true, upsert: true }
     );
     return settings;
