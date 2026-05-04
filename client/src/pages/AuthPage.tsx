@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, getRoleHome } from '../context/AuthContext';
-import { CheckCircle, Copy, Check } from 'lucide-react';
+import { CheckCircle, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
 
 const AuthPage = () => {
@@ -10,6 +10,8 @@ const AuthPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [registrationPending, setRegistrationPending] = useState(false);
@@ -374,35 +376,81 @@ const AuthPage = () => {
 
                         <div className="form-group">
                             <label htmlFor="auth-password">Password</label>
-                            <input
-                                id="auth-password"
-                                type="password"
-                                className="form-input"
-                                placeholder="Enter your password"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                required
-                                minLength={6}
-                                autoComplete={isLogin ? 'current-password' : 'new-password'}
-                                enterKeyHint={isLogin ? 'go' : 'next'}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    id="auth-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="form-input"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                    autoComplete={isLogin ? 'current-password' : 'new-password'}
+                                    enterKeyHint={isLogin ? 'go' : 'next'}
+                                    style={{ paddingRight: 40 }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(v => !v)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    style={{
+                                        position: 'absolute',
+                                        right: 10,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: 4,
+                                        color: 'var(--text-secondary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         {!isLogin && (
                             <div className="form-group">
                                 <label htmlFor="auth-confirm-password">Confirm Password</label>
-                                <input
-                                    id="auth-confirm-password"
-                                    type="password"
-                                    className="form-input"
-                                    placeholder="Re-enter your password"
-                                    value={confirmPassword}
-                                    onChange={e => setConfirmPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                    autoComplete="new-password"
-                                    enterKeyHint="go"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        id="auth-confirm-password"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        className="form-input"
+                                        placeholder="Re-enter your password"
+                                        value={confirmPassword}
+                                        onChange={e => setConfirmPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        autoComplete="new-password"
+                                        enterKeyHint="go"
+                                        style={{ paddingRight: 40 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(v => !v)}
+                                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                        style={{
+                                            position: 'absolute',
+                                            right: 10,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: 4,
+                                            color: 'var(--text-secondary)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                         )}
 
