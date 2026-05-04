@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth, getRoleHome } from '../context/AuthContext';
 import { CheckCircle, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
+import API from '../api/axios';
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -18,13 +19,15 @@ const AuthPage = () => {
     const [autoApprovedCreds, setAutoApprovedCreds] = useState<{ email: string; username: string } | null>(null);
     const [copiedField, setCopiedField] = useState('');
     const [suspendedMsg, setSuspendedMsg] = useState('');
+    // Signup mode from platform settings
+    const [signupMode, setSignupMode] = useState<'otp' | 'manual'>('otp');
     // OTP step (sign-up email verification)
     const [otpStage, setOtpStage] = useState(false);
     const [otpEmail, setOtpEmail] = useState('');
     const [otpCode, setOtpCode] = useState('');
     const [otpTtl, setOtpTtl] = useState(0);
     const [otpResendCooldown, setOtpResendCooldown] = useState(0);
-    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp } = useAuth();
+    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister } = useAuth();
     const navigate = useNavigate();
     const { toasts, show: showToast, dismiss } = useToast();
 
@@ -35,6 +38,10 @@ const AuthPage = () => {
             setSuspendedMsg(msg);
             localStorage.removeItem('fitforge_suspended_msg');
         }
+        // Fetch current signup mode from server
+        API.get('/auth/signup-mode')
+            .then(res => setSignupMode(res.data.signupMode))
+            .catch(() => {}); // fallback to default 'otp'
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -62,12 +69,20 @@ const AuthPage = () => {
                     setLoading(false);
                     return;
                 }
-                const result = await initiateRegister(username, email, password);
-                setOtpEmail(result.email);
-                setOtpTtl(result.ttlMinutes);
-                setOtpStage(true);
-                setOtpCode('');
-                showToast(`Verification code sent to ${result.email}`, 'success');
+
+                if (signupMode === 'otp') {
+                    // OTP flow: initiate → email OTP → verify → auto-approved
+                    const result = await initiateRegister(username, email, password);
+                    setOtpEmail(result.email);
+                    setOtpTtl(result.ttlMinutes);
+                    setOtpStage(true);
+                    setOtpCode('');
+                    showToast(`Verification code sent to ${result.email}`, 'success');
+                } else {
+                    // Manual approval flow: create pending account directly
+                    await directRegister(username, email, password);
+                    setRegistrationPending(true);
+                }
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Something went wrong');

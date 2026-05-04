@@ -65,12 +65,29 @@ const trySendOtp = async ({ to, code, purpose }) => {
     }
 };
 
-// ── Sign-up: step 1 (initiate) ─────────────────────────────────────────────
+// ── Public: which signup mode is active? ────────────────────────────────────
+// The AuthPage calls this on mount to decide between OTP or simple form.
+router.get('/signup-mode', async (_req, res) => {
+    try {
+        const settings = await PlatformSettings.getSettings();
+        res.json({ signupMode: settings.signupMode });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// ── Sign-up: OTP flow — step 1 (initiate) ──────────────────────────────────
+// Only active when signupMode === 'otp'.
 // Validates the prospective account, hashes the password, stores it in an
 // ephemeral OTP record, and emails a 6-digit code. The User document is NOT
 // created until /register/verify succeeds.
 router.post('/register/initiate', authLimiter, async (req, res) => {
     try {
+        const settings = await PlatformSettings.getSettings();
+        if (settings.signupMode !== 'otp') {
+            return res.status(400).json({ message: 'OTP registration is not enabled. Please use the standard sign-up form.' });
+        }
+
         const { username, email, password, displayName } = req.body;
 
         if (!username?.trim() || !email?.trim() || !password) {
@@ -112,7 +129,8 @@ router.post('/register/initiate', authLimiter, async (req, res) => {
     }
 });
 
-// ── Sign-up: step 2 (verify) ───────────────────────────────────────────────
+// ── Sign-up: OTP flow — step 2 (verify) ────────────────────────────────────
+// OTP mode always auto-approves since email is verified.
 router.post('/register/verify', authLimiter, async (req, res) => {
     try {
         const { email, code } = req.body;
@@ -129,33 +147,24 @@ router.post('/register/verify', authLimiter, async (req, res) => {
             return res.status(409).json({ message: 'That email or username was just taken. Please try again with different details.' });
         }
 
-        const settings = await PlatformSettings.getSettings();
-        const userStatus = settings.autoApproveUsers ? 'active' : 'pending';
-
         const user = new User({
             username,
             email: email.toLowerCase(),
             password: passwordHash,
             displayName,
             role: 'user',
-            status: userStatus,
+            status: 'active',
             emailVerified: true,
         });
         // Skip the bcrypt pre-save hook because the password is already hashed.
         user.unmarkModified('password');
         await user.save();
 
-        if (settings.autoApproveUsers) {
-            return res.status(201).json({
-                pending: false,
-                autoApproved: true,
-                message: 'Email verified! Your account has been created.',
-                credentials: { email: user.email, username: user.username },
-            });
-        }
         res.status(201).json({
-            pending: true,
-            message: 'Email verified! Your account is now under review by the FitForge team.',
+            pending: false,
+            autoApproved: true,
+            message: 'Email verified! Your account has been created.',
+            credentials: { email: user.email, username: user.username },
         });
     } catch (error) {
         res.status(error.status || 500).json({ message: error.message });
@@ -165,6 +174,10 @@ router.post('/register/verify', authLimiter, async (req, res) => {
 // ── Sign-up: resend OTP ────────────────────────────────────────────────────
 router.post('/register/resend', otpLimiter, async (req, res) => {
     try {
+        const settings = await PlatformSettings.getSettings();
+        if (settings.signupMode !== 'otp') {
+            return res.status(400).json({ message: 'OTP registration is not enabled.' });
+        }
         const { email } = req.body;
         if (!email || !isValidEmail(email)) {
             return res.status(400).json({ message: 'Valid email is required' });
@@ -176,6 +189,51 @@ router.post('/register/resend', otpLimiter, async (req, res) => {
         const code = await issueOtp({ email, purpose: 'signup', payload: existing.payload });
         await trySendOtp({ to: email, code, purpose: 'signup' });
         res.json({ message: `New code sent to ${email}.`, ttlMinutes: OTP_TTL_MIN });
+    } catch (error) {
+        res.status(error.status || 500).json({ message: error.message });
+    }
+});
+
+// ── Sign-up: Manual-Approval flow (single step, no OTP) ────────────────────
+// Only active when signupMode === 'manual'. Creates user with status 'pending'.
+router.post('/register/direct', authLimiter, async (req, res) => {
+    try {
+        const settings = await PlatformSettings.getSettings();
+        if (settings.signupMode !== 'manual') {
+            return res.status(400).json({ message: 'Direct registration is not enabled. Please use OTP sign-up.' });
+        }
+
+        const { username, email, password, displayName } = req.body;
+
+        if (!username?.trim() || !email?.trim() || !password) {
+            return res.status(400).json({ message: 'Username, email, and password are required' });
+        }
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ message: 'Please provide a valid email address' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        const userExists = await User.findOne({ $or: [{ email: email.toLowerCase() }, { username: username.trim() }] });
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists with that email or username' });
+        }
+
+        await User.create({
+            username: username.trim(),
+            email: email.toLowerCase(),
+            password,
+            displayName: displayName?.trim() || username.trim(),
+            role: 'user',
+            status: 'pending',
+            emailVerified: false,
+        });
+
+        res.status(201).json({
+            pending: true,
+            message: 'Account created! Your account is now under review by the FitForge team.',
+        });
     } catch (error) {
         res.status(error.status || 500).json({ message: error.message });
     }

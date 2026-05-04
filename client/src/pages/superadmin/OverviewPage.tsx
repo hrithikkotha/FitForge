@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import API from '../../api/axios';
-import { Shield, Users, Clock, Dumbbell, UtensilsCrossed, Activity, TrendingUp, UserCheck, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Shield, Users, Clock, Dumbbell, UtensilsCrossed, Activity, TrendingUp, UserCheck, Mail, ShieldCheck } from 'lucide-react';
 import PageLoader from '../../components/PageLoader';
 
 const OverviewPage = () => {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [autoApprove, setAutoApprove] = useState(false);
+    const [signupMode, setSignupMode] = useState<'otp' | 'manual'>('otp');
     const [settingsLoading, setSettingsLoading] = useState(false);
 
     useEffect(() => {
@@ -16,19 +16,20 @@ const OverviewPage = () => {
         ])
             .then(([statsRes, settingsRes]) => {
                 setStats(statsRes.data);
-                setAutoApprove(settingsRes.data.autoApproveUsers ?? false);
+                setSignupMode(settingsRes.data.signupMode ?? 'otp');
             })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
 
-    const toggleAutoApprove = async () => {
+    const switchSignupMode = async (mode: 'otp' | 'manual') => {
+        if (mode === signupMode || settingsLoading) return;
         setSettingsLoading(true);
         try {
-            const { data } = await API.put('/super-admin/settings', { autoApproveUsers: !autoApprove });
-            setAutoApprove(data.autoApproveUsers);
+            const { data } = await API.put('/super-admin/settings', { signupMode: mode });
+            setSignupMode(data.signupMode);
         } catch (err) {
-            console.error('Failed to toggle auto-approve:', err);
+            console.error('Failed to switch signup mode:', err);
         } finally {
             setSettingsLoading(false);
         }
@@ -68,80 +69,132 @@ const OverviewPage = () => {
                 </div>
             </div>
 
-            {/* ── Auto-Approve Toggle ────────────────────────────────────────── */}
-            <div style={{
-                background: autoApprove
-                    ? 'rgba(74,222,128,0.08)'
-                    : 'rgba(252,163,17,0.06)',
-                border: `1px solid ${autoApprove ? 'rgba(74,222,128,0.3)' : 'rgba(252,163,17,0.25)'}`,
-                borderRadius: 14,
-                padding: '16px 20px',
-                marginBottom: 16,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 16,
-            }}>
-                <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {autoApprove
-                            ? <ToggleRight size={20} style={{ color: '#4ade80' }} />
-                            : <ToggleLeft size={20} style={{ color: 'var(--sa-accent)' }} />
-                        }
-                        Auto-Approve New Signups
-                        <span style={{
-                            fontSize: '0.68rem',
-                            fontWeight: 700,
-                            padding: '1px 8px',
-                            borderRadius: 99,
-                            background: autoApprove ? 'rgba(74,222,128,0.2)' : 'rgba(252,163,17,0.2)',
-                            color: autoApprove ? '#4ade80' : 'var(--sa-accent)',
-                        }}>
-                            {autoApprove ? 'ON' : 'OFF'}
-                        </span>
-                    </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                        {autoApprove
-                            ? 'New users are instantly approved when they sign up — no manual review needed.'
-                            : 'New users must be manually approved before they can log in.'}
-                    </div>
-                </div>
-                <button
-                    onClick={toggleAutoApprove}
-                    disabled={settingsLoading}
-                    style={{
-                        flexShrink: 0,
-                        width: 52,
-                        height: 28,
-                        borderRadius: 99,
-                        border: 'none',
-                        cursor: settingsLoading ? 'not-allowed' : 'pointer',
-                        background: autoApprove
-                            ? 'linear-gradient(135deg, #4ade80, #22c55e)'
-                            : 'var(--bg-card)',
-                        boxShadow: autoApprove
-                            ? '0 2px 8px rgba(74,222,128,0.4)'
-                            : '0 2px 6px rgba(0,0,0,0.3)',
-                        position: 'relative',
-                        transition: 'background 0.25s, box-shadow 0.25s',
-                        opacity: settingsLoading ? 0.6 : 1,
-                    }}
-                    title={autoApprove ? 'Turn OFF auto-approve' : 'Turn ON auto-approve'}
-                >
-                    <span style={{
-                        position: 'absolute',
-                        top: 3,
-                        left: autoApprove ? 26 : 3,
-                        width: 22,
-                        height: 22,
-                        borderRadius: '50%',
-                        background: '#fff',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                        transition: 'left 0.25s',
-                    }} />
-                </button>
+            {/* ── Signup Mode Toggles (mutually exclusive) ───────────────── */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+                {/* OTP Auto-Approve card */}
+                {(() => {
+                    const isActive = signupMode === 'otp';
+                    return (
+                        <button
+                            onClick={() => switchSignupMode('otp')}
+                            disabled={settingsLoading}
+                            style={{
+                                flex: 1,
+                                minWidth: 240,
+                                background: isActive ? 'rgba(74,222,128,0.08)' : 'var(--bg-elevated)',
+                                border: `1.5px solid ${isActive ? 'rgba(74,222,128,0.4)' : 'var(--border-color)'}`,
+                                borderRadius: 14,
+                                padding: '16px 20px',
+                                cursor: settingsLoading ? 'not-allowed' : 'pointer',
+                                opacity: settingsLoading ? 0.6 : 1,
+                                textAlign: 'left',
+                                transition: 'all 0.25s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 14,
+                                fontFamily: 'inherit',
+                                color: 'inherit',
+                            }}
+                        >
+                            <div style={{
+                                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                                background: isActive ? 'rgba(74,222,128,0.15)' : 'var(--bg-card)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <Mail size={20} style={{ color: isActive ? '#4ade80' : 'var(--text-muted)' }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    OTP Auto-Approve
+                                    <span style={{
+                                        fontSize: '0.62rem', fontWeight: 700, padding: '1px 7px', borderRadius: 99,
+                                        background: isActive ? 'rgba(74,222,128,0.2)' : 'transparent',
+                                        color: isActive ? '#4ade80' : 'var(--text-muted)',
+                                        border: isActive ? 'none' : '1px solid var(--border-color)',
+                                    }}>
+                                        {isActive ? 'ACTIVE' : 'OFF'}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                    Users verify email via OTP, then get approved instantly.
+                                </div>
+                            </div>
+                            <div style={{
+                                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                                border: `2px solid ${isActive ? '#4ade80' : 'var(--border-color)'}`,
+                                background: isActive ? '#4ade80' : 'transparent',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.25s ease',
+                            }}>
+                                {isActive && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
+                            </div>
+                        </button>
+                    );
+                })()}
+
+                {/* Manual Approval card */}
+                {(() => {
+                    const isActive = signupMode === 'manual';
+                    return (
+                        <button
+                            onClick={() => switchSignupMode('manual')}
+                            disabled={settingsLoading}
+                            style={{
+                                flex: 1,
+                                minWidth: 240,
+                                background: isActive ? 'rgba(252,163,17,0.08)' : 'var(--bg-elevated)',
+                                border: `1.5px solid ${isActive ? 'rgba(252,163,17,0.4)' : 'var(--border-color)'}`,
+                                borderRadius: 14,
+                                padding: '16px 20px',
+                                cursor: settingsLoading ? 'not-allowed' : 'pointer',
+                                opacity: settingsLoading ? 0.6 : 1,
+                                textAlign: 'left',
+                                transition: 'all 0.25s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 14,
+                                fontFamily: 'inherit',
+                                color: 'inherit',
+                            }}
+                        >
+                            <div style={{
+                                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                                background: isActive ? 'rgba(252,163,17,0.15)' : 'var(--bg-card)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <ShieldCheck size={20} style={{ color: isActive ? 'var(--sa-accent)' : 'var(--text-muted)' }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    Manual Approval
+                                    <span style={{
+                                        fontSize: '0.62rem', fontWeight: 700, padding: '1px 7px', borderRadius: 99,
+                                        background: isActive ? 'rgba(252,163,17,0.2)' : 'transparent',
+                                        color: isActive ? 'var(--sa-accent)' : 'var(--text-muted)',
+                                        border: isActive ? 'none' : '1px solid var(--border-color)',
+                                    }}>
+                                        {isActive ? 'ACTIVE' : 'OFF'}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                    New accounts need your approval before users can log in.
+                                </div>
+                            </div>
+                            <div style={{
+                                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                                border: `2px solid ${isActive ? 'var(--sa-accent)' : 'var(--border-color)'}`,
+                                background: isActive ? 'var(--sa-accent)' : 'transparent',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.25s ease',
+                            }}>
+                                {isActive && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
+                            </div>
+                        </button>
+                    );
+                })()}
             </div>
 
-            {/* Pending admin alert — hide when auto-approve is on */}
+            {/* Pending admin alert */}
             {stats?.pendingAdmins > 0 && (
                 <div style={{ background: 'rgba(252,163,17,0.1)', border: '1px solid rgba(252,163,17,0.3)', borderRadius: 14, padding: '14px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={20} style={{ color: 'var(--sa-accent)', flexShrink: 0 }} />
@@ -154,8 +207,8 @@ const OverviewPage = () => {
                 </div>
             )}
 
-            {/* Pending user approval alert — only relevant when auto-approve is OFF */}
-            {!autoApprove && stats?.pendingUsers > 0 && (
+            {/* Pending user approval alert — only relevant when manual approval is active */}
+            {signupMode === 'manual' && stats?.pendingUsers > 0 && (
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 14, padding: '14px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={20} style={{ color: '#ef4444', flexShrink: 0 }} />
                     <div>

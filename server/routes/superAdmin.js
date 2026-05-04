@@ -318,13 +318,17 @@ router.get('/settings', guard, async (req, res) => {
 router.put('/settings', guard, async (req, res) => {
     try {
         const update = {};
-        if (req.body.autoApproveUsers !== undefined) {
-            update.autoApproveUsers = !!req.body.autoApproveUsers;
+        if (req.body.signupMode !== undefined) {
+            const mode = req.body.signupMode;
+            if (!['otp', 'manual'].includes(mode)) {
+                return res.status(400).json({ message: 'signupMode must be "otp" or "manual"' });
+            }
+            update.signupMode = mode;
         }
         const settings = await PlatformSettings.findByIdAndUpdate(
             'platform',
             { $set: update },
-            { new: true, upsert: true }
+            { returnDocument: 'after', upsert: true }
         );
         res.json(settings);
     } catch (error) { res.status(500).json({ message: error.message }); }

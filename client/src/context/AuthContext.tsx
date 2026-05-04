@@ -24,12 +24,14 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<{ displayName: string }>;
-    /** Step 1 of sign-up: validates input, sends OTP to email. Does NOT create the user. */
+    /** Step 1 of OTP sign-up: validates input, sends OTP to email. Does NOT create the user. */
     initiateRegister: (username: string, email: string, password: string) => Promise<{ email: string; ttlMinutes: number }>;
-    /** Step 2 of sign-up: confirms OTP and finalises account creation. */
+    /** Step 2 of OTP sign-up: confirms OTP and finalises account creation. */
     verifyRegisterOtp: (email: string, code: string) => Promise<{ pending: boolean; autoApproved?: boolean; credentials?: { email: string; username: string } }>;
     /** Resend the sign-up OTP for an in-flight registration. */
     resendRegisterOtp: (email: string) => Promise<{ ttlMinutes: number }>;
+    /** Manual-approval sign-up: creates account with pending status (no OTP). */
+    directRegister: (username: string, email: string, password: string) => Promise<{ pending: boolean; message: string }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
     /** Refresh the locally-cached user (e.g. after a username change). */
@@ -103,6 +105,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { ttlMinutes: data.ttlMinutes as number };
     };
 
+    const directRegister = async (username: string, email: string, password: string) => {
+        const { data } = await API.post('/auth/register/direct', { username, email, password });
+        return { pending: data.pending as boolean, message: data.message as string };
+    };
+
     const updateProfile = async (updates: Partial<User>) => {
         const { data } = await API.put('/auth/me', updates);
         const updated = { ...user!, ...data };
@@ -118,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, logout, updateProfile, setLocalUser }}>
+        <AuthContext.Provider value={{ user, loading, login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister, logout, updateProfile, setLocalUser }}>
             {children}
         </AuthContext.Provider>
     );
