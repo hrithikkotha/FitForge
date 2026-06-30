@@ -12,25 +12,22 @@ const platformSettingsSchema = new mongoose.Schema({
         enum: ['otp', 'manual'],
         default: 'otp',
     },
+    // Only applies when signupMode='manual':
+    // true  → auto-approve new users (no admin review)
+    // false → require admin/super-admin approval
+    autoApproveUsers: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });
 
 // Always return a settings doc (create if missing).
 platformSettingsSchema.statics.getSettings = async function () {
-    // First check if a legacy doc exists with autoApproveUsers but no signupMode.
-    // Use the raw collection to see all fields (Mongoose strips fields not in schema).
-    const raw = await this.collection.findOne({ _id: 'platform' });
-    if (raw && !raw.signupMode) {
-        const mode = raw.autoApproveUsers === false ? 'manual' : 'otp';
-        await this.collection.updateOne(
-            { _id: 'platform' },
-            { $set: { signupMode: mode }, $unset: { autoApproveUsers: '' } }
-        );
-    }
     const settings = await this.findByIdAndUpdate(
         'platform',
-        { $setOnInsert: { _id: 'platform', signupMode: 'otp' } },
+        { $setOnInsert: { _id: 'platform', signupMode: 'otp', autoApproveUsers: false } },
         { returnDocument: 'after', upsert: true }
     );
     return settings;

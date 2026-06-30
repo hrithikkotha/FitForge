@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, X, Loader, AudioLines, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
+import { Mic, MicOff, X, Loader, AudioLines, Sparkles, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import useVoiceActions from '../hooks/useVoiceActions';
 import type { ParserContext } from '../utils/voiceCommandParser';
 import { useToast, ToastContainer } from './Toast';
@@ -50,6 +50,10 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
         pendingConfirmation,
         confirmPending,
         dismissConfirmation,
+        // Clarification gate
+        clarification,
+        answerClarification,
+        cancelClarification,
     } = useVoiceActions({
         context,
         onRefresh,
@@ -303,8 +307,67 @@ const VoiceAssistant = ({ context, onRefresh }: VoiceAssistantProps) => {
                         </div>
                     )}
 
+                    {/* ── Clarification Dialog ── */}
+                    {clarification && !pendingConfirmation && (
+                        <div className="voice-confirm-card">
+                            <div className="voice-confirm-header">
+                                <div className="voice-confirm-icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                                    <HelpCircle size={16} />
+                                </div>
+                                <div className="voice-confirm-content">
+                                    <div className="voice-confirm-title">AI needs more info</div>
+                                    <div className="voice-confirm-subtitle">{clarification.question}</div>
+                                </div>
+                            </div>
+
+                            <div className="voice-confirm-actions">
+                                <button
+                                    className="voice-confirm-btn voice-confirm-btn--yes"
+                                    onClick={() => {
+                                        // Start voice recording for answer
+                                        start();
+                                        // When recording stops, answer will be sent via handleVoiceResult
+                                        // For now, we'll add a text input fallback
+                                    }}
+                                    disabled={processing || isListening}
+                                >
+                                    <Mic size={15} />
+                                    Answer with Voice
+                                </button>
+                                <button
+                                    className="voice-confirm-btn voice-confirm-btn--no"
+                                    onClick={cancelClarification}
+                                    disabled={processing}
+                                >
+                                    <XCircle size={15} />
+                                    Cancel
+                                </button>
+                            </div>
+
+                            {/* Quick answers for meal type */}
+                            {clarification.pendingAction?.type === 'LOG_MEAL' && (
+                                <>
+                                    <div className="voice-confirm-alt-label">Quick pick meal:</div>
+                                    <div className="voice-suggestions-list">
+                                        {['breakfast', 'lunch', 'dinner', 'snack'].map(meal => (
+                                            <button
+                                                key={meal}
+                                                className="voice-suggestion-chip"
+                                                onClick={() => answerClarification(meal)}
+                                                disabled={processing}
+                                            >
+                                                <span className="voice-suggestion-icon">▶</span>
+                                                {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
                     {/* ── Smart Suggestions (only shown when there's no pending confirm) ── */}
-                    {suggestions.length > 0 && !pendingConfirmation && !processing && !isListening && (
+                    {suggestions.length > 0 && !pendingConfirmation && !clarification && !processing && !isListening && (
                         <div className="voice-suggestions">
                             <div className="voice-suggestions-header">
                                 <Sparkles size={13} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />

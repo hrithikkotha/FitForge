@@ -19,6 +19,7 @@ const AuthPage = () => {
     const [autoApprovedCreds, setAutoApprovedCreds] = useState<{ email: string; username: string } | null>(null);
     const [copiedField, setCopiedField] = useState('');
     const [suspendedMsg, setSuspendedMsg] = useState('');
+    const [redirectCountdown, setRedirectCountdown] = useState(0);
     // Signup mode from platform settings
     const [signupMode, setSignupMode] = useState<'otp' | 'manual'>('otp');
     // OTP step (sign-up email verification)
@@ -80,8 +81,14 @@ const AuthPage = () => {
                     showToast(`Verification code sent to ${result.email}`, 'success');
                 } else {
                     // Manual approval flow: create pending account directly
-                    await directRegister(username, email, password);
-                    setRegistrationPending(true);
+                    const result = await directRegister(username, email, password);
+                    if (result.pending) {
+                        setRegistrationPending(true);
+                    } else {
+                        // Auto-approved - show success and redirect to login
+                        setAutoApprovedCreds({ email, username });
+                        setRedirectCountdown(5); // Start 5 second countdown
+                    }
                 }
             }
         } catch (err: any) {
@@ -96,6 +103,24 @@ const AuthPage = () => {
         const id = setInterval(() => setOtpResendCooldown(c => Math.max(0, c - 1)), 1000);
         return () => clearInterval(id);
     }, [otpResendCooldown]);
+
+    // Auto-redirect countdown for auto-approved accounts
+    useEffect(() => {
+        if (redirectCountdown <= 0) return;
+        if (redirectCountdown === 1) {
+            // Redirect to login
+            setEmail(autoApprovedCreds?.email || '');
+            setPassword('');
+            setAutoApprovedCreds(null);
+            setIsLogin(true);
+            setUsername('');
+            setConfirmPassword('');
+            setRedirectCountdown(0);
+            return;
+        }
+        const id = setTimeout(() => setRedirectCountdown(c => c - 1), 1000);
+        return () => clearTimeout(id);
+    }, [redirectCountdown, autoApprovedCreds]);
 
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -253,9 +278,9 @@ const AuthPage = () => {
                     </div>
                     <div className="auth-card" style={{ textAlign: 'center' }}>
                         <CheckCircle size={56} style={{ color: 'var(--accent-success)', margin: '0 auto 16px' }} />
-                        <h2 style={{ marginBottom: 10 }}>Account Created!</h2>
+                        <h2 style={{ marginBottom: 10 }}>Account Created Successfully!</h2>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: 20, fontSize: '0.9rem' }}>
-                            Your account has been <strong style={{ color: 'var(--accent-success)' }}>approved automatically</strong>. Use these credentials to log in:
+                            Your account is <strong style={{ color: 'var(--accent-success)' }}>ready to use</strong>! You can log in now with your credentials.
                         </p>
 
                         <div style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: 16, marginBottom: 20, textAlign: 'left' }}>
@@ -288,7 +313,11 @@ const AuthPage = () => {
                         </div>
 
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: 20 }}>
-                            Your password is the one you just entered. Click below to log in now.
+                            Your password is the one you just entered. {redirectCountdown > 0 && (
+                                <span style={{ color: 'var(--accent-success)', fontWeight: 600 }}>
+                                    Redirecting to sign in in {redirectCountdown}s...
+                                </span>
+                            )}
                         </p>
 
                         <button
@@ -301,9 +330,10 @@ const AuthPage = () => {
                                 setIsLogin(true);
                                 setUsername('');
                                 setConfirmPassword('');
+                                setRedirectCountdown(0);
                             }}
                         >
-                            Go to Sign In
+                            {redirectCountdown > 0 ? `Sign In Now (${redirectCountdown}s)` : 'Go to Sign In'}
                         </button>
                     </div>
                 </div>

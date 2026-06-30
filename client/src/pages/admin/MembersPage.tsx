@@ -13,6 +13,8 @@ const StatusBadge = ({ status }: { status: string }) => {
     );
 };
 
+type FilterTab = 'all' | 'pending' | 'active' | 'suspended';
+
 const MembersPage = () => {
     const [members, setMembers] = useState<any[]>([]);
     const [activity, setActivity] = useState<Record<string, any>>({});
@@ -24,6 +26,9 @@ const MembersPage = () => {
     const [newPassword, setNewPassword] = useState('');
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
     const [form, setForm] = useState({ username: '', email: '', password: '', displayName: '' });
+    const [activeTab, setActiveTab] = useState<FilterTab>('all');
+    const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+    const [bulkProcessing, setBulkProcessing] = useState(false);
     const { toasts, show: showToast, dismiss } = useToast();
 
     const load = useCallback(() => {
@@ -34,7 +39,18 @@ const MembersPage = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    useEffect(() => { load(); }, [load]);
+    const loadPendingUsers = useCallback(() => {
+        API.get('/admin/users/pending')
+            .then(r => setPendingUsers(r.data))
+            .catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        load();
+        if (activeTab === 'pending') {
+            loadPendingUsers();
+        }
+    }, [load, activeTab, loadPendingUsers]);
 
     const loadActivity = async (userId: string) => {
         if (activity[userId]) return; // already loaded
@@ -59,7 +75,12 @@ const MembersPage = () => {
         });
     };
     const toggleAll = () => {
-        setSelected(prev => prev.size === members.length ? new Set() : new Set(members.map(m => m._id)));
+        const displayedMembers = activeTab === 'pending'
+            ? pendingUsers
+            : activeTab === 'all'
+                ? members
+                : members.filter(m => m.status === activeTab);
+        setSelected(prev => prev.size === displayedMembers.length ? new Set() : new Set(displayedMembers.map(m => m._id)));
     };
 
     // ── Actions ──
@@ -101,6 +122,44 @@ const MembersPage = () => {
             await API.delete(`/admin/users/${deleteTarget._id}`);
             setDeleteTarget(null); load(); showToast('Member deleted');
         } catch { showToast('Delete failed', 'error'); }
+    };
+
+    const approvePending = async (id: string) => {
+        try {
+            await API.put(`/admin/users/${id}/approve`);
+            showToast('User approved');
+            loadPendingUsers();
+            load();
+        } catch {
+            showToast('Approval failed', 'error');
+        }
+    };
+
+    const rejectPending = async (id: string, username: string) => {
+        if (!confirm(`Reject user ${username}?`)) return;
+        try {
+            await API.delete(`/admin/users/${id}/reject`);
+            showToast('User rejected');
+            loadPendingUsers();
+        } catch {
+            showToast('Rejection failed', 'error');
+        }
+    };
+
+    const handleBulkApprovePending = async () => {
+        if (!confirm(`Approve ${selected.size} user(s)?`)) return;
+        setBulkProcessing(true);
+        try {
+            const { data } = await API.put('/admin/users/bulk-approve', { userIds: [...selected] });
+            showToast(data.message);
+            setSelected(new Set());
+            loadPendingUsers();
+            load();
+        } catch {
+            showToast('Bulk approval failed', 'error');
+        } finally {
+            setBulkProcessing(false);
+        }
     };
 
     const handleResetPassword = async () => {
@@ -205,8 +264,39 @@ const MembersPage = () => {
                 <button className="btn btn-primary" onClick={() => setShowAddModal(true)}><Plus size={18} /> Add Member</button>
             </div>
 
+            {/* Tab Navigation */}
+            <div className="date-pills" style={{ marginBottom: 16 }}>
+                <button
+                    className={`date-pill ${activeTab === 'all' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('all')}
+                >
+                    All
+                </button>
+                <button
+                    className={`date-pill ${activeTab === 'pending' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('pending')}
+                >
+                    Pending
+                    {pendingUsers.length > 0 && (
+                        <span style={{ marginLeft: 4, opacity: 0.8 }}>({pendingUsers.length})</span>
+                    )}
+                </button>
+                <button
+                    className={`date-pill ${activeTab === 'active' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('active')}
+                >
+                    Active
+                </button>
+                <button
+                    className={`date-pill ${activeTab === 'suspended' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('suspended')}
+                >
+                    Suspended
+                </button>
+            </div>
+
             {/* Bulk action bar */}
-            {hasSelected && (
+            {hasSelected && activeTab !== 'pending' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: 12, marginBottom: 16 }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--admin-accent)' }}>{selected.size} selected</span>
                     <button className="btn btn-secondary btn-sm" onClick={bulkActivate}><UserCheck size={14} /> Activate All</button>
@@ -215,7 +305,130 @@ const MembersPage = () => {
                 </div>
             )}
 
-            {members.length === 0 ? (
+            {/* Bulk Approval Bar for Pending Tab */}
+            {hasSelected && activeTab === 'pending' && (
+                <div style={{
+                    background: 'rgba(74,222,128,0.08)',
+                    border: '1px solid rgba(74,222,128,0.3)',
+                    borderRadius: 12,
+                    padding: '12px 18px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12
+                }}>
+                    <UserCheck size={18} style={{ color: '#4ade80', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+                        {selected.size} user{selected.size > 1 ? 's' : ''} selected
+                    </span>
+                    <button
+                        className="btn btn-primary btn-sm"
+                        onClick={handleBulkApprovePending}
+                        disabled={bulkProcessing}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        {bulkProcessing ? 'Processing...' : 'Approve Selected'}
+                    </button>
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setSelected(new Set())}
+                    >
+                        <X size={14} /> Clear
+                    </button>
+                </div>
+            )}
+
+            {/* Pending Tab Content */}
+            {activeTab === 'pending' && (
+                pendingUsers.length === 0 ? (
+                    <div className="card">
+                        <div className="empty-state">
+                            <Users size={48} />
+                            <h4>No pending approvals</h4>
+                            <p>All members have been approved.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="card" style={{ padding: 0 }}>
+                        <div className="table-responsive">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: 40 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selected.size === pendingUsers.length && pendingUsers.length > 0}
+                                                onChange={() => {
+                                                    if (selected.size === pendingUsers.length) {
+                                                        setSelected(new Set());
+                                                    } else {
+                                                        setSelected(new Set(pendingUsers.map(u => u._id)));
+                                                    }
+                                                }}
+                                                style={{ cursor: 'pointer' }}
+                                            />
+                                        </th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Requested</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pendingUsers.map(u => (
+                                        <tr key={u._id}>
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selected.has(u._id)}
+                                                    onChange={() => toggleSelect(u._id)}
+                                                    style={{ cursor: 'pointer' }}
+                                                />
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <div style={{ width: 30, height: 30, borderRadius: 50, background: 'linear-gradient(135deg, var(--admin-accent), #7dd3fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: '#000', flexShrink: 0 }}>
+                                                        {(u.displayName || u.username)?.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{u.displayName || u.username}</div>
+                                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>@{u.username}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>{u.email}</td>
+                                            <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                                                {new Date(u.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    <button
+                                                        className="btn btn-primary btn-sm"
+                                                        onClick={() => approvePending(u._id)}
+                                                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                                    >
+                                                        <UserCheck size={13} /> Approve
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-secondary btn-sm"
+                                                        onClick={() => rejectPending(u._id, u.username)}
+                                                        style={{ padding: '4px 10px', fontSize: '0.75rem', background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
+                                                    >
+                                                        <UserX size={13} /> Reject
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )
+            )}
+
+            {/* All/Active/Suspended Tabs Content */}
+            {activeTab !== 'pending' && (members.length === 0 ? (
                 <div className="card"><div className="empty-state"><Users size={48} /><h4>No members yet</h4><p>Click "Add Member" to register your first gym member.</p></div></div>
             ) : (
                 <div className="card" style={{ padding: 0 }}>
@@ -235,7 +448,10 @@ const MembersPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {members.map(m => (
+                                {members.filter(m => {
+                                    if (activeTab === 'all') return true;
+                                    return m.status === activeTab;
+                                }).map(m => (
                                     <>
                                         <tr key={m._id}>
                                             <td>
@@ -316,7 +532,7 @@ const MembersPage = () => {
                         </table>
                     </div>
                 </div>
-            )}
+            ))}
         </div>
     );
 };

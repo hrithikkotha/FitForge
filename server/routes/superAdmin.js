@@ -207,6 +207,59 @@ router.delete('/users/:id', guard, async (req, res) => {
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
+// PUT /api/super-admin/users/bulk-approve — bulk approve pending users
+router.put('/users/bulk-approve', guard, async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ message: 'userIds array is required' });
+        }
+        const result = await User.updateMany(
+            { _id: { $in: userIds }, status: 'pending', role: 'user' },
+            { $set: { status: 'active', emailVerified: true } }
+        );
+        res.json({
+            message: `Approved ${result.modifiedCount} user(s)`,
+            count: result.modifiedCount
+        });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// PUT /api/super-admin/users/bulk-reject — bulk reject pending users
+router.put('/users/bulk-reject', guard, async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ message: 'userIds array is required' });
+        }
+        const result = await User.deleteMany(
+            { _id: { $in: userIds }, status: 'pending', role: 'user' }
+        );
+        res.json({
+            message: `Rejected ${result.deletedCount} user(s)`,
+            count: result.deletedCount
+        });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// PUT /api/super-admin/admins/bulk-approve — bulk approve pending gym owners
+router.put('/admins/bulk-approve', guard, async (req, res) => {
+    try {
+        const { adminIds } = req.body;
+        if (!Array.isArray(adminIds) || adminIds.length === 0) {
+            return res.status(400).json({ message: 'adminIds array is required' });
+        }
+        const result = await User.updateMany(
+            { _id: { $in: adminIds }, status: 'pending', role: 'admin' },
+            { $set: { status: 'active' } }
+        );
+        res.json({
+            message: `Approved ${result.modifiedCount} admin(s)`,
+            count: result.modifiedCount
+        });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
 // ─── Food Items (Global Management) ──────────────────────────────────────────
 
 // GET /api/super-admin/foods — all food items
@@ -324,6 +377,9 @@ router.put('/settings', guard, async (req, res) => {
                 return res.status(400).json({ message: 'signupMode must be "otp" or "manual"' });
             }
             update.signupMode = mode;
+        }
+        if (req.body.autoApproveUsers !== undefined) {
+            update.autoApproveUsers = Boolean(req.body.autoApproveUsers);
         }
         const settings = await PlatformSettings.findByIdAndUpdate(
             'platform',

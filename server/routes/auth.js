@@ -220,19 +220,25 @@ router.post('/register/direct', authLimiter, async (req, res) => {
             return res.status(400).json({ message: 'User already exists with that email or username' });
         }
 
+        const autoApprove = settings?.autoApproveUsers || false;
+
         await User.create({
             username: username.trim(),
             email: email.toLowerCase(),
             password,
             displayName: displayName?.trim() || username.trim(),
             role: 'user',
-            status: 'pending',
-            emailVerified: false,
+            status: autoApprove ? 'active' : 'pending',
+            emailVerified: autoApprove ? true : false,
         });
 
+        const message = autoApprove
+            ? 'Account created successfully! You can now log in.'
+            : 'Account created! Your account is now under review by the FitForge team.';
+
         res.status(201).json({
-            pending: true,
-            message: 'Account created! Your account is now under review by the FitForge team.',
+            pending: !autoApprove,
+            message,
         });
     } catch (error) {
         res.status(error.status || 500).json({ message: error.message });

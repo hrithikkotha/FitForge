@@ -1,0 +1,6 @@
+[dotenv@17.3.1] injecting env (0) from ..\.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+MongoDB Connected: ac-tk3yfey-shard-00-00.h9ppv2f.mongodb.net
+Exercises synced: 0 added, 53 updated
+Foods synced: 0 added, 264 updated
+[SuperAdmin Seed] Super Admin already exists — skipped.
+Server running on port 3001

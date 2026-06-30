@@ -59,6 +59,8 @@ const AllUsersPage = () => {
     const [activityTarget, setActivityTarget] = useState<any | null>(null);
     const [activityData, setActivityData] = useState<any | null>(null);
     const [activityLoading, setActivityLoading] = useState(false);
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+    const [bulkProcessing, setBulkProcessing] = useState(false);
     const { toasts, show: showToast, dismiss } = useToast();
 
     const load = () => {
@@ -114,6 +116,36 @@ const AllUsersPage = () => {
             setDeleteTarget(null);
             load();
         } catch { showToast('Delete failed', 'error'); }
+    };
+
+    const handleBulkApprove = async () => {
+        if (!confirm(`Approve ${selectedUserIds.length} user(s)?`)) return;
+        setBulkProcessing(true);
+        try {
+            const { data } = await API.put('/super-admin/users/bulk-approve', { userIds: selectedUserIds });
+            showToast(data.message);
+            setSelectedUserIds([]);
+            load();
+        } catch {
+            showToast('Bulk approval failed', 'error');
+        } finally {
+            setBulkProcessing(false);
+        }
+    };
+
+    const handleBulkReject = async () => {
+        if (!confirm(`Reject and delete ${selectedUserIds.length} user(s)?`)) return;
+        setBulkProcessing(true);
+        try {
+            const { data } = await API.put('/super-admin/users/bulk-reject', { userIds: selectedUserIds });
+            showToast(data.message);
+            setSelectedUserIds([]);
+            load();
+        } catch {
+            showToast('Bulk rejection failed', 'error');
+        } finally {
+            setBulkProcessing(false);
+        }
     };
 
     const pendingCount = users.filter(u => u.status === 'pending').length;
@@ -299,6 +331,41 @@ const AllUsersPage = () => {
                 </div>
             )}
 
+            {/* Bulk Actions Bar */}
+            {selectedUserIds.length > 0 && filterTab === 'pending' && (
+                <div style={{
+                    background: 'rgba(74,222,128,0.08)',
+                    border: '1px solid rgba(74,222,128,0.3)',
+                    borderRadius: 12,
+                    padding: '12px 18px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12
+                }}>
+                    <CheckCircle size={18} style={{ color: '#4ade80', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+                        {selectedUserIds.length} user{selectedUserIds.length > 1 ? 's' : ''} selected
+                    </span>
+                    <button
+                        className="btn btn-primary btn-sm"
+                        onClick={handleBulkApprove}
+                        disabled={bulkProcessing}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        {bulkProcessing ? 'Processing...' : 'Approve Selected'}
+                    </button>
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleBulkReject}
+                        disabled={bulkProcessing}
+                        style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
+                    >
+                        {bulkProcessing ? 'Processing...' : 'Reject Selected'}
+                    </button>
+                </div>
+            )}
+
             {/* Filters + Search */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
                 <div className="date-pills" style={{ margin: 0 }}>
@@ -320,6 +387,22 @@ const AllUsersPage = () => {
                     <table className="data-table">
                         <thead>
                             <tr>
+                                {filterTab === 'pending' && (
+                                    <th style={{ width: 40 }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUserIds.length === filtered.length && filtered.length > 0}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedUserIds(filtered.map(u => u._id));
+                                                } else {
+                                                    setSelectedUserIds([]);
+                                                }
+                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                        />
+                                    </th>
+                                )}
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Gym</th>
@@ -332,6 +415,22 @@ const AllUsersPage = () => {
                         <tbody>
                             {filtered.map(u => (
                                 <tr key={u._id}>
+                                    {filterTab === 'pending' && (
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedUserIds.includes(u._id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedUserIds([...selectedUserIds, u._id]);
+                                                    } else {
+                                                        setSelectedUserIds(selectedUserIds.filter(id => id !== u._id));
+                                                    }
+                                                }}
+                                                style={{ cursor: 'pointer' }}
+                                            />
+                                        </td>
+                                    )}
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                             <div style={{ width: 30, height: 30, borderRadius: 50, background: 'linear-gradient(135deg, var(--sa-accent), #fdb940)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: '#000', flexShrink: 0 }}>

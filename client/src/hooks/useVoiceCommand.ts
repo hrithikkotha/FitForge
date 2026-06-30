@@ -5,6 +5,9 @@ import type { VoiceAction } from '../utils/voiceCommandParser';
 export interface VoiceAIResult {
     transcript: string;
     actions: VoiceAction[];
+    needsClarification?: boolean;
+    clarifyingQuestion?: string;
+    pendingAction?: any;
 }
 
 export interface UseVoiceCommandReturn {

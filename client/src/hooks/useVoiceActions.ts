@@ -33,6 +33,8 @@ function describeAction(action: VoiceAction): string {
     switch (action.type) {
         case 'LOG_MEAL':
             return `Log ${action.quantity} ${action.servingUnit ?? 'serving(s) of'} ${action.foodName} for ${action.mealType}`;
+        case 'CREATE_CUSTOM_FOOD_AND_LOG':
+            return `Create and log ${action.quantity}g ${action.foodName} (${action.caloriesPer100g}cal/100g, AI-estimated)`;
         case 'ADD_EXERCISE':
         case 'ADD_EXERCISE_WITH_SETS':
             return `Add ${action.exerciseName}${action.setCount ? ` — ${action.setCount} sets × ${action.reps} reps` : ''}${action.weight ? ` @ ${action.weight}kg` : ''}`;
@@ -51,6 +53,13 @@ function describeAction(action: VoiceAction): string {
     }
 }
 
+// ── Clarification state ──────────────────────────────────────────────────────
+// When the LLM needs more info to complete an action
+export interface ClarificationState {
+    question: string;
+    pendingAction: any;
+}
+
 const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActionsProps) => {
     const [processing, setProcessing] = useState(false);
     const [lastAction, setLastAction] = useState<VoiceAction | null>(null);
@@ -58,6 +67,8 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
     const [suggestions, setSuggestions] = useState<SuggestionResult[]>([]);
     // Confirmation gate — set when the LLM parses an action; cleared after confirm/dismiss
     const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
+    // Clarification gate — set when action needs more params
+    const [clarification, setClarification] = useState<ClarificationState | null>(null);
     const contextRef = useRef(context);
     contextRef.current = context;
 
@@ -406,6 +417,38 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
                     return;
                 }
 
+                case 'CREATE_CUSTOM_FOOD_AND_LOG': {
+                    // Create custom food item with AI-estimated nutrition
+                    const { data: newFood } = await API.post('/foods', {
+                        name: action.foodName,
+                        caloriesPer100g: action.caloriesPer100g || 100,
+                        proteinPer100g: action.proteinPer100g || 5,
+                        carbsPer100g: action.carbsPer100g || 15,
+                        fatPer100g: action.fatPer100g || 3,
+                        servingUnit: 'g',
+                        gramsPerServing: 1, // ← FIX: 1g per serving, so quantity directly = grams
+                        isDefault: false,
+                        isAiEstimated: true,
+                        aiEstimateNote: 'AI-estimated nutritional values',
+                    });
+
+                    // Log the meal with the newly created food
+                    await API.post('/meals', {
+                        date: new Date().toISOString(),
+                        mealType: action.mealType || 'snack',
+                        foodItemId: newFood._id,
+                        quantity: action.quantity,
+                    });
+
+                    onRefresh?.();
+                    onActionComplete?.({
+                        success: true,
+                        action,
+                        message: `Created and logged ${action.quantity}g ${action.foodName} (AI-estimated)`
+                    });
+                    return;
+                }
+
                 case 'DELETE_WORKOUT': {
                     if (!activeWorkoutId) {
                         onActionComplete?.({ success: false, action, message: 'No active workout to delete' });
@@ -454,8 +497,78 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
         await executeAction(s.action);
     }, [executeAction]);
 
+    // ── Clarification handler ─────────────────────────────────────────────────
+    // Send answer to complete pending action
+    const answerClarification = useCallback(async (answer: string) => {
+        if (!clarification) return;
+
+        setProcessing(true);
+        setFeedback('Processing your answer...');
+        try {
+            // Send answer with pending action context
+            const { data } = await API.post('/voice/chat', {
+                message: answer,
+                pendingAction: clarification.pendingAction,
+                history: JSON.stringify([]), // Can include recent history
+            });
+
+            setClarification(null);
+
+            // Process the completed action
+            if (data.needsClarification) {
+                // Still needs more info
+                setClarification({
+                    question: data.clarifyingQuestion || data.response,
+                    pendingAction: data.pendingAction,
+                });
+                setFeedback(data.clarifyingQuestion || data.response);
+            } else if (data.actions && data.actions.length > 0) {
+                // Action complete, show confirmation
+                const action = data.actions[0];
+                const summary = describeAction(action);
+                setPendingConfirmation({
+                    transcript: answer,
+                    action,
+                    summary,
+                    suggestions: [],
+                });
+                setFeedback(data.response);
+            } else {
+                setFeedback(data.response || 'Could not complete action');
+            }
+        } catch (err: any) {
+            setFeedback('Failed to process answer');
+            console.error('Clarification error:', err);
+        } finally {
+            setProcessing(false);
+        }
+    }, [clarification]);
+
+    const cancelClarification = useCallback(() => {
+        setClarification(null);
+        setFeedback('');
+    }, []);
+
     const handleVoiceResult = useCallback(async (result: VoiceAIResult) => {
-        const { actions, transcript } = result;
+        const { actions, transcript, needsClarification, clarifyingQuestion, pendingAction } = result;
+
+        // ── If we're currently in clarification mode, use this transcript as the answer ──
+        if (clarification && transcript) {
+            await answerClarification(transcript);
+            return;
+        }
+
+        // ── Check if clarification needed ───────────────────────────────────────
+        if (needsClarification && pendingAction) {
+            setClarification({
+                question: clarifyingQuestion || 'Could you provide more details?',
+                pendingAction,
+            });
+            setPendingConfirmation(null);
+            setSuggestions([]);
+            setFeedback(clarifyingQuestion || 'Needs more info');
+            return;
+        }
 
         // ── No recognizable action ─────────────────────────────────────────────
         if (!actions || actions.length === 0) {
@@ -503,7 +616,7 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
                 // Don't call executeAction — wait for user to confirm
             }
         }
-    }, [executeAction, onActionComplete]);
+    }, [executeAction, onActionComplete, clarification, answerClarification]);
 
     // Build the AI context payload from ParserContext
     const voiceContext: VoiceContext = {
@@ -551,6 +664,10 @@ const useVoiceActions = ({ context, onActionComplete, onRefresh }: UseVoiceActio
         pendingConfirmation,
         confirmPending,
         dismissConfirmation,
+        // Clarification API
+        clarification,
+        answerClarification,
+        cancelClarification,
     };
 };
 

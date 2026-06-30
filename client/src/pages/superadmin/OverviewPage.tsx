@@ -7,6 +7,7 @@ const OverviewPage = () => {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [signupMode, setSignupMode] = useState<'otp' | 'manual'>('otp');
+    const [autoApprove, setAutoApprove] = useState(false);
     const [settingsLoading, setSettingsLoading] = useState(false);
 
     useEffect(() => {
@@ -17,6 +18,7 @@ const OverviewPage = () => {
             .then(([statsRes, settingsRes]) => {
                 setStats(statsRes.data);
                 setSignupMode(settingsRes.data.signupMode ?? 'otp');
+                setAutoApprove(settingsRes.data.autoApproveUsers ?? false);
             })
             .catch(console.error)
             .finally(() => setLoading(false));
@@ -26,10 +28,30 @@ const OverviewPage = () => {
         if (mode === signupMode || settingsLoading) return;
         setSettingsLoading(true);
         try {
-            const { data } = await API.put('/super-admin/settings', { signupMode: mode });
+            const { data } = await API.put('/super-admin/settings', { signupMode: mode, autoApproveUsers: autoApprove });
             setSignupMode(data.signupMode);
+            setAutoApprove(data.autoApproveUsers ?? false);
         } catch (err) {
             console.error('Failed to switch signup mode:', err);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const handleAutoApproveChange = async (value: boolean) => {
+        if (settingsLoading) return;
+        const previousValue = autoApprove;
+        setAutoApprove(value);
+        setSettingsLoading(true);
+        try {
+            const { data } = await API.put('/super-admin/settings', { signupMode, autoApproveUsers: value });
+            // Server should return the updated value, use it if present
+            if (data.autoApproveUsers !== undefined) {
+                setAutoApprove(data.autoApproveUsers);
+            }
+        } catch (err) {
+            console.error('Failed to update auto-approve:', err);
+            setAutoApprove(previousValue); // Revert to previous value on error
         } finally {
             setSettingsLoading(false);
         }
@@ -193,6 +215,77 @@ const OverviewPage = () => {
                     );
                 })()}
             </div>
+
+            {/* Manual Mode Sub-Options */}
+            {signupMode === 'manual' && (
+                <div style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 14,
+                    padding: '20px 24px',
+                    marginBottom: 16
+                }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 12, color: 'var(--text-primary)' }}>
+                        Manual Mode Behavior
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <label style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 12,
+                            cursor: 'pointer',
+                            padding: '12px 16px',
+                            background: autoApprove ? 'rgba(74,222,128,0.06)' : 'transparent',
+                            border: `1px solid ${autoApprove ? 'rgba(74,222,128,0.3)' : 'var(--border-color)'}`,
+                            borderRadius: 10,
+                            transition: 'all 0.2s ease'
+                        }}>
+                            <input
+                                type="radio"
+                                checked={autoApprove === true}
+                                onChange={() => handleAutoApproveChange(true)}
+                                disabled={settingsLoading}
+                                style={{ marginTop: 2, cursor: 'pointer' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>
+                                    Auto-Approve (No admin review needed)
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                    Users are activated immediately after signup. Use this as OTP fallback when email service is down.
+                                </div>
+                            </div>
+                        </label>
+                        <label style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 12,
+                            cursor: 'pointer',
+                            padding: '12px 16px',
+                            background: !autoApprove ? 'rgba(252,163,17,0.06)' : 'transparent',
+                            border: `1px solid ${!autoApprove ? 'rgba(252,163,17,0.3)' : 'var(--border-color)'}`,
+                            borderRadius: 10,
+                            transition: 'all 0.2s ease'
+                        }}>
+                            <input
+                                type="radio"
+                                checked={autoApprove === false}
+                                onChange={() => handleAutoApproveChange(false)}
+                                disabled={settingsLoading}
+                                style={{ marginTop: 2, cursor: 'pointer' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>
+                                    Manual Approval (Admin/Super-Admin review required)
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                    Users must be approved by gym admin or super-admin before they can log in.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            )}
 
             {/* Pending admin alert */}
             {stats?.pendingAdmins > 0 && (

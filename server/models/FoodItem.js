@@ -40,6 +40,14 @@ const foodItemSchema = new mongoose.Schema({
         ref: 'User',
         default: null,
     },
+    isAiEstimated: {
+        type: Boolean,
+        default: false,
+    },
+    aiEstimateNote: {
+        type: String,
+        default: null,
+    },
 }, {
     timestamps: true,
 });

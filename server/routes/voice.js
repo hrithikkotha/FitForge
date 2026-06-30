@@ -77,6 +77,10 @@ function messageNeedsActionData(text) {
         'sets', 'reps', 'calories', 'chicken', 'rice', 'protein', 'grams',
         'for lunch', 'for dinner', 'for breakfast', 'for snack',
         'delete workout', 'remove workout',
+        // Common food-related phrases
+        'add', 'logged', 'log', 'eat', 'eating', 'food', 'meal',
+        // Common foods to trigger food list loading
+        'banana', 'apple', 'egg', 'almond', 'bread', 'milk',
     ];
     return actionKeywords.some(kw => lower.includes(kw));
 }
@@ -233,8 +237,11 @@ function buildChatSystemPrompt(userData, exerciseList, foodList) {
 ALWAYS respond with valid JSON exactly like this (no markdown, no extra text):
 {"response":"<your answer>","actions":[]}
 
-If the user asks a QUESTION → put your full answer in "response", set "actions" to [].
-If the user wants to PERFORM AN ACTION → put a friendly confirmation in "response" and add parsed action objects to "actions".
+CRITICAL RULES:
+1. If the user asks a QUESTION (e.g., "what is my protein?", "how many calories should I eat?") → put your full answer in "response", set "actions" to [].
+2. If the user wants to PERFORM AN ACTION (e.g., "add banana", "log chicken", "create workout") → you MUST include the action in "actions" array. Also put a brief confirmation in "response".
+3. NEVER pretend an action was performed in "response" without actually adding it to "actions". Do not say "You've added..." or "Logged..." unless you include the action object.
+4. If you cannot identify a food/exercise ID, use NEEDS_CLARIFICATION instead of making up an action or just responding conversationally.
 
 ═══════════════════════════════════════════
 USER PROFILE
@@ -271,7 +278,34 @@ ACTION TYPES (only include when user requests an action):
 1. CREATE_WORKOUT: {"type":"CREATE_WORKOUT","title":"<name>","description":"Created <name>"}
 2. ADD_EXERCISE_WITH_SETS: {"type":"ADD_EXERCISE_WITH_SETS","exerciseId":"<id>","exerciseName":"<name>","category":"<cat>","setCount":<n>,"reps":<n>,"weight":<kg>,"description":"Added <name>"}
 3. LOG_MEAL: {"type":"LOG_MEAL","foodId":"<id>","foodName":"<name>","quantity":<grams>,"mealType":"<breakfast|lunch|dinner|snack>","description":"Logged <name>"}
-4. DELETE_WORKOUT: {"type":"DELETE_WORKOUT","description":"Deleted workout"}
+4. CREATE_CUSTOM_FOOD_AND_LOG: {"type":"CREATE_CUSTOM_FOOD_AND_LOG","foodName":"<name>","quantity":<grams>,"mealType":"<breakfast|lunch|dinner|snack>","caloriesPer100g":<cal>,"proteinPer100g":<g>,"carbsPer100g":<g>,"fatPer100g":<g>,"description":"Created and logged <name>"}
+5. DELETE_WORKOUT: {"type":"DELETE_WORKOUT","description":"Deleted workout"}
+6. NEEDS_CLARIFICATION: {"type":"NEEDS_CLARIFICATION","pendingAction":{partial action},"missingParams":["param1","param2"],"question":"<ask user>"}
+
+CUSTOM FOOD HANDLING:
+- If a food is NOT in the AVAILABLE FOODS list above, use CREATE_CUSTOM_FOOD_AND_LOG instead of LOG_MEAL.
+- You have nutritional knowledge - estimate the macros per 100g based on your training data.
+- Example: "300g chicken biryani" → caloriesPer100g: 150, proteinPer100g: 8, carbsPer100g: 18, fatPer100g: 5
+- Be realistic with estimates. Add a note in description like "AI-estimated nutrition for chicken biryani"
+- Common Indian foods you should recognize: biryani, dal, roti, paratha, dosa, idli, samosa, paneer tikka, butter chicken, etc.
+- Common international foods: pizza, burger, pasta, sushi, tacos, etc.
+
+CLARIFICATION PROTOCOL:
+- If an action is MISSING required parameters (e.g., user says "add almonds" without quantity/meal), do NOT return a normal action.
+- Instead, return a NEEDS_CLARIFICATION action with the partial info in "pendingAction" and a friendly question.
+- Keep questions conversational: "How many almonds? (e.g., 10 almonds, 50g) And which meal?" not "Please provide quantity and mealType."
+- Store partial action in "pendingAction" so the client can complete it later.
+- Include "missingParams" array listing what's still needed.
+
+CLARIFICATION EXAMPLES:
+User: "add almonds"
+→ {"response":"I'd be happy to log almonds! How many would you like? (e.g., 10 almonds, 30g) And which meal?","actions":[{"type":"NEEDS_CLARIFICATION","pendingAction":{"type":"LOG_MEAL","foodId":"<id>","foodName":"almonds"},"missingParams":["quantity","mealType"],"question":"How many almonds? And which meal (breakfast/lunch/dinner/snack)?"}]}
+
+User: "add bench press"
+→ {"response":"Got it, bench press! How many sets and reps?","actions":[{"type":"NEEDS_CLARIFICATION","pendingAction":{"type":"ADD_EXERCISE_WITH_SETS","exerciseId":"<id>","exerciseName":"Bench Press"},"missingParams":["setCount","reps","weight"],"question":"How many sets and reps for bench press? (e.g., 3 sets of 10 reps at 60kg)"}]}
+
+User: "log chicken"
+→ {"response":"Sure! How much chicken? And which meal?","actions":[{"type":"NEEDS_CLARIFICATION","pendingAction":{"type":"LOG_MEAL","foodId":"<id>","foodName":"Chicken Breast"},"missingParams":["quantity","mealType"],"question":"How much chicken? (e.g., 150g, 200g) And which meal?"}]}
 
 FUZZY MATCH: "bench"→"Barbell Bench Press", "chicken"→"Chicken Breast (cooked)". Use exact id. Weight in kg (convert lbs÷2.205). Default meal type: snack.
 ` : ''}
@@ -462,6 +496,7 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
 
         const groq = getGroq();
         let userMessage = (req.body.message || '').trim();
+        const pendingAction = req.body.pendingAction || null; // Sent by client when answering clarification
 
         // Transcribe voice if audio provided
         if (req.file && req.file.size > 1000) {
@@ -507,11 +542,17 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
             .map(f => `  - id:"${f._id}", name:"${f.name}"${f.servingUnit ? `, unit:"${f.servingUnit}"` : ''}`)
             .join('\n');
 
+        // If there's a pending action, instruct the LLM to complete it using the new answer
+        let contextInstruction = '';
+        if (pendingAction) {
+            contextInstruction = `\n\nCONTEXT: The user previously started this action: ${JSON.stringify(pendingAction)}. The current message "${userMessage}" is their answer to complete it. Parse the answer and fill in the missing parameters, then return the completed action. If still unclear, ask for clarification again with NEEDS_CLARIFICATION.`;
+        }
+
         const systemPrompt = buildChatSystemPrompt(
             userData,
             needsActionData ? exerciseList : null,
             needsActionData ? foodList : null
-        );
+        ) + contextInstruction;
 
         // Parse conversation history — keep last 6 exchanges (3 pairs) max
         let conversationMessages = [];
@@ -555,11 +596,23 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
 
         let response = "I'm here to help with your fitness journey! Could you rephrase that?";
         let actions = [];
+        let needsClarification = false;
+        let clarifyingQuestion = null;
+        let pendingActionResponse = null;
 
         if (parsed) {
             response = parsed.response || response;
             if (Array.isArray(parsed.actions)) {
                 actions = parsed.actions.filter(a => a.type && a.type !== 'UNKNOWN');
+
+                // Check if any action needs clarification
+                const clarificationAction = actions.find(a => a.type === 'NEEDS_CLARIFICATION');
+                if (clarificationAction) {
+                    needsClarification = true;
+                    clarifyingQuestion = clarificationAction.question || response;
+                    pendingActionResponse = clarificationAction.pendingAction || null;
+                    actions = []; // Don't execute, wait for clarification
+                }
             }
         } else {
             // Fallback: treat raw content as the response text
@@ -567,11 +620,18 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
         }
 
         // Invalidate user data cache if actions were taken (data will change)
-        if (actions.length > 0) {
+        if (actions.length > 0 && !needsClarification) {
             invalidateUserCache(req.user._id);
         }
 
-        res.json({ transcript: userMessage, response, actions });
+        res.json({
+            transcript: userMessage,
+            response,
+            actions,
+            needsClarification,
+            clarifyingQuestion,
+            pendingAction: pendingActionResponse
+        });
     } catch (err) {
         const status = err?.status || err?.statusCode;
         const errDetail = err?.error?.error?.message || err?.error?.message || err?.message || 'Unknown error';

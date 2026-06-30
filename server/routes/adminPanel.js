@@ -33,6 +33,18 @@ router.get('/users', guard, async (req, res) => {
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
+// GET /api/admin/users/pending — pending users under this admin
+router.get('/users/pending', guard, async (req, res) => {
+    try {
+        const users = await User.find({
+            adminId: req.user._id,
+            role: 'user',
+            status: 'pending'
+        }).select('-password').sort({ createdAt: -1 });
+        res.json(users);
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
 // GET /api/admin/users/:id/activity — member fitness summary
 router.get('/users/:id/activity', guard, async (req, res) => {
     try {
@@ -101,6 +113,29 @@ router.put('/users/bulk-activate', guard, async (req, res) => {
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
+// PUT /api/admin/users/bulk-approve — bulk approve pending users
+router.put('/users/bulk-approve', guard, async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        if (!Array.isArray(userIds) || userIds.length === 0)
+            return res.status(400).json({ message: 'userIds array is required' });
+
+        const result = await User.updateMany(
+            {
+                _id: { $in: userIds },
+                adminId: req.user._id,
+                role: 'user',
+                status: 'pending'
+            },
+            { $set: { status: 'active', emailVerified: true } }
+        );
+        res.json({
+            message: `Approved ${result.modifiedCount} user(s)`,
+            count: result.modifiedCount
+        });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
 // PUT /api/admin/users/:id/suspend
 router.put('/users/:id/suspend', guard, async (req, res) => {
     try {
@@ -120,6 +155,38 @@ router.put('/users/:id/activate', guard, async (req, res) => {
         user.status = 'active';
         await user.save();
         res.json({ message: 'Member reactivated', status: user.status });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// PUT /api/admin/users/:id/approve — approve single pending user
+router.put('/users/:id/approve', guard, async (req, res) => {
+    try {
+        const user = await User.findOne({
+            _id: req.params.id,
+            adminId: req.user._id,
+            role: 'user',
+            status: 'pending'
+        });
+        if (!user) return res.status(404).json({ message: 'Pending user not found under your gym' });
+        user.status = 'active';
+        user.emailVerified = true;
+        await user.save();
+        res.json({ message: `Approved user: ${user.username}` });
+    } catch (error) { res.status(500).json({ message: error.message }); }
+});
+
+// DELETE /api/admin/users/:id/reject — reject pending user
+router.delete('/users/:id/reject', guard, async (req, res) => {
+    try {
+        const user = await User.findOne({
+            _id: req.params.id,
+            adminId: req.user._id,
+            role: 'user',
+            status: 'pending'
+        });
+        if (!user) return res.status(404).json({ message: 'Pending user not found under your gym' });
+        await user.deleteOne();
+        res.json({ message: `Rejected user: ${user.username}` });
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 

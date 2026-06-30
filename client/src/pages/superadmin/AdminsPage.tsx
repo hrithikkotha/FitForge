@@ -25,6 +25,8 @@ const SuperAdminAdminsPage = () => {
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'active' | 'suspended'>('all');
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+    const [selectedAdminIds, setSelectedAdminIds] = useState<string[]>([]);
+    const [bulkProcessing, setBulkProcessing] = useState(false);
     const { toasts, show: showToast, dismiss } = useToast();
     const navigate = useNavigate();
 
@@ -72,6 +74,21 @@ const SuperAdminAdminsPage = () => {
         } catch { showToast('Failed to delete', 'error'); }
     };
 
+    const handleBulkApprove = async () => {
+        if (!confirm(`Approve ${selectedAdminIds.length} admin(s)?`)) return;
+        setBulkProcessing(true);
+        try {
+            const { data } = await API.put('/super-admin/admins/bulk-approve', { adminIds: selectedAdminIds });
+            showToast(data.message);
+            setSelectedAdminIds([]);
+            load();
+        } catch {
+            showToast('Bulk approval failed', 'error');
+        } finally {
+            setBulkProcessing(false);
+        }
+    };
+
     const filtered = filterStatus === 'all' ? admins : admins.filter(a => a.status === filterStatus);
 
     if (loading) return <PageLoader />;
@@ -86,6 +103,33 @@ const SuperAdminAdminsPage = () => {
                     <p>Manage gym owners registered on FitForge</p>
                 </div>
             </div>
+
+            {/* Bulk Actions Bar */}
+            {selectedAdminIds.length > 0 && filterStatus === 'pending' && (
+                <div style={{
+                    background: 'rgba(74,222,128,0.08)',
+                    border: '1px solid rgba(74,222,128,0.3)',
+                    borderRadius: 12,
+                    padding: '12px 18px',
+                    marginBottom: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12
+                }}>
+                    <CheckCircle size={18} style={{ color: '#4ade80', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+                        {selectedAdminIds.length} admin{selectedAdminIds.length > 1 ? 's' : ''} selected
+                    </span>
+                    <button
+                        className="btn btn-primary btn-sm"
+                        onClick={handleBulkApprove}
+                        disabled={bulkProcessing}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        {bulkProcessing ? 'Processing...' : 'Approve Selected'}
+                    </button>
+                </div>
+            )}
 
             {/* Filter pills */}
             <div className="date-pills" style={{ marginBottom: 20 }}>
@@ -116,6 +160,22 @@ const SuperAdminAdminsPage = () => {
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    {filterStatus === 'pending' && (
+                                        <th style={{ width: 40 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedAdminIds.length === filtered.length && filtered.length > 0}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedAdminIds(filtered.map(a => a._id));
+                                                    } else {
+                                                        setSelectedAdminIds([]);
+                                                    }
+                                                }}
+                                                style={{ cursor: 'pointer' }}
+                                            />
+                                        </th>
+                                    )}
                                     <th>Gym Name</th>
                                     <th>Owner</th>
                                     <th>Email</th>
@@ -128,6 +188,22 @@ const SuperAdminAdminsPage = () => {
                             <tbody>
                                 {filtered.map(admin => (
                                     <tr key={admin._id}>
+                                        {filterStatus === 'pending' && (
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedAdminIds.includes(admin._id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedAdminIds([...selectedAdminIds, admin._id]);
+                                                        } else {
+                                                            setSelectedAdminIds(selectedAdminIds.filter(id => id !== admin._id));
+                                                        }
+                                                    }}
+                                                    style={{ cursor: 'pointer' }}
+                                                />
+                                            </td>
+                                        )}
                                         <td style={{ fontWeight: 600 }}>{admin.gymName || '—'}</td>
                                         <td>{admin.displayName}</td>
                                         <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>{admin.email}</td>

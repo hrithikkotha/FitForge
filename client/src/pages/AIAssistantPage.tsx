@@ -8,6 +8,8 @@ interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+    pendingAction?: any;
+    needsClarification?: boolean;
 }
 
 interface ChatAction {
@@ -111,6 +113,31 @@ async function executeActions(actions: ChatAction[]): Promise<string[]> {
                         quantity: action.quantity || 100,
                     });
                     results.push(`✅ Logged ${action.foodName} for ${action.mealType || 'snack'}`);
+                    break;
+                }
+
+                case 'CREATE_CUSTOM_FOOD_AND_LOG': {
+                    // Create custom food item with AI-estimated nutrition
+                    const { data: newFood } = await API.post('/foods', {
+                        name: action.foodName,
+                        caloriesPer100g: action.caloriesPer100g || 100,
+                        proteinPer100g: action.proteinPer100g || 5,
+                        carbsPer100g: action.carbsPer100g || 15,
+                        fatPer100g: action.fatPer100g || 3,
+                        servingUnit: 'g',
+                        gramsPerServing: 1, // ← FIX: 1g per serving, so quantity directly = grams
+                        isDefault: false,
+                        isAiEstimated: true,
+                        aiEstimateNote: 'AI-estimated nutritional values. You can edit these in the Foods page.',
+                    });
+                    // Log the meal with the newly created food
+                    await API.post('/meals', {
+                        date: new Date().toISOString(),
+                        mealType: action.mealType || 'snack',
+                        foodItemId: newFood._id,
+                        quantity: action.quantity || 100, // This is in grams
+                    });
+                    results.push(`✅ Created "${action.foodName}" and logged ${action.quantity}g for ${action.mealType || 'snack'} (AI-estimated nutrition)`);
                     break;
                 }
 
@@ -360,28 +387,49 @@ const AIAssistantPage = () => {
         setLoading(true);
 
         try {
+            // Check if there's a pending clarification in last AI message
+            const lastMsg = messages[messages.length - 1];
+            const pendingAction = lastMsg?.pendingAction || null;
+
             const { data } = await API.post('/voice/chat',
-                { message: text.trim(), history: JSON.stringify(getHistory()) },
+                {
+                    message: text.trim(),
+                    pendingAction, // Include if answering a clarification
+                    history: JSON.stringify(getHistory())
+                },
                 { timeout: 35000 },
             );
 
-            // Execute any actions returned by the AI
-            let actionResults: string[] = [];
-            if (data.actions && data.actions.length > 0) {
-                actionResults = await executeActions(data.actions);
+            // Check if needs clarification
+            if (data.needsClarification) {
+                const assistantMsg: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: data.response || data.clarifyingQuestion || 'Could you provide more details?',
+                    timestamp: new Date(),
+                    pendingAction: data.pendingAction,
+                    needsClarification: true,
+                };
+                setMessages(prev => [...prev, assistantMsg]);
+            } else {
+                // Execute any actions returned by the AI
+                let actionResults: string[] = [];
+                if (data.actions && data.actions.length > 0) {
+                    actionResults = await executeActions(data.actions);
+                }
+
+                const responseContent = actionResults.length > 0
+                    ? `${data.response || 'Done!'}\n\n${actionResults.join('\n')}`
+                    : (data.response || 'No response received.');
+
+                const assistantMsg: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: responseContent,
+                    timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, assistantMsg]);
             }
-
-            const responseContent = actionResults.length > 0
-                ? `${data.response || 'Done!'}\n\n${actionResults.join('\n')}`
-                : (data.response || 'No response received.');
-
-            const assistantMsg: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: responseContent,
-                timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, assistantMsg]);
         } catch (err: any) {
             const serverMsg = err?.response?.data?.message;
             const isTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
@@ -424,9 +472,16 @@ const AIAssistantPage = () => {
         }]);
 
         try {
+            // Check if there's a pending clarification in last AI message
+            const lastMsg = messages[messages.length - 1];
+            const pendingAction = lastMsg?.pendingAction || null;
+
             const formData = new FormData();
             formData.append('audio', blob, 'voice.webm');
             formData.append('history', JSON.stringify(getHistory()));
+            if (pendingAction) {
+                formData.append('pendingAction', JSON.stringify(pendingAction));
+            }
 
             const { data } = await API.post('/voice/chat', formData, {
                 timeout: 30000,
@@ -439,23 +494,36 @@ const AIAssistantPage = () => {
                     : m
             ));
 
-            // Execute any actions returned by the AI
-            let actionResults: string[] = [];
-            if (data.actions && data.actions.length > 0) {
-                actionResults = await executeActions(data.actions);
+            // Check if needs clarification
+            if (data.needsClarification) {
+                const assistantMsg: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: data.response || data.clarifyingQuestion || 'Could you provide more details?',
+                    timestamp: new Date(),
+                    pendingAction: data.pendingAction,
+                    needsClarification: true,
+                };
+                setMessages(prev => [...prev, assistantMsg]);
+            } else {
+                // Execute any actions returned by the AI
+                let actionResults: string[] = [];
+                if (data.actions && data.actions.length > 0) {
+                    actionResults = await executeActions(data.actions);
+                }
+
+                const responseContent = actionResults.length > 0
+                    ? `${data.response || 'Done!'}\n\n${actionResults.join('\n')}`
+                    : (data.response || 'No response received.');
+
+                const assistantMsg: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: responseContent,
+                    timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, assistantMsg]);
             }
-
-            const responseContent = actionResults.length > 0
-                ? `${data.response || 'Done!'}\n\n${actionResults.join('\n')}`
-                : (data.response || 'No response received.');
-
-            const assistantMsg: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: responseContent,
-                timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, assistantMsg]);
         } catch (err: any) {
             const serverMsg = err?.response?.data?.message;
             const isTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
