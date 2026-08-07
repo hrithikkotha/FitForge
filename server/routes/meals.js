@@ -44,7 +44,7 @@ router.get('/', protect, async (req, res) => {
 
         const [meals, total] = await Promise.all([
             MealEntry.find(query)
-                .populate('foodItemId')
+                .populate({ path: 'foodItemId', populate: { path: 'recipeIngredients.ingredientId' } })
                 .sort({ date: -1 })
                 .skip(skip)
                 .limit(limit),
@@ -82,7 +82,7 @@ router.post('/', protect, async (req, res) => {
             fat: Math.round(food.fatPer100g * multiplier * 10) / 10,
         });
 
-        const populated = await meal.populate('foodItemId');
+        const populated = await meal.populate({ path: 'foodItemId', populate: { path: 'recipeIngredients.ingredientId' } });
         res.status(201).json(populated);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -117,7 +117,7 @@ router.put('/:id', protect, async (req, res) => {
         meal.mealType = req.body.mealType ?? meal.mealType;
 
         const updated = await meal.save();
-        const populated = await updated.populate('foodItemId');
+        const populated = await updated.populate({ path: 'foodItemId', populate: { path: 'recipeIngredients.ingredientId' } });
         res.json(populated);
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -62,9 +62,18 @@ const TIER1_CARBS = ['sweet potato', 'quinoa', 'oats', 'dal', 'lentil', 'broccol
 const TIER3_CARBS = ['white rice', 'dosa', 'idli', 'pasta', 'paratha', 'uttapam', 'upma', 'poha', 'pongal', 'khichdi', 'bhatura', 'puri', 'naan', 'kulcha', 'rava', 'lemon rice', 'coconut rice', 'tamarind rice', 'curd rice', 'tomato rice', 'vangi bath'];
 const TIER4_CARBS = ['maida', 'fried', 'samosa', 'biscuit', 'cake', 'candy', 'soda', 'juice', 'vada', 'bonda', 'bajji', 'murukku', 'chakli', 'jalebi', 'gulab jamun', 'ladoo', 'barfi', 'halwa', 'kheer', 'payasam', 'mysore pak', 'kachori', 'sev puri', 'bhujia', 'mixture', 'mathri', 'namak pare'];
 
+// Builds searchable text for a meal entry, including recipe ingredient names, for keyword-based scoring/badges
+function mealSearchText(m: any): string {
+    const food = m.foodItemId;
+    const ingredientNames = food?.isRecipe
+        ? (food.recipeIngredients || []).map((ing: any) => ing.ingredientId?.name || '').join(' ')
+        : '';
+    return `${m.foodName || food?.name || ''} ${ingredientNames}`;
+}
+
 function scoreMeal(meals: any[]): MealScore {
     const totalProtein = meals.reduce((s, m) => s + (m.protein || 0), 0);
-    const names = meals.map(m => (m.foodName || m.foodItemId?.name || '').toLowerCase()).join(' ');
+    const names = meals.map(m => mealSearchText(m).toLowerCase()).join(' ');
 
     const leucineOk = totalProtein >= 25;
     const hasFiber = HIGH_FIBER_KEYWORDS.some(k => names.includes(k));
@@ -510,7 +519,7 @@ const NutritionPage = () => {
                                         <div>
                                             <div style={{ fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 {m.foodName || m.foodItemId?.name}
-                                                <AntiInflamBadge name={m.foodName || m.foodItemId?.name || ''} />
+                                                <AntiInflamBadge name={mealSearchText(m)} />
                                             </div>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                                 {mealTypeLabel(m.mealType)} · {m.quantity}{m.servingUnit === 'g' || m.servingUnit === 'ml' || !m.servingUnit ? (m.servingUnit || 'g') : ` ${m.servingUnit}${m.quantity !== 1 ? 's' : ''}`}
@@ -578,7 +587,7 @@ const NutritionPage = () => {
                                         <td>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 {m.foodName || m.foodItemId?.name}
-                                                <AntiInflamBadge name={m.foodName || m.foodItemId?.name || ''} />
+                                                <AntiInflamBadge name={mealSearchText(m)} />
                                             </div>
                                         </td>
                                         <td>{m.quantity}{m.servingUnit === 'g' || m.servingUnit === 'ml' || !m.servingUnit ? (m.servingUnit || 'g') : ` ${m.servingUnit}${m.quantity !== 1 ? 's' : ''}`}</td>
@@ -796,12 +805,12 @@ const NutritionPage = () => {
                                 {recipe.ingredients.length > 0 && (
                                     <div style={{ marginBottom: 16 }}>
                                         <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 600 }}>Recipe Ingredients</label>
-                                        <div style={{ background: 'var(--bg-primary)', borderRadius: 8, padding: 12 }}>
+                                        <div style={{ background: 'var(--bg-primary)', borderRadius: 8, padding: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                                             {recipe.ingredients.map((ing, idx) => (
-                                                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: idx === recipe.ingredients.length - 1 ? 0 : 12, paddingBottom: idx === recipe.ingredients.length - 1 ? 0 : 12, borderBottom: idx === recipe.ingredients.length - 1 ? 'none' : '1px solid var(--bg-secondary)' }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{ing.foodItem?.name}</div>
-                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 420, marginBottom: idx === recipe.ingredients.length - 1 ? 0 : 12, paddingBottom: idx === recipe.ingredients.length - 1 ? 0 : 12, borderBottom: idx === recipe.ingredients.length - 1 ? 'none' : '1px solid var(--bg-secondary)' }}>
+                                                    <div style={{ flex: '0 0 auto', width: 150 }}>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ing.foodItem?.name}</div>
+                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                                                             {ing.foodItem?.caloriesPer100g} kcal/100g · {unitLabel(ing.foodItem?.servingUnit)}
                                                         </div>
                                                     </div>
@@ -810,17 +819,17 @@ const NutritionPage = () => {
                                                         inputMode="decimal"
                                                         min="0"
                                                         step={ing.foodItem?.servingUnit === 'g' || ing.foodItem?.servingUnit === 'ml' ? '10' : '1'}
-                                                        style={{ width: 80, padding: '6px 8px', borderRadius: 4, border: '1px solid var(--bg-secondary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                                                        style={{ width: 80, flex: '0 0 auto', padding: '6px 8px', borderRadius: 4, border: '1px solid var(--bg-secondary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
                                                         value={ing.quantity}
                                                         onChange={e => updateRecipeIngredientQty(idx, e.target.value)}
                                                     />
-                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minWidth: 60 }}>
+                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minWidth: 60, flex: '0 0 auto', whiteSpace: 'nowrap' }}>
                                                         {ing.foodItem?.servingUnit === 'g' || ing.foodItem?.servingUnit === 'ml' ? (ing.foodItem?.servingUnit || 'g') : ing.foodItem?.servingUnit}
                                                     </span>
                                                     <button
                                                         className="btn-icon btn-sm"
                                                         onClick={() => removeRecipeIngredient(idx)}
-                                                        style={{ color: 'var(--accent-danger)' }}
+                                                        style={{ color: 'var(--accent-danger)', flex: '0 0 auto' }}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>

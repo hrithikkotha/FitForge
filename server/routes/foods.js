@@ -18,7 +18,9 @@ router.get('/', protect, async (req, res) => {
             query.name = { $regex: req.query.search, $options: 'i' };
         }
 
-        const foods = await FoodItem.find(query).sort({ name: 1 });
+        const foods = await FoodItem.find(query)
+            .populate('recipeIngredients.ingredientId')
+            .sort({ name: 1 });
         res.json(foods);
     } catch (error) {
         res.status(500).json({ message: error.message });
