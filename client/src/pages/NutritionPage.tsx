@@ -3,7 +3,7 @@ import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import {
     Plus, Trash2, X, Search, Sunrise, Sun, Moon, Apple, UtensilsCrossed,
-    Shield, Star
+    Shield, Star, Pencil
 } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
 import PageLoader from '../components/PageLoader';
@@ -19,7 +19,13 @@ interface FoodItem {
     fatPer100g: number;
     servingUnit?: string;
     gramsPerServing?: number;
+    isDefault?: boolean;
+    isRecipe?: boolean;
+    userId?: string;
+    recipeIngredients?: Array<{ ingredientId: FoodItem; quantity: number; servingUnit?: string }>;
 }
+
+const unitLabel = (unit?: string) => unit === 'g' ? 'grams' : unit === 'ml' ? 'ml' : unit === 'piece' ? 'pieces' : unit === 'slice' ? 'slices' : unit === 'scoop' ? 'scoops' : unit === 'tbsp' ? 'tablespoons' : unit === 'cup' ? 'cups' : unit === 'serving' ? 'servings' : 'grams';
 
 // ── Meal Scoring Logic (Health & Nutrition Expert skill) ──────────────────────
 interface MealScore {
@@ -196,6 +202,19 @@ function AntiInflamBadge({ name }: { name: string }) {
     );
 }
 
+// ── Custom food/recipe badge ───────────────────────────────────────────────────
+function CustomBadge({ isRecipe }: { isRecipe?: boolean }) {
+    return (
+        <span title={isRecipe ? 'Custom recipe' : 'Custom food'} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            background: 'rgba(252,163,17,0.1)', border: '1px solid rgba(252,163,17,0.3)',
+            borderRadius: 20, padding: '1px 6px', fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 700
+        }}>
+            {isRecipe ? 'Custom Recipe' : 'Custom'}
+        </span>
+    );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const NutritionPage = () => {
     const { user } = useAuth();
@@ -209,8 +228,13 @@ const NutritionPage = () => {
     const [mealType, setMealType] = useState('lunch');
     const [mealDate, setMealDate] = useState(new Date().toISOString().split('T')[0]);
     const [deleteMealId, setDeleteMealId] = useState<string | null>(null);
-    const [showFoodModal, setShowFoodModal] = useState(false);
+    const [showCustomMealModal, setShowCustomMealModal] = useState(false);
     const [customFood, setCustomFood] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '', servingUnit: 'g', gramsPerServing: '1' });
+    const [recipeMode, setRecipeMode] = useState<'direct' | 'recipe'>('recipe');
+    const [recipe, setRecipe] = useState({ name: '', ingredients: [] as Array<{ foodId: string; quantity: string; foodItem?: FoodItem }> });
+    const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
+    const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
+    const [deleteRecipeId, setDeleteRecipeId] = useState<string | null>(null);
     const { toasts, show: showToast, dismiss } = useToast();
     const [pageLoading, setPageLoading] = useState(true);
 
@@ -264,13 +288,116 @@ const NutritionPage = () => {
                 gramsPerServing: Number(customFood.gramsPerServing || 1),
             });
             setFoods(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)));
-            setShowFoodModal(false);
             setCustomFood({ name: '', calories: '', protein: '', carbs: '', fat: '', servingUnit: 'g', gramsPerServing: '1' });
             if (showModal) { setSelectedFood(res.data); setSearchTerm(res.data.name); }
             showToast('Custom food created');
+            closeCustomMealModal();
         } catch {
             showToast('Failed to create custom food', 'error');
         }
+    };
+
+    const createRecipe = async () => {
+        if (!recipe.name || recipe.ingredients.length === 0) return;
+        try {
+            const payload = {
+                name: recipe.name,
+                recipeIngredients: recipe.ingredients.map(ing => ({
+                    ingredientId: ing.foodId,
+                    quantity: parseFloat(ing.quantity) || 1,
+                    servingUnit: ing.foodItem?.servingUnit || 'g',
+                })),
+            };
+            if (editingRecipeId) {
+                const res = await API.put(`/foods/${editingRecipeId}`, payload);
+                setFoods(prev => prev.map(f => f._id === editingRecipeId ? res.data : f).sort((a, b) => a.name.localeCompare(b.name)));
+                showToast('Recipe updated successfully');
+            } else {
+                const res = await API.post('/foods', payload);
+                setFoods(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)));
+                if (showModal) { setSelectedFood(res.data); setSearchTerm(res.data.name); }
+                showToast('Recipe created successfully');
+            }
+            closeCustomMealModal();
+        } catch {
+            showToast(editingRecipeId ? 'Failed to update recipe' : 'Failed to create recipe', 'error');
+        }
+    };
+
+    const closeCustomMealModal = () => {
+        setShowCustomMealModal(false);
+        setRecipe({ name: '', ingredients: [] });
+        setRecipeSearchTerm('');
+        setEditingRecipeId(null);
+        setCustomFood({ name: '', calories: '', protein: '', carbs: '', fat: '', servingUnit: 'g', gramsPerServing: '1' });
+        setRecipeMode('recipe');
+    };
+
+    const editRecipe = (food: FoodItem) => {
+        setEditingRecipeId(food._id);
+        setRecipe({
+            name: food.name,
+            ingredients: (food.recipeIngredients || []).map(ing => ({
+                foodId: typeof ing.ingredientId === 'string' ? ing.ingredientId : ing.ingredientId._id,
+                quantity: String(ing.quantity),
+                foodItem: typeof ing.ingredientId === 'string' ? undefined : ing.ingredientId,
+            })),
+        });
+        setRecipeMode('recipe');
+        setShowCustomMealModal(true);
+    };
+
+    const handleDeleteRecipe = async () => {
+        if (!deleteRecipeId) return;
+        try {
+            await API.delete(`/foods/${deleteRecipeId}`);
+            setFoods(prev => prev.filter(f => f._id !== deleteRecipeId));
+            setDeleteRecipeId(null);
+            showToast('Recipe deleted');
+        } catch {
+            showToast('Failed to delete recipe', 'error');
+        }
+    };
+
+    const addRecipeIngredient = (food: FoodItem) => {
+        const defaultQty = food.servingUnit === 'g' || food.servingUnit === 'ml' ? '100' : '1';
+        setRecipe(prev => ({
+            ...prev,
+            ingredients: [...prev.ingredients, { foodId: food._id, quantity: defaultQty, foodItem: food }]
+        }));
+        setRecipeSearchTerm('');
+    };
+
+    const removeRecipeIngredient = (index: number) => {
+        setRecipe(prev => ({
+            ...prev,
+            ingredients: prev.ingredients.filter((_, i) => i !== index)
+        }));
+    };
+
+    const updateRecipeIngredientQty = (index: number, qty: string) => {
+        setRecipe(prev => {
+            const newIngredients = [...prev.ingredients];
+            newIngredients[index].quantity = qty;
+            return { ...prev, ingredients: newIngredients };
+        });
+    };
+
+    const calculateRecipeTotals = () => {
+        let totalCals = 0, totalProt = 0, totalCarbs = 0, totalFat = 0, totalGrams = 0;
+        recipe.ingredients.forEach(ing => {
+            if (ing.foodItem) {
+                const gps = ing.foodItem.gramsPerServing || 1;
+                const ingGrams = (parseFloat(ing.quantity) || 0) * gps;
+                totalGrams += ingGrams;
+                const mult = ingGrams / 100;
+                totalCals += ing.foodItem.caloriesPer100g * mult;
+                totalProt += ing.foodItem.proteinPer100g * mult;
+                totalCarbs += ing.foodItem.carbsPer100g * mult;
+                totalFat += ing.foodItem.fatPer100g * mult;
+            }
+        });
+        return totalGrams > 0 ? { cals: Math.round(totalCals), prot: Math.round(totalProt * 10) / 10, carbs: Math.round(totalCarbs * 10) / 10, fat: Math.round(totalFat * 10) / 10, grams: totalGrams } : null;
     };
 
     const handleDeleteMeal = async () => {
@@ -294,6 +421,7 @@ const NutritionPage = () => {
     const weightKg = (user as any)?.weight || 70;
 
     const filteredFoods = foods.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredRecipeFoods = foods.filter(f => f.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()));
 
     const mealTypeLabel = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
     const mealTypeIcon = (t: string) => {
@@ -319,8 +447,8 @@ const NutritionPage = () => {
                     <p className="text-secondary">Log meals and track your macros</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn btn-secondary" onClick={() => setShowFoodModal(true)}>
-                        <Plus size={18} /> Custom Food
+                    <button className="btn btn-secondary" onClick={() => { closeCustomMealModal(); setShowCustomMealModal(true); }}>
+                        <Plus size={18} /> Custom Meal
                     </button>
                     <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                         <Plus size={18} /> Log Meal
@@ -407,6 +535,29 @@ const NutritionPage = () => {
                 </div>
             </div>
 
+            {/* My Recipes */}
+            {foods.some(f => f.isRecipe) && (
+                <div className="card" style={{ marginBottom: 24 }}>
+                    <div className="card-header"><h3>My Recipes</h3></div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {foods.filter(f => f.isRecipe).map(f => (
+                            <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px', borderBottom: '1px solid var(--bg-primary)' }}>
+                                <div>
+                                    <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{f.name}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                        {f.caloriesPer100g} kcal · P:{f.proteinPer100g}g · C:{f.carbsPer100g}g · F:{f.fatPer100g}g per 100g
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 4 }}>
+                                    <button className="btn-icon btn-sm" onClick={() => editRecipe(f)} title="Edit recipe"><Pencil size={14} /></button>
+                                    <button className="btn-icon btn-sm" onClick={() => setDeleteRecipeId(f._id)} title="Delete recipe" style={{ color: 'var(--accent-danger)' }}><Trash2 size={14} /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Meal History */}
             <div className="card">
                 <div className="card-header"><h3>Meal History</h3></div>
@@ -430,7 +581,7 @@ const NutritionPage = () => {
                                                 <AntiInflamBadge name={m.foodName || m.foodItemId?.name || ''} />
                                             </div>
                                         </td>
-                                        <td>{m.quantity}{m.servingUnit === 'g' || m.servingUnit === 'ml' || !m.servingUnit ? (m.servingUnit || 'g') : ` ${m.servingUnit}`}</td>
+                                        <td>{m.quantity}{m.servingUnit === 'g' || m.servingUnit === 'ml' || !m.servingUnit ? (m.servingUnit || 'g') : ` ${m.servingUnit}${m.quantity !== 1 ? 's' : ''}`}</td>
                                         <td style={{ fontWeight: 600 }}>{m.calories}</td>
                                         <td style={{ color: 'var(--text-secondary)' }}>{m.protein}g / {m.carbs}g / {m.fat}g</td>
                                         <td><button className="btn-icon btn-sm" onClick={() => setDeleteMealId(m._id)}><Trash2 size={12} /></button></td>
@@ -476,7 +627,7 @@ const NutritionPage = () => {
                                         type="search" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" autoCapitalize="none"
                                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                 </div>
-                                <button className="btn btn-secondary" onClick={() => setShowFoodModal(true)} title="Create custom food" style={{ padding: '0 12px' }}>
+                                <button className="btn btn-secondary" onClick={() => { closeCustomMealModal(); setShowCustomMealModal(true); setShowModal(false); }} title="Create custom meal" style={{ padding: '0 12px' }}>
                                     <Plus size={18} />
                                 </button>
                             </div>
@@ -486,7 +637,7 @@ const NutritionPage = () => {
                                 {filteredFoods.length === 0 && (
                                     <div style={{ padding: '12px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
                                         No matches.{' '}
-                                        <button style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowFoodModal(true)}>
+                                        <button style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => { closeCustomMealModal(); setRecipeMode('direct'); setShowCustomMealModal(true); }}>
                                             Create custom food →
                                         </button>
                                     </div>
@@ -500,10 +651,11 @@ const NutritionPage = () => {
                                         <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                                             {f.name}
                                             <AntiInflamBadge name={f.name} />
+                                            {!f.isDefault && <CustomBadge isRecipe={f.isRecipe} />}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                             {f.caloriesPer100g} kcal · P:{f.proteinPer100g}g · C:{f.carbsPer100g}g · F:{f.fatPer100g}g per 100g
-                                            {f.servingUnit && f.servingUnit !== 'g' && f.servingUnit !== 'ml' && (
+                                            {f.servingUnit && f.servingUnit !== 'g' && f.servingUnit !== 'ml' && f.servingUnit !== 'serving' && (
                                                 <span> · 1 {f.servingUnit} = {f.gramsPerServing}g</span>
                                             )}
                                         </div>
@@ -513,7 +665,7 @@ const NutritionPage = () => {
                         )}
                         {selectedFood && (
                             <div className="form-group">
-                                <label>Quantity ({selectedFood.servingUnit === 'g' ? 'grams' : selectedFood.servingUnit === 'ml' ? 'ml' : selectedFood.servingUnit === 'piece' ? 'pieces' : selectedFood.servingUnit === 'slice' ? 'slices' : selectedFood.servingUnit === 'scoop' ? 'scoops' : selectedFood.servingUnit === 'tbsp' ? 'tablespoons' : selectedFood.servingUnit === 'cup' ? 'cups' : 'grams'})</label>
+                                <label>Quantity ({unitLabel(selectedFood.servingUnit)})</label>
                                 <input className="form-input" type="number" inputMode="decimal" enterKeyHint="done" value={quantity} onChange={e => setQuantity(e.target.value)} min="0" step={selectedFood.servingUnit === 'g' || selectedFood.servingUnit === 'ml' ? '10' : '1'} />
                                 <div style={{ marginTop: 8, padding: 12, background: 'var(--bg-primary)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                     {(() => {
@@ -528,7 +680,7 @@ const NutritionPage = () => {
                                                 · C: {(selectedFood.carbsPer100g * mult).toFixed(1)}g
                                                 · F: {(selectedFood.fatPer100g * mult).toFixed(1)}g
                                                 {protG >= 25 && <span style={{ marginLeft: 6, color: '#4ade80', fontSize: '0.72rem' }}>✓ leucine threshold</span>}
-                                                {selectedFood.servingUnit !== 'g' && selectedFood.servingUnit !== 'ml' && (
+                                                {selectedFood.servingUnit !== 'g' && selectedFood.servingUnit !== 'ml' && selectedFood.servingUnit !== 'serving' && (
                                                     <span style={{ marginLeft: 8, opacity: 0.7 }}>({Math.round(totalGrams)}g)</span>
                                                 )}
                                             </>
@@ -545,62 +697,212 @@ const NutritionPage = () => {
                 </div>
             )}
 
-            {/* Create Custom Food Modal */}
-            {showFoodModal && (
-                <div className="modal-overlay" onClick={() => setShowFoodModal(false)} style={{ zIndex: 1100 }}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
+            {/* Custom Meal Modal (Custom Recipe / Custom Food tabs) */}
+            {showCustomMealModal && (
+                <div className="modal-overlay" onClick={closeCustomMealModal} style={{ zIndex: 1100 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: recipeMode === 'recipe' ? 600 : undefined }}>
                         <div className="modal-header">
-                            <h3>Create Custom Food</h3>
-                            <button className="btn-icon" onClick={() => setShowFoodModal(false)}><X size={18} /></button>
+                            <h3>{editingRecipeId ? 'Edit Recipe' : 'Custom Meal'}</h3>
+                            <button className="btn-icon" onClick={closeCustomMealModal}><X size={18} /></button>
                         </div>
-                        <div className="form-group">
-                            <label>Food Name *</label>
-                            <input className="form-input" value={customFood.name} onChange={e => setCustomFood({ ...customFood, name: e.target.value })} placeholder="E.g., Mom's Dal Tadka" autoCapitalize="words" enterKeyHint="next" />
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Calories (per 100g) *</label>
-                                <input type="number" inputMode="numeric" min="0" enterKeyHint="next" className="form-input" value={customFood.calories} onChange={e => setCustomFood({ ...customFood, calories: e.target.value })} />
+
+                        {!editingRecipeId && (
+                            <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '1px solid var(--bg-primary)' }}>
+                                <button
+                                    onClick={() => setRecipeMode('recipe')}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 4px', fontWeight: 600, fontSize: '0.9rem', color: recipeMode === 'recipe' ? 'var(--accent-primary)' : 'var(--text-secondary)', borderBottom: recipeMode === 'recipe' ? '2px solid var(--accent-primary)' : '2px solid transparent' }}
+                                >
+                                    Custom Recipe
+                                </button>
+                                <button
+                                    onClick={() => setRecipeMode('direct')}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 4px', fontWeight: 600, fontSize: '0.9rem', color: recipeMode === 'direct' ? 'var(--accent-primary)' : 'var(--text-secondary)', borderBottom: recipeMode === 'direct' ? '2px solid var(--accent-primary)' : '2px solid transparent' }}
+                                >
+                                    Custom Food
+                                </button>
                             </div>
-                            <div className="form-group">
-                                <label>Protein (per 100g)</label>
-                                <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.protein} onChange={e => setCustomFood({ ...customFood, protein: e.target.value })} />
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Carbs (per 100g)</label>
-                                <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.carbs} onChange={e => setCustomFood({ ...customFood, carbs: e.target.value })} />
-                            </div>
-                            <div className="form-group">
-                                <label>Fat (per 100g)</label>
-                                <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.fat} onChange={e => setCustomFood({ ...customFood, fat: e.target.value })} />
-                            </div>
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Serving Unit</label>
-                                <select className="form-input" value={customFood.servingUnit} onChange={e => setCustomFood({ ...customFood, servingUnit: e.target.value, gramsPerServing: e.target.value === 'g' || e.target.value === 'ml' ? '1' : customFood.gramsPerServing })}>
-                                    <option value="g">Grams (g)</option>
-                                    <option value="ml">Milliliters (ml)</option>
-                                    <option value="piece">Piece</option>
-                                    <option value="slice">Slice</option>
-                                    <option value="scoop">Scoop</option>
-                                    <option value="tbsp">Tablespoon</option>
-                                    <option value="cup">Cup</option>
-                                </select>
-                            </div>
-                            {customFood.servingUnit !== 'g' && customFood.servingUnit !== 'ml' && (
+                        )}
+
+                        {recipeMode === 'recipe' ? (
+                            <>
                                 <div className="form-group">
-                                    <label>Grams per {customFood.servingUnit}</label>
-                                    <input type="number" inputMode="decimal" min="0" step="1" enterKeyHint="done" className="form-input" value={customFood.gramsPerServing} onChange={e => setCustomFood({ ...customFood, gramsPerServing: e.target.value })} placeholder="e.g., 50 for one egg" />
+                                    <label>Recipe Name *</label>
+                                    <input
+                                        className="form-input"
+                                        value={recipe.name}
+                                        onChange={e => setRecipe({ ...recipe, name: e.target.value })}
+                                        placeholder="E.g., Protein Shake, Breakfast Bowl"
+                                        autoCapitalize="words"
+                                        enterKeyHint="next"
+                                    />
                                 </div>
-                            )}
-                        </div>
-                        <div className="modal-actions" style={{ marginTop: 24 }}>
-                            <button className="btn btn-secondary" onClick={() => setShowFoodModal(false)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={createCustomFood} disabled={!customFood.name || !customFood.calories}>Create Food</button>
-                        </div>
+
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 600 }}>Add Ingredients</label>
+                                    <div style={{ position: 'relative', display: 'flex', gap: '8px' }}>
+                                        <div style={{ position: 'relative', flex: 1 }}>
+                                            <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)' }} />
+                                            <input
+                                                className="form-input"
+                                                style={{ paddingLeft: 36 }}
+                                                placeholder="Search ingredients..."
+                                                type="search"
+                                                inputMode="search"
+                                                enterKeyHint="search"
+                                                autoComplete="off"
+                                                autoCorrect="off"
+                                                autoCapitalize="none"
+                                                value={recipeSearchTerm}
+                                                onChange={e => setRecipeSearchTerm(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {recipeSearchTerm && (
+                                        <div style={{ maxHeight: 200, overflowY: 'auto', marginTop: 8, border: '1px solid var(--bg-primary)', borderRadius: 6 }}>
+                                            {filteredRecipeFoods.length === 0 ? (
+                                                <div style={{ padding: '12px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
+                                                    No ingredients found
+                                                </div>
+                                            ) : (
+                                                filteredRecipeFoods.map(f => (
+                                                    <div
+                                                        key={f._id}
+                                                        onClick={() => addRecipeIngredient(f)}
+                                                        style={{
+                                                            padding: '10px 12px',
+                                                            cursor: 'pointer',
+                                                            borderBottom: '1px solid var(--bg-primary)',
+                                                            fontSize: '0.85rem',
+                                                            transition: 'background 0.2s'
+                                                        }}
+                                                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                                    >
+                                                        <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            {f.name}
+                                                            {!f.isDefault && <CustomBadge isRecipe={f.isRecipe} />}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                            {f.caloriesPer100g} kcal · P:{f.proteinPer100g}g · C:{f.carbsPer100g}g · F:{f.fatPer100g}g
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {recipe.ingredients.length > 0 && (
+                                    <div style={{ marginBottom: 16 }}>
+                                        <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 600 }}>Recipe Ingredients</label>
+                                        <div style={{ background: 'var(--bg-primary)', borderRadius: 8, padding: 12 }}>
+                                            {recipe.ingredients.map((ing, idx) => (
+                                                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: idx === recipe.ingredients.length - 1 ? 0 : 12, paddingBottom: idx === recipe.ingredients.length - 1 ? 0 : 12, borderBottom: idx === recipe.ingredients.length - 1 ? 'none' : '1px solid var(--bg-secondary)' }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{ing.foodItem?.name}</div>
+                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                            {ing.foodItem?.caloriesPer100g} kcal/100g · {unitLabel(ing.foodItem?.servingUnit)}
+                                                        </div>
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        inputMode="decimal"
+                                                        min="0"
+                                                        step={ing.foodItem?.servingUnit === 'g' || ing.foodItem?.servingUnit === 'ml' ? '10' : '1'}
+                                                        style={{ width: 80, padding: '6px 8px', borderRadius: 4, border: '1px solid var(--bg-secondary)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                                                        value={ing.quantity}
+                                                        onChange={e => updateRecipeIngredientQty(idx, e.target.value)}
+                                                    />
+                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minWidth: 60 }}>
+                                                        {ing.foodItem?.servingUnit === 'g' || ing.foodItem?.servingUnit === 'ml' ? (ing.foodItem?.servingUnit || 'g') : ing.foodItem?.servingUnit}
+                                                    </span>
+                                                    <button
+                                                        className="btn-icon btn-sm"
+                                                        onClick={() => removeRecipeIngredient(idx)}
+                                                        style={{ color: 'var(--accent-danger)' }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {(() => {
+                                            const totals = calculateRecipeTotals();
+                                            return totals ? (
+                                                <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-primary)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                                    <strong style={{ color: 'var(--text-primary)' }}>Recipe Totals (per serving):</strong> {totals.cals} kcal · P: {totals.prot}g · C: {totals.carbs}g · F: {totals.fat}g
+                                                    <div style={{ fontSize: '0.72rem', marginTop: 4 }}>Total weight: {Math.round(totals.grams)}g</div>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </div>
+                                )}
+
+                                <div className="modal-actions" style={{ marginTop: 24 }}>
+                                    <button className="btn btn-secondary" onClick={closeCustomMealModal}>Cancel</button>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={createRecipe}
+                                        disabled={!recipe.name || recipe.ingredients.length === 0}
+                                    >
+                                        {editingRecipeId ? 'Save Changes' : 'Create Recipe'}
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="form-group">
+                                    <label>Food Name *</label>
+                                    <input className="form-input" value={customFood.name} onChange={e => setCustomFood({ ...customFood, name: e.target.value })} placeholder="E.g., Mom's Dal Tadka" autoCapitalize="words" enterKeyHint="next" />
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Calories (per 100g) *</label>
+                                        <input type="number" inputMode="numeric" min="0" enterKeyHint="next" className="form-input" value={customFood.calories} onChange={e => setCustomFood({ ...customFood, calories: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Protein (per 100g)</label>
+                                        <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.protein} onChange={e => setCustomFood({ ...customFood, protein: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Carbs (per 100g)</label>
+                                        <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.carbs} onChange={e => setCustomFood({ ...customFood, carbs: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Fat (per 100g)</label>
+                                        <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" className="form-input" value={customFood.fat} onChange={e => setCustomFood({ ...customFood, fat: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Serving Unit</label>
+                                        <select className="form-input" value={customFood.servingUnit} onChange={e => setCustomFood({ ...customFood, servingUnit: e.target.value, gramsPerServing: e.target.value === 'g' || e.target.value === 'ml' ? '1' : customFood.gramsPerServing })}>
+                                            <option value="g">Grams (g)</option>
+                                            <option value="ml">Milliliters (ml)</option>
+                                            <option value="piece">Piece</option>
+                                            <option value="slice">Slice</option>
+                                            <option value="scoop">Scoop</option>
+                                            <option value="tbsp">Tablespoon</option>
+                                            <option value="cup">Cup</option>
+                                        </select>
+                                    </div>
+                                    {customFood.servingUnit !== 'g' && customFood.servingUnit !== 'ml' && (
+                                        <div className="form-group">
+                                            <label>Grams per {customFood.servingUnit}</label>
+                                            <input type="number" inputMode="decimal" min="0" step="1" enterKeyHint="done" className="form-input" value={customFood.gramsPerServing} onChange={e => setCustomFood({ ...customFood, gramsPerServing: e.target.value })} placeholder="e.g., 50 for one egg" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-actions" style={{ marginTop: 24 }}>
+                                    <button className="btn btn-secondary" onClick={closeCustomMealModal}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={createCustomFood} disabled={!customFood.name || !customFood.calories}>Create Food</button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -617,6 +919,23 @@ const NutritionPage = () => {
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => setDeleteMealId(null)}>Cancel</button>
                             <button className="btn btn-danger" onClick={handleDeleteMeal}><Trash2 size={16} /> Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Recipe Confirmation Modal */}
+            {deleteRecipeId && (
+                <div className="modal-overlay" onClick={() => setDeleteRecipeId(null)} style={{ zIndex: 1200 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+                        <div className="modal-header">
+                            <h3>Delete Recipe</h3>
+                            <button className="btn-icon" onClick={() => setDeleteRecipeId(null)}><X size={18} /></button>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Are you sure you want to delete this recipe? This action cannot be undone.</p>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setDeleteRecipeId(null)}>Cancel</button>
+                            <button className="btn btn-danger" onClick={handleDeleteRecipe}><Trash2 size={16} /> Delete</button>
                         </div>
                     </div>
                 </div>

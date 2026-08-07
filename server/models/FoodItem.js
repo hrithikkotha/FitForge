@@ -24,7 +24,7 @@ const foodItemSchema = new mongoose.Schema({
     },
     servingUnit: {
         type: String,
-        enum: ['g', 'ml', 'piece', 'slice', 'scoop', 'tbsp', 'cup'],
+        enum: ['g', 'ml', 'piece', 'slice', 'scoop', 'tbsp', 'cup', 'serving'],
         default: 'g',
     },
     gramsPerServing: {
@@ -48,6 +48,18 @@ const foodItemSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
+    isRecipe: {
+        type: Boolean,
+        default: false,
+    },
+    recipeIngredients: [{
+        ingredientId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodItem',
+        },
+        quantity: Number,
+        servingUnit: String,
+    }],
 }, {
     timestamps: true,
 });
