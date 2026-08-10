@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
 import {
-    Scale, TrendingDown, TrendingUp, Target, Calendar, Trophy,
+    Scale, TrendingDown, TrendingUp, Target, Calendar,
     Activity, Flame, AlertCircle, CheckCircle2, Info
 } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
@@ -100,7 +100,6 @@ const WeightTrackerPage = () => {
     } = weightStats;
 
     const {
-        bmr = 0,
         tdee = 0,
         avgDailyCalories = 0,
         avgCaloriesBurned = 0,
@@ -290,7 +289,7 @@ const WeightTrackerPage = () => {
                                         borderRadius: 8,
                                         color: '#fff',
                                     }}
-                                    labelFormatter={(val) => new Date(val).toLocaleDateString()}
+                                    labelFormatter={(val: any) => new Date(val).toLocaleDateString()}
                                     formatter={(value: any) => [Number(value).toFixed(1) + ' kg', '']}
                                 />
                                 {goalWeight > 0 && (
@@ -352,7 +351,7 @@ const WeightTrackerPage = () => {
                                             borderRadius: 8,
                                             color: '#fff',
                                         }}
-                                        labelFormatter={formatDate}
+                                        labelFormatter={(val: any) => formatDate(String(val))}
                                     />
                                     <Legend />
                                     <Line
