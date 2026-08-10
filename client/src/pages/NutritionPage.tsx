@@ -232,8 +232,7 @@ const NutritionPage = () => {
     const [todayMeals, setTodayMeals] = useState<any[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
-    const [quantity, setQuantity] = useState('1');
+    const [selectedFoods, setSelectedFoods] = useState<Array<{ food: FoodItem; quantity: string }>>([]);
     const [mealType, setMealType] = useState('lunch');
     const [mealDate, setMealDate] = useState(new Date().toISOString().split('T')[0]);
     const [deleteMealId, setDeleteMealId] = useState<string | null>(null);
@@ -265,22 +264,25 @@ const NutritionPage = () => {
     };
 
     const saveMeal = async () => {
-        if (!selectedFood) return;
+        if (selectedFoods.length === 0) return;
         try {
-            await API.post('/meals', {
-                date: new Date(mealDate).toISOString(),
-                mealType,
-                foodItemId: selectedFood._id,
-                quantity: parseFloat(quantity) || 1,
-            });
+            const mealPromises = selectedFoods.map(item =>
+                API.post('/meals', {
+                    date: new Date(mealDate).toISOString(),
+                    mealType,
+                    foodItemId: item.food._id,
+                    quantity: parseFloat(item.quantity) || 1,
+                })
+            );
+            await Promise.all(mealPromises);
             setShowModal(false);
-            setSelectedFood(null);
-            setQuantity('1');
+            setSelectedFoods([]);
             setMealType('lunch');
+            setSearchTerm('');
             loadData();
-            showToast('Meal logged successfully');
+            showToast(`${selectedFoods.length} meal${selectedFoods.length > 1 ? 's' : ''} logged successfully`);
         } catch {
-            showToast('Failed to log meal', 'error');
+            showToast('Failed to log meals', 'error');
         }
     };
 
@@ -298,7 +300,11 @@ const NutritionPage = () => {
             });
             setFoods(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)));
             setCustomFood({ name: '', calories: '', protein: '', carbs: '', fat: '', servingUnit: 'g', gramsPerServing: '1' });
-            if (showModal) { setSelectedFood(res.data); setSearchTerm(res.data.name); }
+            if (showModal) {
+                const defaultQty = res.data.servingUnit === 'g' || res.data.servingUnit === 'ml' ? '100' : '1';
+                setSelectedFoods(prev => [...prev, { food: res.data, quantity: defaultQty }]);
+                setSearchTerm('');
+            }
             showToast('Custom food created');
             closeCustomMealModal();
         } catch {
@@ -324,7 +330,11 @@ const NutritionPage = () => {
             } else {
                 const res = await API.post('/foods', payload);
                 setFoods(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)));
-                if (showModal) { setSelectedFood(res.data); setSearchTerm(res.data.name); }
+                if (showModal) {
+                    const defaultQty = res.data.servingUnit === 'g' || res.data.servingUnit === 'ml' ? '100' : '1';
+                    setSelectedFoods(prev => [...prev, { food: res.data, quantity: defaultQty }]);
+                    setSearchTerm('');
+                }
                 showToast('Recipe created successfully');
             }
             closeCustomMealModal();
@@ -651,56 +661,197 @@ const NutritionPage = () => {
                                         </button>
                                     </div>
                                 )}
-                                {filteredFoods.map(f => (
-                                    <div key={f._id}
-                                        onClick={() => { setSelectedFood(f); setSearchTerm(f.name); setQuantity(f.servingUnit === 'g' || f.servingUnit === 'ml' ? '100' : '1'); }}
-                                        style={{ padding: '8px 12px', cursor: 'pointer', borderRadius: 6, background: selectedFood?._id === f._id ? 'rgba(252,163,17,0.12)' : 'transparent', fontSize: '0.85rem' }}
-                                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                                        onMouseLeave={e => (e.currentTarget.style.background = selectedFood?._id === f._id ? 'rgba(252,163,17,0.12)' : 'transparent')}>
-                                        <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            {f.name}
-                                            <AntiInflamBadge name={f.name} />
-                                            {!f.isDefault && <CustomBadge isRecipe={f.isRecipe} />}
+                                {filteredFoods.map(f => {
+                                    const isSelected = selectedFoods.some(sf => sf.food._id === f._id);
+                                    return (
+                                        <div key={f._id}
+                                            onClick={() => {
+                                                if (!isSelected) {
+                                                    const defaultQty = f.servingUnit === 'g' || f.servingUnit === 'ml' ? '100' : '1';
+                                                    setSelectedFoods(prev => [...prev, { food: f, quantity: defaultQty }]);
+                                                    setSearchTerm('');
+                                                }
+                                            }}
+                                            style={{
+                                                padding: '8px 12px',
+                                                cursor: isSelected ? 'default' : 'pointer',
+                                                borderRadius: 6,
+                                                background: isSelected ? 'rgba(74,222,128,0.1)' : 'transparent',
+                                                fontSize: '0.85rem',
+                                                opacity: isSelected ? 0.6 : 1
+                                            }}
+                                            onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'var(--bg-hover)')}
+                                            onMouseLeave={e => !isSelected && (e.currentTarget.style.background = 'transparent')}>
+                                            <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                {f.name}
+                                                {isSelected && <span style={{ color: '#4ade80', fontSize: '0.7rem' }}>✓ Added</span>}
+                                                <AntiInflamBadge name={f.name} />
+                                                {!f.isDefault && <CustomBadge isRecipe={f.isRecipe} />}
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                {f.caloriesPer100g} kcal · P:{f.proteinPer100g}g · C:{f.carbsPer100g}g · F:{f.fatPer100g}g per 100g
+                                                {f.servingUnit && f.servingUnit !== 'g' && f.servingUnit !== 'ml' && f.servingUnit !== 'serving' && (
+                                                    <span> · 1 {f.servingUnit} = {f.gramsPerServing}g</span>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                            {f.caloriesPer100g} kcal · P:{f.proteinPer100g}g · C:{f.carbsPer100g}g · F:{f.fatPer100g}g per 100g
-                                            {f.servingUnit && f.servingUnit !== 'g' && f.servingUnit !== 'ml' && f.servingUnit !== 'serving' && (
-                                                <span> · 1 {f.servingUnit} = {f.gramsPerServing}g</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
-                        {selectedFood && (
+                        {selectedFoods.length > 0 && (
                             <div className="form-group">
-                                <label>Quantity ({unitLabel(selectedFood.servingUnit)})</label>
-                                <input className="form-input" type="number" inputMode="decimal" enterKeyHint="done" value={quantity} onChange={e => setQuantity(e.target.value)} min="0" step={selectedFood.servingUnit === 'g' || selectedFood.servingUnit === 'ml' ? '10' : '1'} />
-                                <div style={{ marginTop: 8, padding: 12, background: 'var(--bg-primary)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                    {(() => {
-                                        const gps = selectedFood.gramsPerServing || 1;
-                                        const totalGrams = (parseFloat(quantity) || 0) * gps;
+                                <label>Selected Foods ({selectedFoods.length})</label>
+                                <div style={{ background: 'var(--bg-primary)', borderRadius: 8, padding: 12 }}>
+                                    {selectedFoods.map((item, idx) => {
+                                        const gps = item.food.gramsPerServing || 1;
+                                        const totalGrams = (parseFloat(item.quantity) || 0) * gps;
                                         const mult = totalGrams / 100;
-                                        const protG = selectedFood.proteinPer100g * mult;
+                                        const cals = Math.round(item.food.caloriesPer100g * mult);
+                                        const protG = item.food.proteinPer100g * mult;
+                                        const carbG = item.food.carbsPer100g * mult;
+                                        const fatG = item.food.fatPer100g * mult;
+
                                         return (
-                                            <>
-                                                <strong style={{ color: 'var(--text-primary)' }}>{Math.round(selectedFood.caloriesPer100g * mult)} kcal</strong>{' '}
-                                                · P: <span style={{ color: protG >= 25 ? '#4ade80' : 'var(--text-secondary)', fontWeight: protG >= 25 ? 700 : 400 }}>{protG.toFixed(1)}g</span>
-                                                · C: {(selectedFood.carbsPer100g * mult).toFixed(1)}g
-                                                · F: {(selectedFood.fatPer100g * mult).toFixed(1)}g
-                                                {protG >= 25 && <span style={{ marginLeft: 6, color: '#4ade80', fontSize: '0.72rem' }}>✓ leucine threshold</span>}
-                                                {selectedFood.servingUnit !== 'g' && selectedFood.servingUnit !== 'ml' && selectedFood.servingUnit !== 'serving' && (
-                                                    <span style={{ marginLeft: 8, opacity: 0.7 }}>({Math.round(totalGrams)}g)</span>
-                                                )}
-                                            </>
+                                            <div key={idx} style={{
+                                                marginBottom: idx === selectedFoods.length - 1 ? 0 : 16,
+                                                paddingBottom: idx === selectedFoods.length - 1 ? 0 : 16,
+                                                borderBottom: idx === selectedFoods.length - 1 ? 'none' : '1px solid var(--bg-secondary)'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 8, color: 'var(--text-primary)' }}>
+                                                            {item.food.name}
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                                                <input
+                                                                    type="number"
+                                                                    inputMode="decimal"
+                                                                    min="0"
+                                                                    step={item.food.servingUnit === 'g' || item.food.servingUnit === 'ml' ? '10' : '1'}
+                                                                    className="form-input"
+                                                                    style={{
+                                                                        width: 90,
+                                                                        padding: '8px 12px',
+                                                                        paddingRight: 8,
+                                                                        fontSize: '0.88rem',
+                                                                        fontWeight: 600,
+                                                                        textAlign: 'center',
+                                                                        border: '1.5px solid var(--bg-secondary)',
+                                                                        background: 'var(--bg-elevated)',
+                                                                        borderRadius: 8,
+                                                                        transition: 'all 0.2s ease'
+                                                                    }}
+                                                                    value={item.quantity}
+                                                                    onChange={e => {
+                                                                        const newFoods = [...selectedFoods];
+                                                                        newFoods[idx].quantity = e.target.value;
+                                                                        setSelectedFoods(newFoods);
+                                                                    }}
+                                                                    onFocus={e => {
+                                                                        e.target.style.borderColor = 'var(--accent-primary)';
+                                                                        e.target.style.background = 'var(--bg-primary)';
+                                                                    }}
+                                                                    onBlur={e => {
+                                                                        e.target.style.borderColor = 'var(--bg-secondary)';
+                                                                        e.target.style.background = 'var(--bg-elevated)';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <span style={{
+                                                                fontSize: '0.82rem',
+                                                                color: 'var(--text-secondary)',
+                                                                fontWeight: 500,
+                                                                minWidth: 70
+                                                            }}>
+                                                                {unitLabel(item.food.servingUnit)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        className="btn-icon btn-sm"
+                                                        onClick={() => setSelectedFoods(prev => prev.filter((_, i) => i !== idx))}
+                                                        style={{
+                                                            color: 'var(--accent-danger)',
+                                                            opacity: 0.7,
+                                                            transition: 'opacity 0.2s'
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                                        onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+                                                    >
+                                                        <Trash2 size={15} />
+                                                    </button>
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.78rem',
+                                                    color: 'var(--text-secondary)',
+                                                    paddingLeft: 4,
+                                                    background: 'rgba(252,163,17,0.05)',
+                                                    padding: '6px 10px',
+                                                    borderRadius: 6,
+                                                    border: '1px solid rgba(252,163,17,0.1)'
+                                                }}>
+                                                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.82rem' }}>{cals} kcal</strong>
+                                                    {' · P: '}
+                                                    <span style={{
+                                                        color: protG >= 25 ? '#4ade80' : 'var(--text-secondary)',
+                                                        fontWeight: protG >= 25 ? 700 : 500
+                                                    }}>
+                                                        {protG.toFixed(1)}g
+                                                    </span>
+                                                    {' · C: '}{carbG.toFixed(1)}g
+                                                    {' · F: '}{fatG.toFixed(1)}g
+                                                    {protG >= 25 && <span style={{ marginLeft: 6, color: '#4ade80', fontSize: '0.7rem', fontWeight: 700 }}>✓ leucine</span>}
+                                                </div>
+                                            </div>
                                         );
-                                    })()}
+                                    })}
+
+                                    {/* Total summary */}
+                                    {selectedFoods.length > 1 && (
+                                        <div style={{
+                                            marginTop: 12,
+                                            paddingTop: 12,
+                                            borderTop: '2px solid var(--bg-secondary)',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 600
+                                        }}>
+                                            <strong style={{ color: 'var(--text-primary)' }}>Total: </strong>
+                                            {selectedFoods.reduce((sum, item) => {
+                                                const gps = item.food.gramsPerServing || 1;
+                                                const totalGrams = (parseFloat(item.quantity) || 0) * gps;
+                                                const mult = totalGrams / 100;
+                                                return sum + Math.round(item.food.caloriesPer100g * mult);
+                                            }, 0)} kcal
+                                            {' · P: '}{selectedFoods.reduce((sum, item) => {
+                                                const gps = item.food.gramsPerServing || 1;
+                                                const totalGrams = (parseFloat(item.quantity) || 0) * gps;
+                                                const mult = totalGrams / 100;
+                                                return sum + item.food.proteinPer100g * mult;
+                                            }, 0).toFixed(1)}g
+                                            {' · C: '}{selectedFoods.reduce((sum, item) => {
+                                                const gps = item.food.gramsPerServing || 1;
+                                                const totalGrams = (parseFloat(item.quantity) || 0) * gps;
+                                                const mult = totalGrams / 100;
+                                                return sum + item.food.carbsPer100g * mult;
+                                            }, 0).toFixed(1)}g
+                                            {' · F: '}{selectedFoods.reduce((sum, item) => {
+                                                const gps = item.food.gramsPerServing || 1;
+                                                const totalGrams = (parseFloat(item.quantity) || 0) * gps;
+                                                const mult = totalGrams / 100;
+                                                return sum + item.food.fatPer100g * mult;
+                                            }, 0).toFixed(1)}g
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={saveMeal} disabled={!selectedFood}>Save Meal</button>
+                            <button className="btn btn-primary" onClick={saveMeal} disabled={selectedFoods.length === 0}>
+                                Save {selectedFoods.length > 0 ? `(${selectedFoods.length})` : 'Meal'}
+                            </button>
                         </div>
                     </div>
                 </div>
