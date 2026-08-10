@@ -9,7 +9,12 @@ interface User {
     username: string;
     email: string;
     displayName: string;
-    weight: number;
+    currentWeight: number;
+    goalWeight: number;
+    weightGoalType: 'lose' | 'gain' | 'maintain';
+    targetWeeklyChange: number;
+    activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+    gender: 'male' | 'female' | 'other';
     height: number;
     age: number;
     dailyCalorieGoal: number;

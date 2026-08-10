@@ -223,6 +223,12 @@ select.form-input option, select.form-input optgroup { background-color:var(--bg
 .badge-cardio { background:rgba(74,222,128,0.15); color:var(--accent-success); }
 .badge-bodyweight { background:rgba(229,229,229,0.1); color:var(--accent-secondary); }
 
+/* ===== Insight Boxes ===== */
+.insight-box { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; border-radius:var(--radius-md); background:var(--bg-elevated); border:1px solid var(--border-color); }
+.insight-box.success { background:rgba(74,222,128,0.08); border-color:rgba(74,222,128,0.25); color:var(--accent-success); }
+.insight-box.warning { background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.25); color:var(--accent-danger); }
+.insight-box.info { background:rgba(56,189,248,0.08); border-color:rgba(56,189,248,0.25); color:#38bdf8; }
+
 /* ===== Auth Page — Claymorphism ===== */
 .auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg-primary); padding:24px; }
 .auth-container { width:100%; max-width:440px; }

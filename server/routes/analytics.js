@@ -2,7 +2,16 @@ const express = require('express');
 const WorkoutSession = require('../models/WorkoutSession');
 const Exercise = require('../models/Exercise');
 const MealEntry = require('../models/MealEntry');
+const WeightEntry = require('../models/WeightEntry');
+const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const {
+    calculateBMR,
+    calculateTDEE,
+    calculateSmoothedWeight,
+    calculateExpectedWeightChange,
+    calculateCaloriesBurned,
+} = require('../utils/calorieCalculator');
 
 const router = express.Router();
 
@@ -298,6 +307,186 @@ router.get('/nutrition-stats', protect, async (req, res) => {
         setCache(cacheKey, result);
         res.json(result);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /api/analytics/weight-stats
+router.get('/weight-stats', protect, async (req, res) => {
+    try {
+        const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        const to = req.query.to ? new Date(req.query.to) : new Date();
+
+        const cacheKey = `weight-stats:${req.user._id}:${from.getTime()}:${to.getTime()}`;
+        const cached = getCached(cacheKey);
+        if (cached) return res.json(cached);
+
+        // Fetch user data for TDEE calculation
+        const user = await User.findById(req.user._id);
+
+        // Fetch weight entries
+        const entries = await WeightEntry.find({
+            userId: req.user._id,
+            date: { $gte: from, $lte: to },
+        }).sort({ date: 1 });
+
+        if (entries.length === 0) {
+            return res.json({
+                entries: [],
+                trend: [],
+                stats: {
+                    daysLogged: 0,
+                    consistency: 0,
+                    startWeight: 0,
+                    currentWeight: user.currentWeight || 0,
+                    change: 0,
+                    percentChange: 0,
+                },
+            });
+        }
+
+        // Calculate smoothed weights for trend line
+        const trend = entries.map((entry, index) => ({
+            date: entry.date.toISOString().split('T')[0],
+            weight: entry.weight,
+            smoothedWeight: calculateSmoothedWeight(entries, index),
+            notes: entry.notes,
+        }));
+
+        // Calculate basic stats
+        const startWeight = entries[0].weight;
+        const currentWeight = entries[entries.length - 1].weight;
+        const change = Number((currentWeight - startWeight).toFixed(2));
+        const percentChange = startWeight > 0 ? Number(((change / startWeight) * 100).toFixed(1)) : 0;
+
+        // Calculate days and consistency
+        const totalDays = Math.ceil((to - from) / (24 * 60 * 60 * 1000));
+        const daysLogged = entries.length;
+        const consistency = totalDays > 0 ? Math.round((daysLogged / totalDays) * 100) : 0;
+
+        // Calculate weekly rate of change
+        const daysTracked = (entries[entries.length - 1].date - entries[0].date) / (24 * 60 * 60 * 1000);
+        const weeksTracked = daysTracked / 7;
+        const avgWeeklyChange = weeksTracked > 0 ? Number((change / weeksTracked).toFixed(2)) : 0;
+
+        // Calculate BMR and TDEE
+        const bmr = calculateBMR(
+            user.currentWeight || 70,
+            user.height || 170,
+            user.age || 30,
+            user.gender || 'male'
+        );
+        const tdee = calculateTDEE(bmr, user.activityLevel || 'moderate');
+
+        // Fetch nutrition data for correlation
+        const meals = await MealEntry.find({
+            userId: req.user._id,
+            date: { $gte: from, $lte: to },
+        });
+
+        const dailyCalories = {};
+        meals.forEach(meal => {
+            const dateKey = new Date(meal.date).toISOString().split('T')[0];
+            if (!dailyCalories[dateKey]) {
+                dailyCalories[dateKey] = 0;
+            }
+            dailyCalories[dateKey] += meal.calories || 0;
+        });
+
+        // Fetch workout data for calorie burn
+        const workouts = await WorkoutSession.find({
+            userId: req.user._id,
+            date: { $gte: from, $lte: to },
+        }).populate('entries.exerciseId');
+
+        const dailyCaloriesBurned = {};
+        workouts.forEach(workout => {
+            const dateKey = new Date(workout.date).toISOString().split('T')[0];
+            if (!dailyCaloriesBurned[dateKey]) {
+                dailyCaloriesBurned[dateKey] = 0;
+            }
+
+            workout.entries.forEach(entry => {
+                if (entry.duration && entry.exerciseId) {
+                    const calories = calculateCaloriesBurned(
+                        entry.exerciseId,
+                        entry.duration,
+                        user.currentWeight || 70
+                    );
+                    dailyCaloriesBurned[dateKey] += calories;
+                }
+            });
+        });
+
+        // Calculate average calorie balance
+        const calorieKeys = Object.keys(dailyCalories);
+        const avgDailyCalories = calorieKeys.length > 0
+            ? Math.round(calorieKeys.reduce((sum, key) => sum + dailyCalories[key], 0) / calorieKeys.length)
+            : 0;
+
+        const burnKeys = Object.keys(dailyCaloriesBurned);
+        const avgCaloriesBurned = burnKeys.length > 0
+            ? Math.round(burnKeys.reduce((sum, key) => sum + dailyCaloriesBurned[key], 0) / burnKeys.length)
+            : 0;
+
+        const avgDailyBalance = avgDailyCalories - (tdee + avgCaloriesBurned);
+
+        // Calculate expected vs actual weight change
+        const expectedChange = calculateExpectedWeightChange(avgDailyBalance, daysTracked);
+        const efficiency = expectedChange !== 0 ? Number(((change / expectedChange) * 100).toFixed(0)) : 0;
+
+        // Calculate days to goal
+        let daysToGoal = 0;
+        if (user.goalWeight && user.goalWeight !== currentWeight && avgWeeklyChange !== 0) {
+            const remainingChange = user.goalWeight - currentWeight;
+            const weeksToGoal = Math.abs(remainingChange / avgWeeklyChange);
+            daysToGoal = Math.ceil(weeksToGoal * 7);
+
+            // Check if direction is correct
+            if (user.weightGoalType === 'lose' && avgWeeklyChange > 0) daysToGoal = -1; // Going wrong direction
+            if (user.weightGoalType === 'gain' && avgWeeklyChange < 0) daysToGoal = -1; // Going wrong direction
+        }
+
+        const result = {
+            entries,
+            trend,
+            stats: {
+                daysLogged,
+                consistency,
+                startWeight,
+                currentWeight,
+                change,
+                percentChange,
+                avgWeeklyChange,
+                targetWeeklyChange: user.targetWeeklyChange || 0.5,
+                goalWeight: user.goalWeight || 0,
+                weightGoalType: user.weightGoalType || 'maintain',
+                daysToGoal,
+            },
+            correlation: {
+                bmr,
+                tdee,
+                avgDailyCalories,
+                avgCaloriesBurned,
+                avgDailyBalance,
+                expectedChange,
+                actualChange: change,
+                efficiency,
+            },
+            dailyData: trend.map(t => ({
+                date: t.date,
+                weight: t.weight,
+                smoothedWeight: t.smoothedWeight,
+                calories: dailyCalories[t.date] || 0,
+                caloriesBurned: dailyCaloriesBurned[t.date] || 0,
+                balance: (dailyCalories[t.date] || 0) - (tdee + (dailyCaloriesBurned[t.date] || 0)),
+            })),
+        };
+
+        setCache(cacheKey, result);
+        res.json(result);
+    } catch (error) {
+        console.error('Weight stats error:', error);
         res.status(500).json({ message: error.message });
     }
 });

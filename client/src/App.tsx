@@ -11,6 +11,7 @@ import BodyMapPage from './pages/BodyMapPage';
 import StatisticsPage from './pages/StatisticsPage';
 import ProfilePage from './pages/ProfilePage';
 import AIAssistantPage from './pages/AIAssistantPage';
+import WeightTrackerPage from './pages/WeightTrackerPage';
 import AdminRegisterPage from './pages/admin/AdminRegisterPage';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -126,6 +127,7 @@ function App() {
                         <Route path="/dashboard" element={<DashboardPage />} />
                         <Route path="/workouts" element={<WorkoutsPage />} />
                         <Route path="/nutrition" element={<NutritionPage />} />
+                        <Route path="/weight-tracker" element={<WeightTrackerPage />} />
                         <Route path="/body-map" element={<BodyMapPage />} />
                         <Route path="/stats" element={<StatisticsPage />} />
                         <Route path="/ai-assistant" element={<AIAssistantPage />} />

@@ -25,9 +25,32 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
-    weight: {
+    currentWeight: {
         type: Number,
         default: 0,
+    },
+    goalWeight: {
+        type: Number,
+        default: 0,
+    },
+    weightGoalType: {
+        type: String,
+        enum: ['lose', 'gain', 'maintain'],
+        default: 'maintain',
+    },
+    targetWeeklyChange: {
+        type: Number,
+        default: 0.5,
+    },
+    activityLevel: {
+        type: String,
+        enum: ['sedentary', 'light', 'moderate', 'active', 'very_active'],
+        default: 'moderate',
+    },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'other'],
+        default: 'male',
     },
     height: {
         type: Number,
