@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     LayoutDashboard, Dumbbell, Utensils, Activity,
-    BarChart3, User, LogOut, Settings, Bot
+    BarChart3, User, LogOut, Settings, Bot, Scale
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +31,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
         { path: '/workouts', label: 'Workouts', icon: <Dumbbell size={20} /> },
         { path: '/nutrition', label: 'Nutrition', icon: <Utensils size={20} /> },
+        { path: '/weight-tracker', label: 'Weight Tracker', icon: <Scale size={20} /> },
         { path: '/body-map', label: 'Body Map', icon: <Activity size={20} /> },
         { path: '/stats', label: 'Statistics', icon: <BarChart3 size={20} /> },
         { path: '/ai-assistant', label: 'AI Assistant', icon: <Bot size={20} /> },
