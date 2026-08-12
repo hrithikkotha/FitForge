@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import API from '../api/axios';
 import { Plus, Dumbbell, Trash2, X, Edit3, Save, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
@@ -43,6 +43,13 @@ const WorkoutsPage = () => {
     const [deleteWorkoutId, setDeleteWorkoutId] = useState<string | null>(null);
     const { toasts, show: showToast, dismiss } = useToast();
     const [pageLoading, setPageLoading] = useState(true);
+
+    // Loading states
+    const [addingSetFor, setAddingSetFor] = useState<string | null>(null);
+    const [savingField, setSavingField] = useState<string | null>(null);
+
+    // Debounce timers for auto-save
+    const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
     useEffect(() => {
         loadData();
@@ -151,6 +158,9 @@ const WorkoutsPage = () => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
 
+        const loadingKey = `${workoutId}-${entryIndex}`;
+        setAddingSetFor(loadingKey);
+
         const updatedEntries = workout.entries.map((e: any, i: number) => ({
             exerciseId: e.exerciseId?._id || e.exerciseId,
             sets: i === entryIndex ? [...(e.sets || []), { reps: 0, weight: 0 }] : (e.sets || []),
@@ -160,9 +170,11 @@ const WorkoutsPage = () => {
 
         try {
             await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            loadData();
+            await loadData();
         } catch (err) {
             console.error(err);
+        } finally {
+            setAddingSetFor(null);
         }
     };
 
@@ -186,10 +198,28 @@ const WorkoutsPage = () => {
         }
     };
 
+    // Update set values with debounce
+    const debouncedUpdateSet = (workoutId: string, entryIndex: number, setIndex: number, field: 'reps' | 'weight', val: string) => {
+        const fieldKey = `${workoutId}-${entryIndex}-${setIndex}-${field}`;
+
+        // Clear existing timer for this field
+        if (saveTimers.current[fieldKey]) {
+            clearTimeout(saveTimers.current[fieldKey]);
+        }
+
+        // Set new timer - auto-save after 500ms of no typing
+        saveTimers.current[fieldKey] = setTimeout(() => {
+            updateSet(workoutId, entryIndex, setIndex, field, parseFloat(val) || 0);
+        }, 500);
+    };
+
     // Update set values
     const updateSet = async (workoutId: string, entryIndex: number, setIndex: number, field: 'reps' | 'weight', val: number) => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
+
+        const fieldKey = `${workoutId}-${entryIndex}-${setIndex}-${field}`;
+        setSavingField(fieldKey);
 
         const updatedEntries = workout.entries.map((e: any, i: number) => {
             const sets = [...(e.sets || [])];
@@ -206,16 +236,37 @@ const WorkoutsPage = () => {
 
         try {
             await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            loadData();
+            await loadData();
+            // Keep the saved indicator visible for a moment
+            setTimeout(() => setSavingField(null), 800);
         } catch (err) {
             console.error(err);
+            setSavingField(null);
         }
+    };
+
+    // Update cardio fields with debounce
+    const debouncedUpdateCardio = (workoutId: string, entryIndex: number, field: 'duration' | 'distance', val: string) => {
+        const fieldKey = `${workoutId}-${entryIndex}-cardio-${field}`;
+
+        // Clear existing timer for this field
+        if (saveTimers.current[fieldKey]) {
+            clearTimeout(saveTimers.current[fieldKey]);
+        }
+
+        // Set new timer - auto-save after 500ms of no typing
+        saveTimers.current[fieldKey] = setTimeout(() => {
+            updateCardioField(workoutId, entryIndex, field, parseFloat(val) || 0);
+        }, 500);
     };
 
     // Update cardio fields
     const updateCardioField = async (workoutId: string, entryIndex: number, field: 'duration' | 'distance', val: number) => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
+
+        const fieldKey = `${workoutId}-${entryIndex}-cardio-${field}`;
+        setSavingField(fieldKey);
 
         const updatedEntries = workout.entries.map((e: any, i: number) => ({
             exerciseId: e.exerciseId?._id || e.exerciseId,
@@ -226,9 +277,11 @@ const WorkoutsPage = () => {
 
         try {
             await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            loadData();
+            await loadData();
+            setTimeout(() => setSavingField(null), 800);
         } catch (err) {
             console.error(err);
+            setSavingField(null);
         }
     };
 
@@ -347,38 +400,154 @@ const WorkoutsPage = () => {
 
                                                 {isCardio ? (
                                                     <div className="form-row">
-                                                        <div className="set-row" style={{ margin: 0 }}>
+                                                        <div className="set-row" style={{ margin: 0, position: 'relative' }}>
                                                             <span className="set-label">Dur(m)</span>
-                                                            <input type="number" inputMode="numeric" min="0" step="1" enterKeyHint="next" defaultValue={entry.duration || ''} onBlur={e => updateCardioField(w._id, eIdx, 'duration', +e.target.value)} />
+                                                            <input
+                                                                type="number"
+                                                                inputMode="numeric"
+                                                                min="0"
+                                                                step="1"
+                                                                enterKeyHint="next"
+                                                                defaultValue={entry.duration || ''}
+                                                                onChange={e => debouncedUpdateCardio(w._id, eIdx, 'duration', e.target.value)}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') {
+                                                                        const fieldKey = `${w._id}-${eIdx}-cardio-duration`;
+                                                                        if (saveTimers.current[fieldKey]) clearTimeout(saveTimers.current[fieldKey]);
+                                                                        updateCardioField(w._id, eIdx, 'duration', parseFloat(e.currentTarget.value) || 0);
+                                                                        e.currentTarget.blur();
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    transition: 'all 0.3s ease',
+                                                                    borderColor: savingField === `${w._id}-${eIdx}-cardio-duration` ? '#4ade80' : undefined
+                                                                }}
+                                                            />
+                                                            {savingField === `${w._id}-${eIdx}-cardio-duration` && (
+                                                                <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700, animation: 'fadeIn 0.3s ease' }}>✓</span>
+                                                            )}
                                                         </div>
-                                                        <div className="set-row" style={{ margin: 0 }}>
+                                                        <div className="set-row" style={{ margin: 0, position: 'relative' }}>
                                                             <span className="set-label">Dist(km)</span>
-                                                            <input type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="done" defaultValue={entry.distance || ''} onBlur={e => updateCardioField(w._id, eIdx, 'distance', +e.target.value)} />
+                                                            <input
+                                                                type="number"
+                                                                inputMode="decimal"
+                                                                min="0"
+                                                                step="0.1"
+                                                                enterKeyHint="done"
+                                                                defaultValue={entry.distance || ''}
+                                                                onChange={e => debouncedUpdateCardio(w._id, eIdx, 'distance', e.target.value)}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') {
+                                                                        const fieldKey = `${w._id}-${eIdx}-cardio-distance`;
+                                                                        if (saveTimers.current[fieldKey]) clearTimeout(saveTimers.current[fieldKey]);
+                                                                        updateCardioField(w._id, eIdx, 'distance', parseFloat(e.currentTarget.value) || 0);
+                                                                        e.currentTarget.blur();
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    transition: 'all 0.3s ease',
+                                                                    borderColor: savingField === `${w._id}-${eIdx}-cardio-distance` ? '#4ade80' : undefined
+                                                                }}
+                                                            />
+                                                            {savingField === `${w._id}-${eIdx}-cardio-distance` && (
+                                                                <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700, animation: 'fadeIn 0.3s ease' }}>✓</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <>
                                                         <div style={{ display: 'flex', gap: 8, marginBottom: 6, paddingLeft: 44 }}>
-                                                            <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Reps</span>
                                                             <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Weight (kg)</span>
+                                                            <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Reps</span>
                                                             <span style={{ width: 28 }}></span>
                                                         </div>
-                                                        {entry.sets?.map((set: any, sIdx: number) => (
-                                                            <div key={sIdx} className="set-row">
-                                                                <span className="set-label">Set {sIdx + 1}</span>
-                                                                <input type="number" inputMode="numeric" min="0" step="1" enterKeyHint="next" defaultValue={set.reps || ''} placeholder="Reps"
-                                                                    onBlur={e => updateSet(w._id, eIdx, sIdx, 'reps', +e.target.value)} />
-                                                                <input type="number" inputMode="decimal" min="0" step="0.5" enterKeyHint="done" defaultValue={set.weight || ''} placeholder="kg"
-                                                                    onBlur={e => updateSet(w._id, eIdx, sIdx, 'weight', +e.target.value)} />
-                                                                <button className="btn-icon btn-sm" style={{ padding: 4, width: 28, height: 28, flexShrink: 0 }}
-                                                                    onClick={() => deleteSet(w._id, eIdx, sIdx)}>
-                                                                    <X size={12} />
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                        <button className="btn btn-secondary btn-sm" style={{ marginTop: 6 }}
-                                                            onClick={() => addSetToExercise(w._id, eIdx)}>
-                                                            <Plus size={14} /> Add Set
+                                                        {entry.sets?.map((set: any, sIdx: number) => {
+                                                            const weightKey = `${w._id}-${eIdx}-${sIdx}-weight`;
+                                                            const repsKey = `${w._id}-${eIdx}-${sIdx}-reps`;
+                                                            return (
+                                                                <div key={sIdx} className="set-row">
+                                                                    <span className="set-label">Set {sIdx + 1}</span>
+                                                                    <div style={{ flex: 1, position: 'relative' }}>
+                                                                        <input
+                                                                            type="number"
+                                                                            inputMode="decimal"
+                                                                            min="0"
+                                                                            step="0.5"
+                                                                            enterKeyHint="next"
+                                                                            defaultValue={set.weight || ''}
+                                                                            placeholder="kg"
+                                                                            onChange={e => debouncedUpdateSet(w._id, eIdx, sIdx, 'weight', e.target.value)}
+                                                                            onKeyDown={e => {
+                                                                                if (e.key === 'Enter') {
+                                                                                    if (saveTimers.current[weightKey]) clearTimeout(saveTimers.current[weightKey]);
+                                                                                    updateSet(w._id, eIdx, sIdx, 'weight', parseFloat(e.currentTarget.value) || 0);
+                                                                                    // Move to next input (reps)
+                                                                                    const nextInput = e.currentTarget.parentElement?.nextElementSibling?.querySelector('input');
+                                                                                    if (nextInput) (nextInput as HTMLInputElement).focus();
+                                                                                }
+                                                                            }}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                transition: 'all 0.3s ease',
+                                                                                borderColor: savingField === weightKey ? '#4ade80' : undefined,
+                                                                                background: savingField === weightKey ? 'rgba(74, 222, 128, 0.1)' : undefined
+                                                                            }}
+                                                                        />
+                                                                        {savingField === weightKey && (
+                                                                            <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700 }}>✓</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ flex: 1, position: 'relative' }}>
+                                                                        <input
+                                                                            type="number"
+                                                                            inputMode="numeric"
+                                                                            min="0"
+                                                                            step="1"
+                                                                            enterKeyHint="done"
+                                                                            defaultValue={set.reps || ''}
+                                                                            placeholder="Reps"
+                                                                            onChange={e => debouncedUpdateSet(w._id, eIdx, sIdx, 'reps', e.target.value)}
+                                                                            onKeyDown={e => {
+                                                                                if (e.key === 'Enter') {
+                                                                                    if (saveTimers.current[repsKey]) clearTimeout(saveTimers.current[repsKey]);
+                                                                                    updateSet(w._id, eIdx, sIdx, 'reps', parseFloat(e.currentTarget.value) || 0);
+                                                                                    e.currentTarget.blur();
+                                                                                }
+                                                                            }}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                transition: 'all 0.3s ease',
+                                                                                borderColor: savingField === repsKey ? '#4ade80' : undefined,
+                                                                                background: savingField === repsKey ? 'rgba(74, 222, 128, 0.1)' : undefined
+                                                                            }}
+                                                                        />
+                                                                        {savingField === repsKey && (
+                                                                            <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700 }}>✓</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <button className="btn-icon btn-sm" style={{ padding: 4, width: 28, height: 28, flexShrink: 0 }}
+                                                                        onClick={() => deleteSet(w._id, eIdx, sIdx)}>
+                                                                        <X size={12} />
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        <button
+                                                            className="btn btn-secondary btn-sm"
+                                                            style={{ marginTop: 6 }}
+                                                            onClick={() => addSetToExercise(w._id, eIdx)}
+                                                            disabled={addingSetFor === `${w._id}-${eIdx}`}>
+                                                            {addingSetFor === `${w._id}-${eIdx}` ? (
+                                                                <>
+                                                                    <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                                                                    Adding...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Plus size={14} /> Add Set
+                                                                </>
+                                                            )}
                                                         </button>
                                                     </>
                                                 )}
