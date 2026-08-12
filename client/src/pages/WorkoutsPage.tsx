@@ -49,7 +49,7 @@ const WorkoutsPage = () => {
     const [savingField, setSavingField] = useState<string | null>(null);
 
     // Debounce timers for auto-save
-    const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
+    const saveTimers = useRef<Record<string, number>>({});
 
     useEffect(() => {
         loadData();
