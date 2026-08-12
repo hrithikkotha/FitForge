@@ -36,7 +36,7 @@ const AuthPage = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
     const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
-    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister, forgotPassword, resetPassword } = useAuth();
+    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister, resetPassword } = useAuth();
     const navigate = useNavigate();
     const { toasts, show: showToast, dismiss } = useToast();
 
