@@ -37,6 +37,10 @@ interface AuthContextType {
     resendRegisterOtp: (email: string) => Promise<{ ttlMinutes: number }>;
     /** Manual-approval sign-up: creates account with pending status (no OTP). */
     directRegister: (username: string, email: string, password: string) => Promise<{ pending: boolean; message: string }>;
+    /** Forgot password: initiate password reset for email */
+    forgotPassword: (email: string) => Promise<{ message: string }>;
+    /** Reset password: set new password */
+    resetPassword: (email: string, newPassword: string, confirmPassword: string) => Promise<{ message: string }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
     /** Refresh the locally-cached user (e.g. after a username change). */
@@ -115,6 +119,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { pending: data.pending as boolean, message: data.message as string };
     };
 
+    const forgotPassword = async (email: string) => {
+        const { data } = await API.post('/auth/forgot-password', { email });
+        return { message: data.message as string };
+    };
+
+    const resetPassword = async (email: string, newPassword: string, confirmPassword: string) => {
+        const { data } = await API.post('/auth/reset-password', { email, newPassword, confirmPassword });
+        return { message: data.message as string };
+    };
+
     const updateProfile = async (updates: Partial<User>) => {
         const { data } = await API.put('/auth/me', updates);
         const updated = { ...user!, ...data };
@@ -130,7 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister, logout, updateProfile, setLocalUser }}>
+        <AuthContext.Provider value={{ user, loading, login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister, forgotPassword, resetPassword, logout, updateProfile, setLocalUser }}>
             {children}
         </AuthContext.Provider>
     );

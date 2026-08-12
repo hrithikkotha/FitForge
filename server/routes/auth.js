@@ -322,6 +322,58 @@ router.post('/login', authLimiter, async (req, res) => {
     }
 });
 
+// ── Forgot Password: request password reset ────────────────────────────────
+router.post('/forgot-password', authLimiter, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || !isValidEmail(email)) {
+            return res.status(400).json({ message: 'Valid email is required' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            // Return success even if user doesn't exist (security best practice)
+            return res.json({ message: 'If that email exists in our system, you can now reset your password.' });
+        }
+
+        res.json({ message: 'If that email exists in our system, you can now reset your password.' });
+    } catch (error) {
+        res.status(error.status || 500).json({ message: error.message });
+    }
+});
+
+// ── Reset Password: set new password ───────────────────────────────────────
+router.post('/reset-password', authLimiter, async (req, res) => {
+    try {
+        const { email, newPassword, confirmPassword } = req.body;
+
+        if (!email || !isValidEmail(email)) {
+            return res.status(400).json({ message: 'Valid email is required' });
+        }
+        if (!newPassword || !confirmPassword) {
+            return res.status(400).json({ message: 'New password and confirmation are required' });
+        }
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: 'Passwords do not match' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ message: 'No account found with that email address' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password reset successfully. You can now log in with your new password.' });
+    } catch (error) {
+        res.status(error.status || 500).json({ message: error.message });
+    }
+});
+
 // GET /api/auth/me
 router.get('/me', protect, async (req, res) => {
     try {

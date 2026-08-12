@@ -28,7 +28,15 @@ const AuthPage = () => {
     const [otpCode, setOtpCode] = useState('');
     const [otpTtl, setOtpTtl] = useState(0);
     const [otpResendCooldown, setOtpResendCooldown] = useState(0);
-    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister } = useAuth();
+    // Forgot password flow
+    const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+    const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
+    const { login, initiateRegister, verifyRegisterOtp, resendRegisterOtp, directRegister, forgotPassword, resetPassword } = useAuth();
     const navigate = useNavigate();
     const { toasts, show: showToast, dismiss } = useToast();
 
@@ -158,6 +166,36 @@ const AuthPage = () => {
         }
     };
 
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            if (newPassword !== confirmNewPassword) {
+                setError('Passwords do not match');
+                setLoading(false);
+                return;
+            }
+            await resetPassword(resetEmail, newPassword, confirmNewPassword);
+            setPasswordResetSuccess(true);
+            showToast('Password reset successfully!', 'success');
+            // Auto-redirect to login after 3 seconds
+            setTimeout(() => {
+                setForgotPasswordMode(false);
+                setPasswordResetSuccess(false);
+                setIsLogin(true);
+                setEmail(resetEmail);
+                setPassword('');
+                setResetEmail('');
+                setNewPassword('');
+                setConfirmNewPassword('');
+            }, 3000);
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to reset password');
+        }
+        setLoading(false);
+    };
+
     // OTP verification screen — between sign-up form and pending/autoApproved screens
     if (otpStage) {
         return (
@@ -254,6 +292,179 @@ const AuthPage = () => {
                         >
                             Back to Sign In
                         </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show forgot password screen
+    if (forgotPasswordMode) {
+        if (passwordResetSuccess) {
+            return (
+                <div className="auth-page">
+                    <ToastContainer toasts={toasts} dismiss={dismiss} />
+                    <div className="auth-container fade-in">
+                        <div className="auth-brand">
+                            <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon-lg" />
+                            <h1>FitForge</h1>
+                        </div>
+                        <div className="auth-card" style={{ textAlign: 'center' }}>
+                            <CheckCircle size={56} style={{ color: 'var(--accent-success)', margin: '0 auto 16px' }} />
+                            <h2 style={{ marginBottom: 10 }}>Password Reset Successful!</h2>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 28, fontSize: '0.9rem' }}>
+                                Your password has been updated successfully. You can now log in with your new password.
+                            </p>
+                            <button
+                                className="btn btn-primary"
+                                style={{ width: '100%', justifyContent: 'center' }}
+                                onClick={() => {
+                                    setForgotPasswordMode(false);
+                                    setPasswordResetSuccess(false);
+                                    setIsLogin(true);
+                                    setEmail(resetEmail);
+                                    setPassword('');
+                                    setResetEmail('');
+                                    setNewPassword('');
+                                    setConfirmNewPassword('');
+                                }}
+                            >
+                                Go to Sign In
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="auth-page">
+                <ToastContainer toasts={toasts} dismiss={dismiss} />
+                <div className="auth-container fade-in">
+                    <div className="auth-brand">
+                        <img src="/logo.jpg" alt="FitForge Logo" className="logo-icon-lg" />
+                        <h1>FitForge</h1>
+                    </div>
+                    <div className="auth-card">
+                        <h2 style={{ marginBottom: 8, textAlign: 'center' }}>Reset Your Password</h2>
+                        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: 18, fontSize: '0.9rem' }}>
+                            Enter your email and a new password to reset your account password.
+                        </p>
+                        {error && <div className="auth-error">{error}</div>}
+                        <form onSubmit={handleResetPassword}>
+                            <div className="form-group">
+                                <label htmlFor="reset-email">Email</label>
+                                <input
+                                    id="reset-email"
+                                    type="email"
+                                    className="form-input"
+                                    placeholder="Enter your email"
+                                    value={resetEmail}
+                                    onChange={e => setResetEmail(e.target.value)}
+                                    required
+                                    inputMode="email"
+                                    autoComplete="email"
+                                    autoCapitalize="none"
+                                    autoCorrect="off"
+                                    spellCheck={false}
+                                    enterKeyHint="next"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="new-password">New Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        id="new-password"
+                                        type={showNewPassword ? 'text' : 'password'}
+                                        className="form-input"
+                                        placeholder="Enter new password"
+                                        value={newPassword}
+                                        onChange={e => setNewPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        autoComplete="new-password"
+                                        enterKeyHint="next"
+                                        style={{ paddingRight: 40 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(v => !v)}
+                                        aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                                        style={{
+                                            position: 'absolute',
+                                            right: 10,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: 4,
+                                            color: 'var(--text-secondary)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="confirm-new-password">Confirm New Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        id="confirm-new-password"
+                                        type={showConfirmNewPassword ? 'text' : 'password'}
+                                        className="form-input"
+                                        placeholder="Re-enter new password"
+                                        value={confirmNewPassword}
+                                        onChange={e => setConfirmNewPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        autoComplete="new-password"
+                                        enterKeyHint="go"
+                                        style={{ paddingRight: 40 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmNewPassword(v => !v)}
+                                        aria-label={showConfirmNewPassword ? 'Hide password' : 'Show password'}
+                                        style={{
+                                            position: 'absolute',
+                                            right: 10,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: 4,
+                                            color: 'var(--text-secondary)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        {showConfirmNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
+                                disabled={loading}
+                            >
+                                {loading ? 'Resetting...' : 'Reset Password'}
+                            </button>
+                        </form>
+                        <div style={{ textAlign: 'center', marginTop: 14 }}>
+                            <button
+                                type="button"
+                                onClick={() => { setForgotPasswordMode(false); setError(''); setResetEmail(''); setNewPassword(''); setConfirmNewPassword(''); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.82rem' }}
+                            >
+                                ← Back to Sign In
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -508,6 +719,18 @@ const AuthPage = () => {
                             {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
                         </button>
                     </form>
+
+                    {isLogin && (
+                        <div style={{ textAlign: 'center', marginTop: 12 }}>
+                            <button
+                                type="button"
+                                onClick={() => { setForgotPasswordMode(true); setError(''); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)', fontSize: '0.82rem', fontWeight: 600 }}
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+                    )}
 
                     <div className="auth-toggle">
                         {isLogin ? "Don't have an account? " : 'Already have an account? '}

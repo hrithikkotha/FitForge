@@ -25,11 +25,15 @@ const ExercisesPage = () => {
     const [form, setForm] = useState({ ...emptyForm });
     const { toasts, show: showToast, dismiss } = useToast();
 
+    useEffect(() => {
+        setLoading(true);
+        API.get('/super-admin/exercises').then(r => setExercises(r.data)).catch(console.error).finally(() => setLoading(false));
+    }, []);
+
     const load = () => {
         setLoading(true);
         API.get('/super-admin/exercises').then(r => setExercises(r.data)).catch(console.error).finally(() => setLoading(false));
     };
-    useEffect(() => { load(); }, []);
 
     const openEdit = (ex: any) => { setForm({ name: ex.name, category: ex.category, muscleGroups: [...ex.muscleGroups] }); setEditTarget(ex); };
     const openCreate = () => { setForm({ ...emptyForm }); setShowCreate(true); };
@@ -74,55 +78,63 @@ const ExercisesPage = () => {
 
     const catColor: Record<string, string> = { strength: '#f59e0b', cardio: '#ef4444', bodyweight: '#8b5cf6' };
 
-    const ModalForm = () => (
-        <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
-                <div className="modal-header">
-                    <h3>{editTarget ? `Edit ${editTarget.name}` : 'Create Global Exercise'}</h3>
-                    <button className="btn-icon" onClick={closeModal}><X size={18} /></button>
-                </div>
-                {editTarget && (
-                    <div style={{ background: 'rgba(252,163,17,0.08)', border: '1px solid rgba(252,163,17,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: '0.82rem', color: 'var(--sa-accent)' }}>
-                        ⚡ Changes will reflect immediately for <strong>all users</strong> logging workouts
-                    </div>
-                )}
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Exercise Name *</label>
-                        <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Barbell Squat" />
-                    </div>
-                    <div className="form-group">
-                        <label>Category</label>
-                        <select className="form-input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                            {CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
-                        </select>
-                    </div>
-                </div>
-                <div className="form-group">
-                    <label>Muscle Groups</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                        {MUSCLE_GROUPS.map(m => (
-                            <button key={m} type="button" onClick={() => toggleMuscle(m)}
-                                style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${form.muscleGroups.includes(m) ? 'var(--sa-accent)' : 'var(--border-color)'}`, fontSize: '0.75rem', cursor: 'pointer', background: form.muscleGroups.includes(m) ? 'rgba(252,163,17,0.15)' : 'transparent', color: form.muscleGroups.includes(m) ? 'var(--sa-accent)' : 'var(--text-secondary)', transition: 'all 0.2s' }}>
-                                {muscleLabel(m)}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div className="modal-actions">
-                    <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                    <button className="btn btn-primary" onClick={handleSave}>
-                        {editTarget ? <><Pencil size={15} /> Save Changes</> : <><Plus size={15} /> Create Exercise</>}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
         <div className="fade-in">
             <ToastContainer toasts={toasts} dismiss={dismiss} />
-            {(editTarget || showCreate) && <ModalForm />}
+            {(editTarget || showCreate) && (
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
+                        <div className="modal-header">
+                            <h3>{editTarget ? `Edit ${editTarget.name}` : 'Create Global Exercise'}</h3>
+                            <button className="btn-icon" onClick={closeModal}><X size={18} /></button>
+                        </div>
+                        {editTarget && (
+                            <div style={{ background: 'rgba(252,163,17,0.08)', border: '1px solid rgba(252,163,17,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: '0.82rem', color: 'var(--sa-accent)' }}>
+                                ⚡ Changes will reflect immediately for <strong>all users</strong> logging workouts
+                            </div>
+                        )}
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Exercise Name *</label>
+                                <input
+                                    className="form-input"
+                                    value={form.name}
+                                    onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                                    placeholder="e.g. Barbell Squat"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Category</label>
+                                <select
+                                    className="form-input"
+                                    value={form.category}
+                                    onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}
+                                >
+                                    {CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Muscle Groups</label>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                {MUSCLE_GROUPS.map(m => (
+                                    <button key={m} type="button" onClick={() => toggleMuscle(m)}
+                                        style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${form.muscleGroups.includes(m) ? 'var(--sa-accent)' : 'var(--border-color)'}`, fontSize: '0.75rem', cursor: 'pointer', background: form.muscleGroups.includes(m) ? 'rgba(252,163,17,0.15)' : 'transparent', color: form.muscleGroups.includes(m) ? 'var(--sa-accent)' : 'var(--text-secondary)', transition: 'all 0.2s' }}>
+                                        {muscleLabel(m)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+                            <button className="btn btn-primary" onClick={handleSave}>
+                                {editTarget ? <><Pencil size={15} /> Save Changes</> : <><Plus size={15} /> Create Exercise</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {deleteTarget && (
                 <div className="modal-overlay" onClick={() => setDeleteTarget(null)} style={{ zIndex: 1200 }}>

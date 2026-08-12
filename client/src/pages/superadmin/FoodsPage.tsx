@@ -18,11 +18,15 @@ const FoodsPage = () => {
     const [form, setForm] = useState({ ...emptyForm });
     const { toasts, show: showToast, dismiss } = useToast();
 
+    useEffect(() => {
+        setLoading(true);
+        API.get('/super-admin/foods').then(r => setFoods(r.data)).catch(console.error).finally(() => setLoading(false));
+    }, []);
+
     const load = () => {
         setLoading(true);
         API.get('/super-admin/foods').then(r => setFoods(r.data)).catch(console.error).finally(() => setLoading(false));
     };
-    useEffect(() => { load(); }, []);
 
     const openEdit = (food: any) => {
         setForm({
@@ -71,68 +75,120 @@ const FoodsPage = () => {
 
     if (loading) return <PageLoader />;
 
-    const ModalForm = () => (
-        <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
-                <div className="modal-header">
-                    <h3>{editTarget ? `Edit ${editTarget.name}` : 'Create Global Food Item'}</h3>
-                    <button className="btn-icon" onClick={closeModal}><X size={18} /></button>
-                </div>
-                {editTarget && (
-                    <div style={{ background: 'rgba(252,163,17,0.08)', border: '1px solid rgba(252,163,17,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: '0.82rem', color: 'var(--sa-accent)' }}>
-                        ⚡ Changes will reflect immediately for <strong>all users</strong> logging this food
-                    </div>
-                )}
-                <div className="form-group">
-                    <label>Food Name *</label>
-                    <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Brown Rice" />
-                </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Calories / 100g</label>
-                        <input className="form-input" type="number" inputMode="numeric" min="0" enterKeyHint="next" value={form.caloriesPer100g} onChange={e => setForm({ ...form, caloriesPer100g: e.target.value })} />
-                    </div>
-                    <div className="form-group">
-                        <label>Protein / 100g (g)</label>
-                        <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={form.proteinPer100g} onChange={e => setForm({ ...form, proteinPer100g: e.target.value })} />
-                    </div>
-                </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Carbs / 100g (g)</label>
-                        <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={form.carbsPer100g} onChange={e => setForm({ ...form, carbsPer100g: e.target.value })} />
-                    </div>
-                    <div className="form-group">
-                        <label>Fat / 100g (g)</label>
-                        <input className="form-input" type="number" inputMode="decimal" min="0" step="0.1" enterKeyHint="next" value={form.fatPer100g} onChange={e => setForm({ ...form, fatPer100g: e.target.value })} />
-                    </div>
-                </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Serving Unit</label>
-                        <select className="form-input" value={form.servingUnit} onChange={e => setForm({ ...form, servingUnit: e.target.value })}>
-                            {SERVING_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Grams per Serving</label>
-                        <input className="form-input" type="number" inputMode="decimal" min="0" step="1" enterKeyHint="done" value={form.gramsPerServing} onChange={e => setForm({ ...form, gramsPerServing: e.target.value })} />
-                    </div>
-                </div>
-                <div className="modal-actions">
-                    <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                    <button className="btn btn-primary" onClick={handleSave}>
-                        {editTarget ? <><Pencil size={15} /> Save Changes</> : <><Plus size={15} /> Create Food</>}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
         <div className="fade-in">
             <ToastContainer toasts={toasts} dismiss={dismiss} />
-            {(editTarget || showCreate) && <ModalForm />}
+            {(editTarget || showCreate) && (
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+                        <div className="modal-header">
+                            <h3>{editTarget ? `Edit ${editTarget.name}` : 'Create Global Food Item'}</h3>
+                            <button className="btn-icon" onClick={closeModal}><X size={18} /></button>
+                        </div>
+                        {editTarget && (
+                            <div style={{ background: 'rgba(252,163,17,0.08)', border: '1px solid rgba(252,163,17,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: '0.82rem', color: 'var(--sa-accent)' }}>
+                                ⚡ Changes will reflect immediately for <strong>all users</strong> logging this food
+                            </div>
+                        )}
+                        <div className="form-group">
+                            <label>Food Name *</label>
+                            <input
+                                className="form-input"
+                                value={form.name}
+                                onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="e.g. Brown Rice"
+                                autoFocus
+                            />
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Calories / 100g</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    inputMode="numeric"
+                                    min="0"
+                                    enterKeyHint="next"
+                                    value={form.caloriesPer100g}
+                                    onChange={e => setForm(prev => ({ ...prev, caloriesPer100g: e.target.value }))}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Protein / 100g (g)</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="0.1"
+                                    enterKeyHint="next"
+                                    value={form.proteinPer100g}
+                                    onChange={e => setForm(prev => ({ ...prev, proteinPer100g: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Carbs / 100g (g)</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="0.1"
+                                    enterKeyHint="next"
+                                    value={form.carbsPer100g}
+                                    onChange={e => setForm(prev => ({ ...prev, carbsPer100g: e.target.value }))}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Fat / 100g (g)</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="0.1"
+                                    enterKeyHint="next"
+                                    value={form.fatPer100g}
+                                    onChange={e => setForm(prev => ({ ...prev, fatPer100g: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Serving Unit</label>
+                                <select
+                                    className="form-input"
+                                    value={form.servingUnit}
+                                    onChange={e => setForm(prev => ({ ...prev, servingUnit: e.target.value }))}
+                                >
+                                    {SERVING_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Grams per Serving</label>
+                                <input
+                                    className="form-input"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="1"
+                                    enterKeyHint="done"
+                                    value={form.gramsPerServing}
+                                    onChange={e => setForm(prev => ({ ...prev, gramsPerServing: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+                            <button className="btn btn-primary" onClick={handleSave}>
+                                {editTarget ? <><Pencil size={15} /> Save Changes</> : <><Plus size={15} /> Create Food</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {deleteTarget && (
                 <div className="modal-overlay" onClick={() => setDeleteTarget(null)} style={{ zIndex: 1200 }}>
