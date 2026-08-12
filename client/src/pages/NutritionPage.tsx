@@ -254,8 +254,18 @@ const NutritionPage = () => {
             const mealsArray = mealRes.data.meals ?? mealRes.data;
             setFoods(foodRes.data);
             setMeals(mealsArray);
-            const today = new Date().toISOString().split('T')[0];
-            setTodayMeals(mealsArray.filter((m: any) => new Date(m.date).toISOString().split('T')[0] === today));
+
+            // Get today's date at midnight in local timezone
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+            // Filter meals that fall within today's date range
+            const todaysMeals = mealsArray.filter((m: any) => {
+                const mealDate = new Date(m.date);
+                return mealDate >= todayStart && mealDate < todayEnd;
+            });
+            setTodayMeals(todaysMeals);
         } catch (err) {
             console.error(err);
         } finally {
@@ -499,8 +509,8 @@ const NutritionPage = () => {
                     <div className="macro-bars" style={{ marginTop: 20 }}>
                         <div className="macro-bar-item">
                             <div className="macro-label">Protein</div>
-                            <div className="macro-bar-track"><div className="macro-bar-fill" style={{ width: `${Math.min(todayProtein / Math.round(weightKg * 2.205) * 100, 100)}%`, background: 'var(--accent-primary)' }} /></div>
-                            <div className="macro-value">{todayProtein.toFixed(0)}g</div>
+                            <div className="macro-bar-track"><div className="macro-bar-fill" style={{ width: `${Math.min((todayProtein / (weightKg * 2.2)) * 100, 100)}%`, background: 'var(--accent-primary)' }} /></div>
+                            <div className="macro-value">{todayProtein.toFixed(0)}g / {Math.round(weightKg * 2.2)}g</div>
                         </div>
                         <div className="macro-bar-item">
                             <div className="macro-label">Carbs</div>
