@@ -5,6 +5,7 @@ import { useToast, ToastContainer } from '../components/Toast';
 import PageLoader from '../components/PageLoader';
 import DatePicker from '../components/DatePicker';
 import VoiceAssistant from '../components/VoiceAssistant';
+import ExercisePicker from '../components/ExercisePicker';
 
 interface Exercise {
     _id: string;
@@ -25,8 +26,8 @@ const WorkoutsPage = () => {
     const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
 
     // Add exercise to workout
-    const [selectedExercise, setSelectedExercise] = useState('');
-    const [addingToWorkoutId, setAddingToWorkoutId] = useState<string | null>(null);
+    const [showExercisePicker, setShowExercisePicker] = useState(false);
+    const [activeWorkoutForPicker, setActiveWorkoutForPicker] = useState<string | null>(null);
 
     // Custom exercise modal
     const [showCustomModal, setShowCustomModal] = useState(false);
@@ -92,9 +93,9 @@ const WorkoutsPage = () => {
     };
 
     // Add exercise entry to existing workout
-    const addExerciseToWorkout = async (workoutId: string) => {
-        if (!selectedExercise) return;
-        const workout = workouts.find(w => w._id === workoutId);
+    const addExerciseToWorkout = async (exerciseId: string) => {
+        if (!activeWorkoutForPicker) return;
+        const workout = workouts.find(w => w._id === activeWorkoutForPicker);
         if (!workout) return;
 
         const existingEntries = workout.entries?.map((e: any) => ({
@@ -104,23 +105,23 @@ const WorkoutsPage = () => {
             distance: e.distance || 0,
         })) || [];
 
-        const ex = exercises.find(e => e._id === selectedExercise);
+        const ex = exercises.find(e => e._id === exerciseId);
         const isCardio = ex?.category === 'cardio';
 
         try {
-            await API.put(`/workouts/${workoutId}`, {
+            await API.put(`/workouts/${activeWorkoutForPicker}`, {
                 entries: [
                     ...existingEntries,
                     {
-                        exerciseId: selectedExercise,
+                        exerciseId: exerciseId,
                         sets: isCardio ? [] : [{ reps: 0, weight: 0 }],
                         duration: 0,
                         distance: 0,
                     },
                 ],
             });
-            setSelectedExercise('');
-            setAddingToWorkoutId(null);
+            setShowExercisePicker(false);
+            setActiveWorkoutForPicker(null);
             loadData();
             showToast('Exercise added to workout');
         } catch (err) {
@@ -557,22 +558,15 @@ const WorkoutsPage = () => {
 
                                     {/* Add Exercise Bar */}
                                     <div className="add-exercise-bar">
-                                        <select className="form-input" value={addingToWorkoutId === w._id ? selectedExercise : ''}
-                                            onFocus={() => setAddingToWorkoutId(w._id)}
-                                            onChange={e => { setSelectedExercise(e.target.value); setAddingToWorkoutId(w._id); }}>
-                                            <option value="">Add an exercise...</option>
-                                            {['strength', 'cardio', 'bodyweight'].map(cat => (
-                                                <optgroup key={cat} label={cat.charAt(0).toUpperCase() + cat.slice(1)}>
-                                                    {exercises.filter(e => e.category === cat).map(e => (
-                                                        <option key={e._id} value={e._id}>{e.name}</option>
-                                                    ))}
-                                                </optgroup>
-                                            ))}
-                                        </select>
-                                        <button className="btn btn-primary btn-sm"
-                                            onClick={() => addExerciseToWorkout(w._id)}
-                                            disabled={!selectedExercise || addingToWorkoutId !== w._id}>
-                                            <Plus size={16} /> Add
+                                        <button
+                                            className="btn btn-secondary"
+                                            style={{ flex: 1, justifyContent: 'center' }}
+                                            onClick={() => {
+                                                setActiveWorkoutForPicker(w._id);
+                                                setShowExercisePicker(true);
+                                            }}
+                                        >
+                                            <Plus size={16} /> Add Exercise
                                         </button>
                                     </div>
                                 </div>
@@ -688,6 +682,18 @@ const WorkoutsPage = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Exercise Picker Modal */}
+            {showExercisePicker && (
+                <ExercisePicker
+                    exercises={exercises}
+                    onSelect={addExerciseToWorkout}
+                    onClose={() => {
+                        setShowExercisePicker(false);
+                        setActiveWorkoutForPicker(null);
+                    }}
+                />
             )}
 
             <VoiceAssistant
