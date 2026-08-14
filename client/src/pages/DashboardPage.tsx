@@ -88,14 +88,14 @@ const DashboardPage = () => {
                     </div>
                     {stats?.volumeOverTime?.length > 0 ? (
                         <ResponsiveContainer width="100%" height={240}>
-                            <AreaChart data={stats.volumeOverTime.map((v: any) => ({ ...v, date: formatDate(v.date) }))}>
+                            <AreaChart data={stats.volumeOverTime.map((v: any) => ({ ...v, formattedDate: formatDate(v.date) }))}>
                                 <defs>
                                     <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#fca311" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#fca311" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="date" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <XAxis dataKey="formattedDate" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
                                 <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
                                 <Tooltip
                                     contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-primary)' }}
@@ -114,14 +114,14 @@ const DashboardPage = () => {
                     </div>
                     {nutritionStats?.dailyTrend?.length > 0 ? (
                         <ResponsiveContainer width="100%" height={240}>
-                            <AreaChart data={nutritionStats.dailyTrend.map((v: any) => ({ ...v, date: formatDate(v.date) }))}>
+                            <AreaChart data={nutritionStats.dailyTrend.map((v: any) => ({ ...v, formattedDate: formatDate(v.date) }))}>
                                 <defs>
                                     <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="date" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <XAxis dataKey="formattedDate" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
                                 <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
                                 <Tooltip
                                     contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-primary)' }}
