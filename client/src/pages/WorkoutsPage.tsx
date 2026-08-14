@@ -142,22 +142,32 @@ const WorkoutsPage = () => {
                 // Update localStorage
                 localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
 
-                return { success: true, workoutId };
-            } catch (err) {
+                return { success: true, workoutId, notFound: false };
+            } catch (err: any) {
                 console.error('Failed to save workout:', workoutId, err);
-                // Keep in cache for retry - localStorage already has it
-                return { success: false, workoutId };
+
+                // If workout was deleted (404), remove from cache and don't retry
+                if (err.response?.status === 404) {
+                    console.log('Workout not found, removing from cache:', workoutId);
+                    delete pendingChanges.current[workoutId];
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+                    return { success: false, workoutId, notFound: true };
+                }
+
+                // For other errors, keep in cache for retry
+                return { success: false, workoutId, notFound: false };
             }
         });
 
         const results = await Promise.allSettled(savePromises);
         const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+        const notFoundCount = results.filter(r => r.status === 'fulfilled' && r.value.notFound).length;
+        const failedCount = workoutIds.length - successCount - notFoundCount;
 
         if (successCount > 0) {
             showToast(`Saved ${successCount} workout(s)`);
         }
 
-        const failedCount = workoutIds.length - successCount;
         if (failedCount > 0) {
             showToast(`Failed to save ${failedCount} workout(s), will retry`, 'error');
         }
@@ -215,6 +225,14 @@ const WorkoutsPage = () => {
                     },
                 ],
             });
+
+            // Clear any pending changes for this workout since we just saved
+            if (pendingChanges.current[activeWorkoutForPicker]) {
+                delete pendingChanges.current[activeWorkoutForPicker];
+                localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+                setHasUnsavedChanges(Object.keys(pendingChanges.current).length > 0);
+            }
+
             setShowExercisePicker(false);
             setActiveWorkoutForPicker(null);
             loadData();
@@ -241,6 +259,14 @@ const WorkoutsPage = () => {
 
         try {
             await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
+
+            // Clear any pending changes for this workout since we just saved
+            if (pendingChanges.current[workoutId]) {
+                delete pendingChanges.current[workoutId];
+                localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+                setHasUnsavedChanges(Object.keys(pendingChanges.current).length > 0);
+            }
+
             loadData();
             showToast('Exercise removed');
         } catch (err) {
@@ -384,6 +410,14 @@ const WorkoutsPage = () => {
         if (!deleteWorkoutId) return;
         try {
             await API.delete(`/workouts/${deleteWorkoutId}`);
+
+            // Clear any pending changes for this workout from cache
+            if (pendingChanges.current[deleteWorkoutId]) {
+                delete pendingChanges.current[deleteWorkoutId];
+                localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+                setHasUnsavedChanges(Object.keys(pendingChanges.current).length > 0);
+            }
+
             setDeleteWorkoutId(null);
             loadData();
             showToast('Workout deleted successfully');
