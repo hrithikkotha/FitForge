@@ -48,7 +48,6 @@ const WorkoutsPage = () => {
     const [pageLoading, setPageLoading] = useState(true);
 
     // Loading states
-    const [addingSetFor, setAddingSetFor] = useState<string | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // Cache for pending changes - persisted to localStorage

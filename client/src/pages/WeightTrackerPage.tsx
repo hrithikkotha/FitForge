@@ -357,7 +357,7 @@ const WeightTrackerPage = () => {
                                             color: 'var(--text-primary)',
                                         }}
                                         labelFormatter={(val: any) => formatDate(String(val))}
-                                        formatter={(value: any, name: string) => {
+                                        formatter={(value: any, name: string | undefined) => {
                                             if (name === 'Weight (kg)') return [Number(value).toFixed(1) + ' kg', name];
                                             if (name === 'Cal Balance') return [Math.round(value) + ' cal', name];
                                             return [value, name];
