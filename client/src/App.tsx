@@ -28,7 +28,7 @@ import ThemeToggle from './components/ThemeToggle';
 import { LayoutDashboard, Dumbbell, Utensils, Bot, Activity } from 'lucide-react';
 import './index.css';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
 // ── Regular user layout ────────────────────────────────────────────────────

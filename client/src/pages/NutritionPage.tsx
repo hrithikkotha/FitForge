@@ -247,10 +247,11 @@ const NutritionPage = () => {
     const [pageLoading, setPageLoading] = useState(true);
 
     // ✅ P2-11: Add date range filter to prevent unbounded data loading
-    const [dateRange, setDateRange] = useState({
+    const [dateRange] = useState({
         from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         to: new Date().toISOString().split('T')[0]
     });
+    // Note: setDateRange can be added later for UI controls to change date range
 
     useEffect(() => { loadData(); }, [dateRange.from, dateRange.to]);
 
