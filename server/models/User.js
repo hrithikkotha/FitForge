@@ -116,4 +116,10 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// ✅ P2-4: Add index for fast email lookups during login (COLLSCAN → IXSCAN)
+userSchema.index({ email: 1 });
+
+// ✅ P2-5: Add compound index for suspension propagation checks (adminId + status)
+userSchema.index({ adminId: 1, status: 1 });
+
 module.exports = mongoose.model('User', userSchema);

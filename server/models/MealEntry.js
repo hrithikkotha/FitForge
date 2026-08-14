@@ -52,4 +52,7 @@ const mealEntrySchema = new mongoose.Schema({
     timestamps: true,
 });
 
+// ✅ P2-2: Add compound index for efficient user + date queries (COLLSCAN → IXSCAN)
+mealEntrySchema.index({ userId: 1, date: -1 });
+
 module.exports = mongoose.model('MealEntry', mealEntrySchema);

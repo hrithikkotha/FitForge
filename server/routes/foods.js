@@ -15,7 +15,22 @@ router.get('/', protect, async (req, res) => {
         };
 
         if (req.query.search) {
-            query.name = { $regex: req.query.search, $options: 'i' };
+            const search = String(req.query.search).trim();
+
+            // Validate length
+            if (search.length > 100) {
+                return res.status(400).json({ message: 'Search term too long (max 100 characters)' });
+            }
+
+            // Reject patterns with excessive nesting
+            if (/(\(.*\)){3,}/.test(search)) {
+                return res.status(400).json({ message: 'Invalid search pattern' });
+            }
+
+            // Escape regex metacharacters to prevent ReDoS
+            const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            query.name = { $regex: escaped, $options: 'i' };
         }
 
         const foods = await FoodItem.find(query)

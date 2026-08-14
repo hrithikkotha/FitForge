@@ -44,4 +44,7 @@ const workoutSessionSchema = new mongoose.Schema({
     timestamps: true,
 });
 
+// ✅ P2-1: Add compound index for efficient user + date queries (COLLSCAN → IXSCAN)
+workoutSessionSchema.index({ userId: 1, date: -1 });
+
 module.exports = mongoose.model('WorkoutSession', workoutSessionSchema);

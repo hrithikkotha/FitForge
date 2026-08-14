@@ -75,7 +75,8 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
         };
     }, [open]);
 
-    // Sync view when value changes externally
+    // ✅ P2-7: Sync view when value changes externally
+    // Keep this useEffect as it needs to respond to external prop changes
     useEffect(() => {
         if (value) {
             const d = new Date(value + 'T00:00:00');

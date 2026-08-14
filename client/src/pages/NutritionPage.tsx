@@ -246,11 +246,21 @@ const NutritionPage = () => {
     const { toasts, show: showToast, dismiss } = useToast();
     const [pageLoading, setPageLoading] = useState(true);
 
-    useEffect(() => { loadData(); }, []);
+    // ✅ P2-11: Add date range filter to prevent unbounded data loading
+    const [dateRange, setDateRange] = useState({
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        to: new Date().toISOString().split('T')[0]
+    });
+
+    useEffect(() => { loadData(); }, [dateRange.from, dateRange.to]);
 
     const loadData = async () => {
         try {
-            const [foodRes, mealRes] = await Promise.all([API.get('/foods'), API.get('/meals')]);
+            // ✅ P2-11: Add date range parameters to prevent loading all meals
+            const [foodRes, mealRes] = await Promise.all([
+                API.get('/foods'),
+                API.get(`/meals?from=${dateRange.from}&to=${dateRange.to}`)
+            ]);
             const mealsArray = mealRes.data.meals ?? mealRes.data;
             setFoods(foodRes.data);
             setMeals(mealsArray);

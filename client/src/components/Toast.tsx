@@ -1,31 +1,14 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+// ✅ P2-8: Import useToast from hooks file to fix ESLint Fast Refresh warning
+export { useToast, type ToastType } from '../hooks/useToast';
+import type { ToastType } from '../hooks/useToast';
 
 interface Toast {
     id: number;
     message: string;
     type: ToastType;
 }
-
-let idCounter = 0;
-
-export const useToast = () => {
-    const [toasts, setToasts] = useState<Toast[]>([]);
-
-    const show = useCallback((message: string, type: ToastType = 'success') => {
-        const id = ++idCounter;
-        setToasts(prev => [...prev, { id, message, type }]);
-        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
-    }, []);
-
-    const dismiss = useCallback((id: number) => {
-        setToasts(prev => prev.filter(t => t.id !== id));
-    }, []);
-
-    return { toasts, show, dismiss };
-};
 
 const ICON_MAP = {
     success: <CheckCircle size={18} />,

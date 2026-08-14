@@ -34,10 +34,9 @@ import { Menu, X } from 'lucide-react';
 // ── Regular user layout ────────────────────────────────────────────────────
 const ProtectedLayout = () => {
     const { user, loading } = useAuth();
+    // ✅ P2-6: Set initial state directly instead of useEffect (prevents unnecessary re-render)
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
-
-    useEffect(() => { setSidebarOpen(false); }, []);
 
     if (loading) {
         return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>

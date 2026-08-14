@@ -47,6 +47,12 @@ const WorkoutsPage = () => {
     const { toasts, show: showToast, dismiss } = useToast();
     const [pageLoading, setPageLoading] = useState(true);
 
+    // ✅ P2-10: Add date range filter to prevent unbounded data loading
+    const [dateRange, setDateRange] = useState({
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        to: new Date().toISOString().split('T')[0]
+    });
+
     // Loading states
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -86,9 +92,10 @@ const WorkoutsPage = () => {
 
     const loadData = useCallback(async () => {
         try {
+            // ✅ P2-10: Add date range parameters to prevent loading all workouts
             const [exRes, wkRes] = await Promise.all([
                 API.get('/exercises'),
-                API.get('/workouts'),
+                API.get(`/workouts?from=${dateRange.from}&to=${dateRange.to}`),
             ]);
             setExercises(exRes.data);
             const loadedWorkouts = wkRes.data.sessions ?? wkRes.data;
@@ -107,7 +114,7 @@ const WorkoutsPage = () => {
         } finally {
             setPageLoading(false);
         }
-    }, []);
+    }, [dateRange.from, dateRange.to]);
 
     // Flush pending changes to DB
     const flushPendingChanges = async () => {

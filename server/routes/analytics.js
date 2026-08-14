@@ -51,12 +51,46 @@ router.get('/muscle/:muscleGroup', protect, async (req, res) => {
         });
         const exerciseIds = exercises.map(e => e._id);
 
-        // Find workout sessions in date range that include those exercises
-        const sessions = await WorkoutSession.find({
-            userId: req.user._id,
-            date: { $gte: from, $lte: to },
-            'entries.exerciseId': { $in: exerciseIds },
-        }).sort({ date: 1 }).populate('entries.exerciseId');
+        // ✅ OPTIMIZED: Use aggregation pipeline instead of .populate() to avoid N+1 queries
+        const sessions = await WorkoutSession.aggregate([
+            {
+                $match: {
+                    userId: req.user._id,
+                    date: { $gte: from, $lte: to },
+                    'entries.exerciseId': { $in: exerciseIds }
+                }
+            },
+            { $sort: { date: 1 } },
+            { $unwind: { path: '$entries', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'exercises',
+                    localField: 'entries.exerciseId',
+                    foreignField: '_id',
+                    as: 'exerciseDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$exerciseDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    date: { $first: '$date' },
+                    duration: { $first: '$duration' },
+                    entries: {
+                        $push: {
+                            exerciseId: '$exerciseDetails',
+                            sets: '$entries.sets',
+                            duration: '$entries.duration'
+                        }
+                    }
+                }
+            }
+        ]);
 
         // Calculate stats
         let totalSets = 0;
@@ -134,10 +168,44 @@ router.get('/body-heatmap', protect, async (req, res) => {
         const cached = getCached(cacheKey);
         if (cached) return res.json(cached);
 
-        const sessions = await WorkoutSession.find({
-            userId: req.user._id,
-            date: { $gte: from, $lte: to },
-        }).sort({ date: 1 }).populate('entries.exerciseId');
+        // ✅ OPTIMIZED: Use aggregation pipeline instead of .populate() to avoid N+1 queries
+        const sessions = await WorkoutSession.aggregate([
+            {
+                $match: {
+                    userId: req.user._id,
+                    date: { $gte: from, $lte: to }
+                }
+            },
+            { $sort: { date: 1 } },
+            { $unwind: { path: '$entries', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'exercises',
+                    localField: 'entries.exerciseId',
+                    foreignField: '_id',
+                    as: 'exerciseDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$exerciseDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    date: { $first: '$date' },
+                    entries: {
+                        $push: {
+                            exerciseId: '$exerciseDetails',
+                            sets: '$entries.sets',
+                            duration: '$entries.duration'
+                        }
+                    }
+                }
+            }
+        ]);
 
         const muscleCount = {};
         const allMuscles = [
@@ -183,10 +251,45 @@ router.get('/workout-stats', protect, async (req, res) => {
         const cached = getCached(cacheKey);
         if (cached) return res.json(cached);
 
-        const sessions = await WorkoutSession.find({
-            userId: req.user._id,
-            date: { $gte: from, $lte: to },
-        }).sort({ date: 1 }).populate('entries.exerciseId');
+        // ✅ OPTIMIZED: Use aggregation pipeline instead of .populate() to avoid N+1 queries
+        const sessions = await WorkoutSession.aggregate([
+            {
+                $match: {
+                    userId: req.user._id,
+                    date: { $gte: from, $lte: to }
+                }
+            },
+            { $sort: { date: 1 } },
+            { $unwind: { path: '$entries', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'exercises',
+                    localField: 'entries.exerciseId',
+                    foreignField: '_id',
+                    as: 'exerciseDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$exerciseDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    date: { $first: '$date' },
+                    duration: { $first: '$duration' },
+                    entries: {
+                        $push: {
+                            exerciseId: '$exerciseDetails',
+                            sets: '$entries.sets',
+                            duration: '$entries.duration'
+                        }
+                    }
+                }
+            }
+        ]);
 
         let totalSessions = sessions.length;
         let totalDuration = 0;
@@ -393,11 +496,45 @@ router.get('/weight-stats', protect, async (req, res) => {
             dailyCalories[dateKey] += meal.calories || 0;
         });
 
-        // Fetch workout data for calorie burn
-        const workouts = await WorkoutSession.find({
-            userId: req.user._id,
-            date: { $gte: from, $lte: to },
-        }).sort({ date: 1 }).populate('entries.exerciseId');
+        // ✅ OPTIMIZED: Use aggregation pipeline instead of .populate() to avoid N+1 queries
+        const workouts = await WorkoutSession.aggregate([
+            {
+                $match: {
+                    userId: req.user._id,
+                    date: { $gte: from, $lte: to }
+                }
+            },
+            { $sort: { date: 1 } },
+            { $unwind: { path: '$entries', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'exercises',
+                    localField: 'entries.exerciseId',
+                    foreignField: '_id',
+                    as: 'exerciseDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$exerciseDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    date: { $first: '$date' },
+                    duration: { $first: '$duration' },
+                    entries: {
+                        $push: {
+                            exerciseId: '$exerciseDetails',
+                            sets: '$entries.sets',
+                            duration: '$entries.duration'
+                        }
+                    }
+                }
+            }
+        ]);
 
         const dailyCaloriesBurned = {};
         workouts.forEach(workout => {
