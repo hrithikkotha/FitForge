@@ -288,7 +288,8 @@ router.get('/workout-stats', protect, async (req, res) => {
                         }
                     }
                 }
-            }
+            },
+            { $sort: { date: 1 } }
         ]);
 
         let totalSessions = sessions.length;
@@ -381,7 +382,9 @@ router.get('/nutrition-stats', protect, async (req, res) => {
             dailyMap[dateKey].meals += 1;
         });
 
-        const dailyTrend = Object.entries(dailyMap).map(([date, data]) => ({ date, ...data }));
+        const dailyTrend = Object.entries(dailyMap)
+            .map(([date, data]) => ({ date, ...data }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         const totalCalories = meals.reduce((sum, m) => sum + m.calories, 0);
         const totalProtein = meals.reduce((sum, m) => sum + m.protein, 0);
