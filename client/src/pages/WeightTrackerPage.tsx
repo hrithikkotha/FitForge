@@ -76,7 +76,10 @@ const WeightTrackerPage = () => {
         }
     };
 
-    const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const formatDate = (d: string) => {
+        const date = new Date(d);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
 
     if (loading) return <PageLoader />;
 
@@ -275,21 +278,22 @@ const WeightTrackerPage = () => {
                                 </defs>
                                 <XAxis
                                     dataKey="date"
-                                    tick={{ fill: '#b0b8c8', fontSize: 12 }}
+                                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                     tickFormatter={formatDate}
                                 />
                                 <YAxis
                                     domain={['dataMin - 2', 'dataMax + 2']}
-                                    tick={{ fill: '#b0b8c8', fontSize: 12 }}
+                                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                                    tickFormatter={(val) => val.toFixed(1)}
                                 />
                                 <Tooltip
                                     contentStyle={{
-                                        background: '#14213d',
-                                        border: '1px solid #1f3050',
+                                        background: 'var(--bg-elevated)',
+                                        border: '1px solid var(--border-color)',
                                         borderRadius: 8,
-                                        color: '#fff',
+                                        color: 'var(--text-primary)',
                                     }}
-                                    labelFormatter={(val: any) => new Date(val).toLocaleDateString()}
+                                    labelFormatter={(val: any) => formatDate(String(val))}
                                     formatter={(value: any) => [Number(value).toFixed(1) + ' kg', '']}
                                 />
                                 {goalWeight > 0 && (
@@ -332,26 +336,32 @@ const WeightTrackerPage = () => {
                                 <ComposedChart data={dailyData}>
                                     <XAxis
                                         dataKey="date"
-                                        tick={{ fill: '#b0b8c8', fontSize: 12 }}
+                                        tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                         tickFormatter={formatDate}
                                     />
                                     <YAxis
                                         yAxisId="left"
-                                        tick={{ fill: '#b0b8c8', fontSize: 12 }}
+                                        tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                                        tickFormatter={(val) => val.toFixed(1)}
                                     />
                                     <YAxis
                                         yAxisId="right"
                                         orientation="right"
-                                        tick={{ fill: '#b0b8c8', fontSize: 12 }}
+                                        tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                     />
                                     <Tooltip
                                         contentStyle={{
-                                            background: '#14213d',
-                                            border: '1px solid #1f3050',
+                                            background: 'var(--bg-elevated)',
+                                            border: '1px solid var(--border-color)',
                                             borderRadius: 8,
-                                            color: '#fff',
+                                            color: 'var(--text-primary)',
                                         }}
                                         labelFormatter={(val: any) => formatDate(String(val))}
+                                        formatter={(value: any, name: string) => {
+                                            if (name === 'Weight (kg)') return [Number(value).toFixed(1) + ' kg', name];
+                                            if (name === 'Cal Balance') return [Math.round(value) + ' cal', name];
+                                            return [value, name];
+                                        }}
                                     />
                                     <Legend />
                                     <Line

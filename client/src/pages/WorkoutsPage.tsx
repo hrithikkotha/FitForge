@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import API from '../api/axios';
 import { Plus, Dumbbell, Trash2, X, Edit3, Save, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast, ToastContainer } from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 import PageLoader from '../components/PageLoader';
 import DatePicker from '../components/DatePicker';
 import VoiceAssistant from '../components/VoiceAssistant';
@@ -21,6 +22,7 @@ const ALL_MUSCLES = [
 ];
 
 const WorkoutsPage = () => {
+    const { user } = useAuth();
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [workouts, setWorkouts] = useState<any[]>([]);
     const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
@@ -47,13 +49,40 @@ const WorkoutsPage = () => {
 
     // Loading states
     const [addingSetFor, setAddingSetFor] = useState<string | null>(null);
-    const [savingField, setSavingField] = useState<string | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // Debounce timers for auto-save
-    const saveTimers = useRef<Record<string, number>>({});
+    // Cache for pending changes - persisted to localStorage
+    const pendingChanges = useRef<Record<string, any>>({});
+    const saveInterval = useRef<number | null>(null);
+    const CACHE_KEY = `workout_cache_${user?._id || 'temp'}`;
 
     useEffect(() => {
+        // Restore cache from localStorage on mount
+        const savedCache = localStorage.getItem(CACHE_KEY);
+        if (savedCache) {
+            try {
+                pendingChanges.current = JSON.parse(savedCache);
+            } catch (err) {
+                console.error('Failed to restore cache:', err);
+            }
+        }
+
         loadData();
+
+        // Auto-save interval: flush cache to DB every 30 seconds
+        saveInterval.current = setInterval(() => {
+            flushPendingChanges();
+        }, 30000);
+
+        // Also try to flush immediately on mount (in case of reload with pending changes)
+        setTimeout(() => flushPendingChanges(), 1000);
+
+        return () => {
+            // Cleanup: flush any pending changes before unmount
+            flushPendingChanges();
+            if (saveInterval.current) clearInterval(saveInterval.current);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadData = useCallback(async () => {
@@ -63,13 +92,72 @@ const WorkoutsPage = () => {
                 API.get('/workouts'),
             ]);
             setExercises(exRes.data);
-            setWorkouts(wkRes.data.sessions ?? wkRes.data);
+            const loadedWorkouts = wkRes.data.sessions ?? wkRes.data;
+
+            // Apply any pending cached changes on top of loaded data
+            const mergedWorkouts = loadedWorkouts.map((w: any) => {
+                if (pendingChanges.current[w._id]) {
+                    return { ...w, entries: pendingChanges.current[w._id] };
+                }
+                return w;
+            });
+
+            setWorkouts(mergedWorkouts);
         } catch (err) {
             console.error(err);
         } finally {
             setPageLoading(false);
         }
     }, []);
+
+    // Flush pending changes to DB
+    const flushPendingChanges = async () => {
+        if (!pendingChanges.current) return;
+        const workoutIds = Object.keys(pendingChanges.current);
+        if (workoutIds.length === 0) return;
+
+        const savePromises = workoutIds.map(async (workoutId) => {
+            const entries = pendingChanges.current[workoutId];
+
+            // Convert exerciseId objects to IDs for API
+            const entriesForAPI = entries.map((e: any) => ({
+                exerciseId: e.exerciseId?._id || e.exerciseId,
+                sets: e.sets || [],
+                duration: e.duration || 0,
+                distance: e.distance || 0,
+            }));
+
+            try {
+                await API.put(`/workouts/${workoutId}`, { entries: entriesForAPI });
+                // Success - remove from cache
+                delete pendingChanges.current[workoutId];
+
+                // Update localStorage
+                localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+
+                return { success: true, workoutId };
+            } catch (err) {
+                console.error('Failed to save workout:', workoutId, err);
+                // Keep in cache for retry - localStorage already has it
+                return { success: false, workoutId };
+            }
+        });
+
+        const results = await Promise.allSettled(savePromises);
+        const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+
+        if (successCount > 0) {
+            showToast(`Saved ${successCount} workout(s)`);
+        }
+
+        const failedCount = workoutIds.length - successCount;
+        if (failedCount > 0) {
+            showToast(`Failed to save ${failedCount} workout(s), will retry`, 'error');
+        }
+
+        // Update unsaved changes indicator
+        setHasUnsavedChanges(Object.keys(pendingChanges.current).length > 0);
+    };
 
     // Create new workout (just title + date, no exercises yet)
     const createWorkout = async () => {
@@ -154,136 +242,130 @@ const WorkoutsPage = () => {
         }
     };
 
-    // Add set to a specific exercise in a workout
-    const addSetToExercise = async (workoutId: string, entryIndex: number) => {
+    // Add set to a specific exercise in a workout - cache-first
+    const addSetToExercise = (workoutId: string, entryIndex: number) => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
 
-        const loadingKey = `${workoutId}-${entryIndex}`;
-        setAddingSetFor(loadingKey);
+        // Get current cached entries or use workout entries
+        const currentEntries = pendingChanges.current[workoutId] || workout.entries;
 
-        const updatedEntries = workout.entries.map((e: any, i: number) => ({
-            exerciseId: e.exerciseId?._id || e.exerciseId,
-            sets: i === entryIndex ? [...(e.sets || []), { reps: 0, weight: 0 }] : (e.sets || []),
-            duration: e.duration || 0,
-            distance: e.distance || 0,
-        }));
+        // Add new set to the specific exercise entry, keeping full exerciseId object
+        const updatedEntries = currentEntries.map((e: any, i: number) => {
+            if (i === entryIndex) {
+                return {
+                    ...e,
+                    sets: [...(e.sets || []), { reps: 0, weight: 0 }],
+                };
+            }
+            return e;
+        });
 
-        try {
-            await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            await loadData();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setAddingSetFor(null);
-        }
+        // Write to cache immediately
+        pendingChanges.current[workoutId] = updatedEntries;
+        localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+        setHasUnsavedChanges(true);
+
+        // Update local state for instant UI feedback
+        setWorkouts(prev => prev.map(w =>
+            w._id === workoutId ? { ...w, entries: updatedEntries } : w
+        ));
     };
 
-    // Delete a specific set
-    const deleteSet = async (workoutId: string, entryIndex: number, setIndex: number) => {
+    // Delete a specific set - cache-first
+    const deleteSet = (workoutId: string, entryIndex: number, setIndex: number) => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
 
-        const updatedEntries = workout.entries.map((e: any, i: number) => ({
-            exerciseId: e.exerciseId?._id || e.exerciseId,
-            sets: i === entryIndex ? e.sets.filter((_: any, si: number) => si !== setIndex) : (e.sets || []),
-            duration: e.duration || 0,
-            distance: e.distance || 0,
-        }));
+        // Get current cached entries or use workout entries
+        const currentEntries = pendingChanges.current[workoutId] || workout.entries;
 
-        try {
-            await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            loadData();
-        } catch (err) {
-            console.error(err);
-        }
+        // Remove the set from the specific exercise entry, keeping full exerciseId object
+        const updatedEntries = currentEntries.map((e: any, i: number) => {
+            if (i === entryIndex) {
+                return {
+                    ...e,
+                    sets: e.sets.filter((_: any, si: number) => si !== setIndex),
+                };
+            }
+            return e;
+        });
+
+        // Write to cache immediately
+        pendingChanges.current[workoutId] = updatedEntries;
+        localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+        setHasUnsavedChanges(true);
+
+        // Update local state for instant UI feedback
+        setWorkouts(prev => prev.map(w =>
+            w._id === workoutId ? { ...w, entries: updatedEntries } : w
+        ));
     };
 
-    // Update set values with debounce
-    const debouncedUpdateSet = (workoutId: string, entryIndex: number, setIndex: number, field: 'reps' | 'weight', val: string) => {
-        const fieldKey = `${workoutId}-${entryIndex}-${setIndex}-${field}`;
-
-        // Clear existing timer for this field
-        if (saveTimers.current[fieldKey]) {
-            clearTimeout(saveTimers.current[fieldKey]);
-        }
-
-        // Set new timer - auto-save after 500ms of no typing
-        saveTimers.current[fieldKey] = setTimeout(() => {
-            updateSet(workoutId, entryIndex, setIndex, field, parseFloat(val) || 0);
-        }, 500);
-    };
-
-    // Update set values
-    const updateSet = async (workoutId: string, entryIndex: number, setIndex: number, field: 'reps' | 'weight', val: number) => {
+    // Update set values - cache-first (no immediate API call)
+    const updateSet = (workoutId: string, entryIndex: number, setIndex: number, field: 'reps' | 'weight', val: number) => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
 
-        const fieldKey = `${workoutId}-${entryIndex}-${setIndex}-${field}`;
-        setSavingField(fieldKey);
+        // Get current cached entries or use workout entries
+        const currentEntries = pendingChanges.current[workoutId] || workout.entries;
 
-        const updatedEntries = workout.entries.map((e: any, i: number) => {
+        const updatedEntries = currentEntries.map((e: any, i: number) => {
             const sets = [...(e.sets || [])];
             if (i === entryIndex) {
                 sets[setIndex] = { ...sets[setIndex], [field]: val };
             }
             return {
-                exerciseId: e.exerciseId?._id || e.exerciseId,
+                exerciseId: e.exerciseId, // Keep full object for UI display
                 sets,
                 duration: e.duration || 0,
                 distance: e.distance || 0,
             };
         });
 
-        try {
-            await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            await loadData();
-            // Keep the saved indicator visible for a moment
-            setTimeout(() => setSavingField(null), 800);
-        } catch (err) {
-            console.error(err);
-            setSavingField(null);
-        }
+        // Save to cache immediately
+        pendingChanges.current[workoutId] = updatedEntries;
+
+        // Persist to localStorage
+        localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+
+        // Indicate unsaved changes
+        setHasUnsavedChanges(true);
+
+        // Update UI immediately
+        setWorkouts(prev => prev.map(w =>
+            w._id === workoutId ? { ...w, entries: updatedEntries } : w
+        ));
     };
 
-    // Update cardio fields with debounce
-    const debouncedUpdateCardio = (workoutId: string, entryIndex: number, field: 'duration' | 'distance', val: string) => {
-        const fieldKey = `${workoutId}-${entryIndex}-cardio-${field}`;
-
-        // Clear existing timer for this field
-        if (saveTimers.current[fieldKey]) {
-            clearTimeout(saveTimers.current[fieldKey]);
-        }
-
-        // Set new timer - auto-save after 500ms of no typing
-        saveTimers.current[fieldKey] = setTimeout(() => {
-            updateCardioField(workoutId, entryIndex, field, parseFloat(val) || 0);
-        }, 500);
-    };
-
-    // Update cardio fields
-    const updateCardioField = async (workoutId: string, entryIndex: number, field: 'duration' | 'distance', val: number) => {
+    // Update cardio fields - cache-first (no immediate API call)
+    const updateCardioField = (workoutId: string, entryIndex: number, field: 'duration' | 'distance', val: number) => {
         const workout = workouts.find(w => w._id === workoutId);
         if (!workout) return;
 
-        const fieldKey = `${workoutId}-${entryIndex}-cardio-${field}`;
-        setSavingField(fieldKey);
+        // Get current cached entries or use workout entries
+        const currentEntries = pendingChanges.current[workoutId] || workout.entries;
 
-        const updatedEntries = workout.entries.map((e: any, i: number) => ({
-            exerciseId: e.exerciseId?._id || e.exerciseId,
+        const updatedEntries = currentEntries.map((e: any, i: number) => ({
+            exerciseId: e.exerciseId, // Keep full object for UI display
             sets: e.sets || [],
             duration: i === entryIndex && field === 'duration' ? val : (e.duration || 0),
             distance: i === entryIndex && field === 'distance' ? val : (e.distance || 0),
         }));
 
-        try {
-            await API.put(`/workouts/${workoutId}`, { entries: updatedEntries });
-            await loadData();
-            setTimeout(() => setSavingField(null), 800);
-        } catch (err) {
-            console.error(err);
-            setSavingField(null);
-        }
+        // Save to cache immediately
+        pendingChanges.current[workoutId] = updatedEntries;
+
+        // Persist to localStorage
+        localStorage.setItem(CACHE_KEY, JSON.stringify(pendingChanges.current));
+
+        // Indicate unsaved changes
+        setHasUnsavedChanges(true);
+
+        // Update UI immediately
+        setWorkouts(prev => prev.map(w =>
+            w._id === workoutId ? { ...w, entries: updatedEntries } : w
+        ));
     };
 
     // Delete workout
@@ -341,7 +423,14 @@ const WorkoutsPage = () => {
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
                 <div>
                     <h2>Workouts</h2>
-                    <p>Log and dynamically build your training sessions</p>
+                    <p>
+                        Log and dynamically build your training sessions
+                        {hasUnsavedChanges && (
+                            <span style={{ marginLeft: 8, fontSize: '0.85rem', color: 'var(--accent-warning)', fontWeight: 600 }}>
+                                • Unsaved changes (auto-saving...)
+                            </span>
+                        )}
+                    </p>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button className="btn btn-secondary" onClick={() => setShowCustomModal(true)}>
@@ -410,23 +499,13 @@ const WorkoutsPage = () => {
                                                                 step="1"
                                                                 enterKeyHint="next"
                                                                 defaultValue={entry.duration || ''}
-                                                                onChange={e => debouncedUpdateCardio(w._id, eIdx, 'duration', e.target.value)}
+                                                                onChange={e => updateCardioField(w._id, eIdx, 'duration', parseFloat(e.target.value) || 0)}
                                                                 onKeyDown={e => {
                                                                     if (e.key === 'Enter') {
-                                                                        const fieldKey = `${w._id}-${eIdx}-cardio-duration`;
-                                                                        if (saveTimers.current[fieldKey]) clearTimeout(saveTimers.current[fieldKey]);
-                                                                        updateCardioField(w._id, eIdx, 'duration', parseFloat(e.currentTarget.value) || 0);
                                                                         e.currentTarget.blur();
                                                                     }
                                                                 }}
-                                                                style={{
-                                                                    transition: 'all 0.3s ease',
-                                                                    borderColor: savingField === `${w._id}-${eIdx}-cardio-duration` ? '#4ade80' : undefined
-                                                                }}
                                                             />
-                                                            {savingField === `${w._id}-${eIdx}-cardio-duration` && (
-                                                                <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700, animation: 'fadeIn 0.3s ease' }}>✓</span>
-                                                            )}
                                                         </div>
                                                         <div className="set-row" style={{ margin: 0, position: 'relative' }}>
                                                             <span className="set-label">Dist(km)</span>
@@ -437,23 +516,13 @@ const WorkoutsPage = () => {
                                                                 step="0.1"
                                                                 enterKeyHint="done"
                                                                 defaultValue={entry.distance || ''}
-                                                                onChange={e => debouncedUpdateCardio(w._id, eIdx, 'distance', e.target.value)}
+                                                                onChange={e => updateCardioField(w._id, eIdx, 'distance', parseFloat(e.target.value) || 0)}
                                                                 onKeyDown={e => {
                                                                     if (e.key === 'Enter') {
-                                                                        const fieldKey = `${w._id}-${eIdx}-cardio-distance`;
-                                                                        if (saveTimers.current[fieldKey]) clearTimeout(saveTimers.current[fieldKey]);
-                                                                        updateCardioField(w._id, eIdx, 'distance', parseFloat(e.currentTarget.value) || 0);
                                                                         e.currentTarget.blur();
                                                                     }
                                                                 }}
-                                                                style={{
-                                                                    transition: 'all 0.3s ease',
-                                                                    borderColor: savingField === `${w._id}-${eIdx}-cardio-distance` ? '#4ade80' : undefined
-                                                                }}
                                                             />
-                                                            {savingField === `${w._id}-${eIdx}-cardio-distance` && (
-                                                                <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700, animation: 'fadeIn 0.3s ease' }}>✓</span>
-                                                            )}
                                                         </div>
                                                     </div>
                                                 ) : (
@@ -463,10 +532,7 @@ const WorkoutsPage = () => {
                                                             <span style={{ flex: 1, fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Reps</span>
                                                             <span style={{ width: 28 }}></span>
                                                         </div>
-                                                        {entry.sets?.map((set: any, sIdx: number) => {
-                                                            const weightKey = `${w._id}-${eIdx}-${sIdx}-weight`;
-                                                            const repsKey = `${w._id}-${eIdx}-${sIdx}-reps`;
-                                                            return (
+                                                        {entry.sets?.map((set: any, sIdx: number) => (
                                                                 <div key={sIdx} className="set-row">
                                                                     <span className="set-label">Set {sIdx + 1}</span>
                                                                     <div style={{ flex: 1, position: 'relative' }}>
@@ -478,26 +544,16 @@ const WorkoutsPage = () => {
                                                                             enterKeyHint="next"
                                                                             defaultValue={set.weight || ''}
                                                                             placeholder="kg"
-                                                                            onChange={e => debouncedUpdateSet(w._id, eIdx, sIdx, 'weight', e.target.value)}
+                                                                            onChange={e => updateSet(w._id, eIdx, sIdx, 'weight', parseFloat(e.target.value) || 0)}
                                                                             onKeyDown={e => {
                                                                                 if (e.key === 'Enter') {
-                                                                                    if (saveTimers.current[weightKey]) clearTimeout(saveTimers.current[weightKey]);
-                                                                                    updateSet(w._id, eIdx, sIdx, 'weight', parseFloat(e.currentTarget.value) || 0);
                                                                                     // Move to next input (reps)
                                                                                     const nextInput = e.currentTarget.parentElement?.nextElementSibling?.querySelector('input');
                                                                                     if (nextInput) (nextInput as HTMLInputElement).focus();
                                                                                 }
                                                                             }}
-                                                                            style={{
-                                                                                width: '100%',
-                                                                                transition: 'all 0.3s ease',
-                                                                                borderColor: savingField === weightKey ? '#4ade80' : undefined,
-                                                                                background: savingField === weightKey ? 'rgba(74, 222, 128, 0.1)' : undefined
-                                                                            }}
+                                                                            style={{ width: '100%' }}
                                                                         />
-                                                                        {savingField === weightKey && (
-                                                                            <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700 }}>✓</span>
-                                                                        )}
                                                                     </div>
                                                                     <div style={{ flex: 1, position: 'relative' }}>
                                                                         <input
@@ -508,32 +564,21 @@ const WorkoutsPage = () => {
                                                                             enterKeyHint="done"
                                                                             defaultValue={set.reps || ''}
                                                                             placeholder="Reps"
-                                                                            onChange={e => debouncedUpdateSet(w._id, eIdx, sIdx, 'reps', e.target.value)}
+                                                                            onChange={e => updateSet(w._id, eIdx, sIdx, 'reps', parseFloat(e.target.value) || 0)}
                                                                             onKeyDown={e => {
                                                                                 if (e.key === 'Enter') {
-                                                                                    if (saveTimers.current[repsKey]) clearTimeout(saveTimers.current[repsKey]);
-                                                                                    updateSet(w._id, eIdx, sIdx, 'reps', parseFloat(e.currentTarget.value) || 0);
                                                                                     e.currentTarget.blur();
                                                                                 }
                                                                             }}
-                                                                            style={{
-                                                                                width: '100%',
-                                                                                transition: 'all 0.3s ease',
-                                                                                borderColor: savingField === repsKey ? '#4ade80' : undefined,
-                                                                                background: savingField === repsKey ? 'rgba(74, 222, 128, 0.1)' : undefined
-                                                                            }}
+                                                                            style={{ width: '100%' }}
                                                                         />
-                                                                        {savingField === repsKey && (
-                                                                            <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: '0.85rem', fontWeight: 700 }}>✓</span>
-                                                                        )}
                                                                     </div>
                                                                     <button className="btn-icon btn-sm" style={{ padding: 4, width: 28, height: 28, flexShrink: 0 }}
                                                                         onClick={() => deleteSet(w._id, eIdx, sIdx)}>
                                                                         <X size={12} />
                                                                     </button>
                                                                 </div>
-                                                            );
-                                                        })}
+                                                        ))}
                                                         <button
                                                             className="btn btn-secondary btn-sm"
                                                             style={{ marginTop: 6 }}

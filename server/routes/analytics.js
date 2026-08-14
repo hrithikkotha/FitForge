@@ -56,7 +56,7 @@ router.get('/muscle/:muscleGroup', protect, async (req, res) => {
             userId: req.user._id,
             date: { $gte: from, $lte: to },
             'entries.exerciseId': { $in: exerciseIds },
-        }).populate('entries.exerciseId');
+        }).sort({ date: 1 }).populate('entries.exerciseId');
 
         // Calculate stats
         let totalSets = 0;
@@ -137,7 +137,7 @@ router.get('/body-heatmap', protect, async (req, res) => {
         const sessions = await WorkoutSession.find({
             userId: req.user._id,
             date: { $gte: from, $lte: to },
-        }).populate('entries.exerciseId');
+        }).sort({ date: 1 }).populate('entries.exerciseId');
 
         const muscleCount = {};
         const allMuscles = [
@@ -179,14 +179,14 @@ router.get('/workout-stats', protect, async (req, res) => {
         const from = req.query.from ? new Date(req.query.from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const to = req.query.to ? new Date(req.query.to) : new Date();
 
-        const cacheKey = `workout-stats:${req.user._id}:${from.getTime()}:${to.getTime()}`;
+        const cacheKey = `workout-stats:v2:${req.user._id}:${from.getTime()}:${to.getTime()}`;
         const cached = getCached(cacheKey);
         if (cached) return res.json(cached);
 
         const sessions = await WorkoutSession.find({
             userId: req.user._id,
             date: { $gte: from, $lte: to },
-        }).populate('entries.exerciseId');
+        }).sort({ date: 1 }).populate('entries.exerciseId');
 
         let totalSessions = sessions.length;
         let totalDuration = 0;
@@ -382,7 +382,7 @@ router.get('/weight-stats', protect, async (req, res) => {
         const meals = await MealEntry.find({
             userId: req.user._id,
             date: { $gte: from, $lte: to },
-        });
+        }).sort({ date: 1 });
 
         const dailyCalories = {};
         meals.forEach(meal => {
@@ -397,7 +397,7 @@ router.get('/weight-stats', protect, async (req, res) => {
         const workouts = await WorkoutSession.find({
             userId: req.user._id,
             date: { $gte: from, $lte: to },
-        }).populate('entries.exerciseId');
+        }).sort({ date: 1 }).populate('entries.exerciseId');
 
         const dailyCaloriesBurned = {};
         workouts.forEach(workout => {

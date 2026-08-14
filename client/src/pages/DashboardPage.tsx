@@ -95,10 +95,10 @@ const DashboardPage = () => {
                                         <stop offset="95%" stopColor="#fca311" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="date" tick={{ fill: '#b0b8c8', fontSize: 12 }} />
-                                <YAxis tick={{ fill: '#b0b8c8', fontSize: 12 }} />
+                                <XAxis dataKey="date" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
                                 <Tooltip
-                                    contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 8, color: '#fff' }}
+                                    contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-primary)' }}
                                 />
                                 <Area type="monotone" dataKey="volume" stroke="#fca311" fill="url(#volGrad)" strokeWidth={2} />
                             </AreaChart>
@@ -114,17 +114,17 @@ const DashboardPage = () => {
                     </div>
                     {nutritionStats?.dailyTrend?.length > 0 ? (
                         <ResponsiveContainer width="100%" height={240}>
-                            <AreaChart data={nutritionStats.dailyTrend}>
+                            <AreaChart data={nutritionStats.dailyTrend.map((v: any) => ({ ...v, date: formatDate(v.date) }))}>
                                 <defs>
                                     <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="date" tick={{ fill: '#b0b8c8', fontSize: 12 }} tickFormatter={(v) => v.slice(5)} />
-                                <YAxis tick={{ fill: '#b0b8c8', fontSize: 12 }} />
+                                <XAxis dataKey="date" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
                                 <Tooltip
-                                    contentStyle={{ background: '#14213d', border: '1px solid #1f3050', borderRadius: 8, color: '#fff' }}
+                                    contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-primary)' }}
                                 />
                                 <Area type="monotone" dataKey="calories" stroke="#4ade80" fill="url(#calGrad)" strokeWidth={2} />
                             </AreaChart>
