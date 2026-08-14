@@ -581,18 +581,8 @@ const WorkoutsPage = () => {
                                                         <button
                                                             className="btn btn-secondary btn-sm"
                                                             style={{ marginTop: 6 }}
-                                                            onClick={() => addSetToExercise(w._id, eIdx)}
-                                                            disabled={addingSetFor === `${w._id}-${eIdx}`}>
-                                                            {addingSetFor === `${w._id}-${eIdx}` ? (
-                                                                <>
-                                                                    <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
-                                                                    Adding...
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Plus size={14} /> Add Set
-                                                                </>
-                                                            )}
+                                                            onClick={() => addSetToExercise(w._id, eIdx)}>
+                                                            <Plus size={14} /> Add Set
                                                         </button>
                                                     </>
                                                 )}
