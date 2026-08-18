@@ -387,7 +387,7 @@ router.post('/transcribe', protect, transcribeUpload, async (req, res) => {
         }
 
         // Build compact exercise/food lists — format: id|name|category (saves ~40% tokens vs verbose format)
-        // Limits kept small to stay under the 6000 TPM cap of llama-3.1-8b-instant on free tier
+        // Limits kept small for optimal performance with openai/gpt-oss-120b
         const exerciseList = (context.exercises || [])
             .slice(0, 35)
             .map(e => `${e.id}|${e.name}|${e.category}`)
@@ -430,7 +430,7 @@ RULES:
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: transcript },
             ],
-            model: 'llama-3.1-8b-instant',
+            model: 'openai/gpt-oss-120b',
             temperature: 0.1,
             max_tokens: 512,
             response_format: { type: 'json_object' },
@@ -577,7 +577,7 @@ router.post('/chat', protect, chatBodyParser, async (req, res) => {
 
         const chatCompletion = await groq.chat.completions.create({
             messages,
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             temperature: 0.4,
             max_tokens: 4096,   // Large enough for multi-day plans (7-day diet = ~3000 tokens)
             response_format: { type: 'json_object' },
